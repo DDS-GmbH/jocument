@@ -3,15 +3,14 @@ package com.docutools.jocument.impl.word;
 import com.docutools.jocument.PlaceholderResolver;
 import com.docutools.jocument.Template;
 import com.docutools.jocument.impl.ReportImpl;
-import org.apache.poi.xwpf.usermodel.IBodyElement;
-import org.apache.poi.xwpf.usermodel.XWPFDocument;
-
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import org.apache.poi.xwpf.usermodel.IBodyElement;
+import org.apache.poi.xwpf.usermodel.XWPFDocument;
 
 public class WordReportImpl extends ReportImpl {
 

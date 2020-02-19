@@ -1,5 +1,10 @@
 package com.docutools.jocument.impl.word;
 
+import java.util.List;
+import java.util.Optional;
+import java.util.OptionalInt;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import org.apache.poi.xwpf.usermodel.IBodyElement;
 import org.apache.poi.xwpf.usermodel.XWPFParagraph;
 import org.apache.poi.xwpf.usermodel.XWPFRun;
@@ -16,22 +21,32 @@ import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTTc;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTTcPr;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTTrPr;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.OptionalInt;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
-
 public class WordUtilities {
 
+  private WordUtilities() {
+  }
+
+  /**
+   * Joins all {@link org.apache.poi.xwpf.usermodel.XWPFRun}s of this {@link org.apache.poi.xwpf.usermodel.XWPFParagraph}
+   * to one string.
+   *
+   * @param paragraph the {@link org.apache.poi.xwpf.usermodel.XWPFParagraph}
+   * @return the joined String
+   */
   public static String toString(XWPFParagraph paragraph) {
     return getText(paragraph)
             .orElseGet(() -> joinRuns(paragraph));
   }
 
+  /**
+   * Replaces the text in the {@link org.apache.poi.xwpf.usermodel.XWPFParagraph} without loosing formatting.
+   *
+   * @param paragraph the {@link org.apache.poi.xwpf.usermodel.XWPFParagraph}
+   * @param newText the new test
+   */
   public static void replaceText(XWPFParagraph paragraph, String newText) {
     List<XWPFRun> runs = paragraph.getRuns();
-    if(runs.isEmpty()) {
+    if (runs.isEmpty()) {
       XWPFRun run = paragraph.createRun();
       run.setText(newText, 0);
     } else {
@@ -40,49 +55,86 @@ public class WordUtilities {
     }
   }
 
+  /**
+   * Tests if the given element is still part of the referenced {@link org.apache.poi.xwpf.usermodel.XWPFDocument}.
+   *
+   * @param element the element
+   * @return {@code true} when exists
+   */
   public static boolean exists(IBodyElement element) {
     return findPos(element).orElse(-1) != -1;
   }
 
+  /**
+   * Tries to find the position index of the given element in its {@link org.apache.poi.xwpf.usermodel.XWPFDocument}.
+   *
+   * @param element the element
+   * @return the index
+   */
   public static OptionalInt findPos(IBodyElement element) {
     var document = element.getBody().getXWPFDocument();
-    if(element instanceof XWPFParagraph) {
-      return OptionalInt.of(document.getPosOfParagraph((XWPFParagraph)element));
-    } else if(element instanceof XWPFTable) {
-      return OptionalInt.of(document.getPosOfTable((XWPFTable)element));
+    if (element instanceof XWPFParagraph) {
+      return OptionalInt.of(document.getPosOfParagraph((XWPFParagraph) element));
+    } else if (element instanceof XWPFTable) {
+      return OptionalInt.of(document.getPosOfTable((XWPFTable) element));
     }
     return OptionalInt.empty();
   }
 
+  /**
+   * Copies the given elements before the destination element.
+   *
+   * @param elements the elements to copy
+   * @param destination the destination
+   * @return the copies elements
+   */
   public static List<IBodyElement> copyBefore(List<IBodyElement> elements, IBodyElement destination) {
     return elements.stream()
             .map(element -> copyBefore(element, destination))
             .collect(Collectors.toList());
   }
 
+  /**
+   * Copies the given element before the destination.
+   *
+   * @param element the element
+   * @param destination the destination
+   * @return the copies element
+   */
   public static IBodyElement copyBefore(IBodyElement element, IBodyElement destination) {
     var destinationCursor = openCursor(destination).orElseThrow();
 
-    if(element instanceof XWPFTable) {
-      return copyTableTo((XWPFTable)element, destinationCursor);
+    if (element instanceof XWPFTable) {
+      return copyTableTo((XWPFTable) element, destinationCursor);
     }
-    if(element instanceof XWPFParagraph) {
-      return copyParagraphTo((XWPFParagraph)element, destinationCursor);
+    if (element instanceof XWPFParagraph) {
+      return copyParagraphTo((XWPFParagraph) element, destinationCursor);
     }
 
     throw new IllegalArgumentException("Can only copy XWPFParagraph or XWPFTable instances.");
   }
 
+  /**
+   * Removes the element if it still exists in the referenced {@link org.apache.poi.xwpf.usermodel.XWPFDocument}.
+   *
+   * @param element the element to be removed
+   */
   public static void removeIfExists(IBodyElement element) {
     findPos(element)
             .ifPresent(element.getBody().getXWPFDocument()::removeBodyElement);
   }
 
+  /**
+   * Opens a {@link org.apache.xmlbeans.XmlCursor} to the given element in its {@link org.apache.poi.xwpf.usermodel.XWPFDocument}.
+   *
+   * @param element the element
+   * @return the cursor
+   */
   public static Optional<XmlCursor> openCursor(IBodyElement element) {
-    if(element instanceof XWPFParagraph) {
-      return Optional.of(((XWPFParagraph)element).getCTP().newCursor());
-    } else if(element instanceof XWPFTable) {
-      return Optional.of(((XWPFTable)element).getCTTbl().newCursor());
+    if (element instanceof XWPFParagraph) {
+      return Optional.of(((XWPFParagraph) element).getCTP().newCursor());
+    } else if (element instanceof XWPFTable) {
+      return Optional.of(((XWPFTable) element).getCTTbl().newCursor());
     } else {
       return Optional.empty();
     }
@@ -104,7 +156,7 @@ public class WordUtilities {
 
   private static Optional<String> getText(XWPFParagraph paragraph) {
     var rawText = paragraph.getText();
-    if(rawText != null && !rawText.isBlank()) {
+    if (rawText != null && !rawText.isBlank()) {
       return Optional.of(rawText);
     }
     return Optional.empty();
@@ -120,7 +172,7 @@ public class WordUtilities {
     CTTbl tbl = clone.getCTTbl();
     tbl.setTblGrid(original.getCTTbl().getTblGrid());
     CTTblPr tblPr = tbl.getTblPr();
-    if(tblPr == null) {
+    if (tblPr == null) {
       tblPr = tbl.addNewTblPr();
     }
     tblPr.set(original.getCTTbl().getTblPr());
@@ -130,14 +182,14 @@ public class WordUtilities {
               XWPFTableRow newRow = clone.createRow();
               CTRow ctRow = newRow.getCtRow();
               CTTrPr pr = ctRow.getTrPr();
-              if(pr == null) {
+              if (pr == null) {
                 pr = ctRow.addNewTrPr();
               }
               pr.set(row.getCtRow().getTrPr());
               List<XWPFTableCell> cells = row.getTableCells();
-              for(int i = 0; i < cells.size(); i++) {
+              for (int i = 0; i < cells.size(); i++) {
                 XWPFTableCell cell = cells.get(i);
-                XWPFTableCell newCell = newRow.getCell(i) != null? newRow.getCell(i) : newRow.createCell();
+                XWPFTableCell newCell = newRow.getCell(i) != null ? newRow.getCell(i) : newRow.createCell();
                 newCell.removeParagraph(0);
                 CTTc ctTc = newCell.getCTTc();
                 CTTcPr ctTcPr = ctTc.getTcPr();
@@ -155,9 +207,9 @@ public class WordUtilities {
   }
 
   private static void cloneParagraph(XWPFParagraph original, XWPFParagraph clone) {
-    CTPPr pPr = clone.getCTP().isSetPPr() ?
-            clone.getCTP().getPPr() : clone.getCTP().addNewPPr();
-    pPr.set(original.getCTP().getPPr());
+    CTPPr ppr = clone.getCTP().isSetPPr()
+            ? clone.getCTP().getPPr() : clone.getCTP().addNewPPr();
+    ppr.set(original.getCTP().getPPr());
     for (XWPFRun r : original.getRuns()) {
       XWPFRun nr = clone.createRun();
       cloneRun(r, nr);
@@ -165,14 +217,10 @@ public class WordUtilities {
   }
 
   private static void cloneRun(XWPFRun original, XWPFRun clone) {
-    CTRPr rPr = clone.getCTR().isSetRPr() ? clone.getCTR().getRPr() : clone.getCTR().addNewRPr();
-    rPr.set(original.getCTR().getRPr());
+    CTRPr rpr = clone.getCTR().isSetRPr() ? clone.getCTR().getRPr() : clone.getCTR().addNewRPr();
+    rpr.set(original.getCTR().getRPr());
     String text = original.getText(0);
     clone.setText(text != null ? text : "");
-    // TODO copy images in XWPFRun
-  }
-
-  private WordUtilities() {
   }
 
 }

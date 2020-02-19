@@ -5,8 +5,8 @@ import java.util.stream.Stream;
 /**
  * Used by {@link com.docutools.jocument.Report}s to insert data on pre-defined placeholders.
  *
- * If the {@link this#getType()} returns {@link com.docutools.jocument.PlaceholderType#SINGLE} use the return value
- * of {@link this#toString()}.
+ * <p>If the {@link this#getType()} returns {@link com.docutools.jocument.PlaceholderType#SINGLE} use the return value
+ * of {@link this#toString()}.</p>
  *
  * @author codecitzen
  * @since 1.0-SNAPSHOT
@@ -24,7 +24,7 @@ public interface PlaceholderData {
   /**
    * Streams the items represented as {@link com.docutools.jocument.PlaceholderResolver}s.
    *
-   * Only used when {@link this#getType()} returns {@link com.docutools.jocument.PlaceholderType#LIST}.
+   * <p>Only used when {@link this#getType()} returns {@link com.docutools.jocument.PlaceholderType#LIST}.</p>
    *
    * @return stream of {@link com.docutools.jocument.PlaceholderResolver}s
    */
@@ -35,7 +35,7 @@ public interface PlaceholderData {
   /**
    * The count of {@link com.docutools.jocument.PlaceholderResolver}s.
    *
-   * Only used when {@link this#getType()} returns {@link com.docutools.jocument.PlaceholderType#LIST}.
+   * <p>Only used when {@link this#getType()} returns {@link com.docutools.jocument.PlaceholderType#LIST}.</p>
    *
    * @return count of {@link com.docutools.jocument.PlaceholderResolver}s
    */
@@ -46,7 +46,7 @@ public interface PlaceholderData {
   /**
    * Transforms the given placeholder Object based on the data.
    *
-   * Only used when {@link this#getType()} returns {@link com.docutools.jocument.PlaceholderType#CUSTOM}.
+   * <p>Only used when {@link this#getType()} returns {@link com.docutools.jocument.PlaceholderType#CUSTOM}.</p>
    *
    * @param placeholder the placeholder
    */

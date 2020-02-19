@@ -3,7 +3,6 @@ package com.docutools.jocument.impl;
 import com.docutools.jocument.PlaceholderData;
 import com.docutools.jocument.PlaceholderResolver;
 import com.docutools.jocument.PlaceholderType;
-
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 

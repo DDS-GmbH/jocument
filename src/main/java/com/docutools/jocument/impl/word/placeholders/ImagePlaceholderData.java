@@ -3,10 +3,9 @@ package com.docutools.jocument.impl.word.placeholders;
 import com.docutools.jocument.impl.word.CustomWordPlaceholderData;
 import com.docutools.jocument.impl.word.WordImageUtils;
 import com.docutools.jocument.impl.word.WordUtilities;
+import java.nio.file.Path;
 import org.apache.poi.xwpf.usermodel.IBodyElement;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
-
-import java.nio.file.Path;
 
 public class ImagePlaceholderData extends CustomWordPlaceholderData {
 

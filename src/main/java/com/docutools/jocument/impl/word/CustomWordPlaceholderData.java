@@ -14,11 +14,11 @@ public abstract class CustomWordPlaceholderData implements PlaceholderData {
 
   @Override
   public void transform(Object placeholder) {
-    if(!(placeholder instanceof IBodyElement)) {
+    if (!(placeholder instanceof IBodyElement)) {
       throw new IllegalArgumentException("Only IBodyElements accepted.");
     }
 
-    var element = (IBodyElement)placeholder;
+    var element = (IBodyElement) placeholder;
     var document = element.getBody().getXWPFDocument();
 
     transform(element, document);

@@ -1,7 +1,6 @@
 package com.docutools.jocument;
 
 import com.docutools.jocument.impl.TemplateImpl;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Optional;

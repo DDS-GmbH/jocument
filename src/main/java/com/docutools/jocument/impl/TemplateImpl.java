@@ -5,7 +5,6 @@ import com.docutools.jocument.PlaceholderResolver;
 import com.docutools.jocument.Report;
 import com.docutools.jocument.Template;
 import com.docutools.jocument.impl.word.WordReportImpl;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
