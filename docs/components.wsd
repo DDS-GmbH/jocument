@@ -1,0 +1,16 @@
+@startuml
+!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/release/1-0/C4_Component.puml
+
+Component(template, "Template", "Class")
+
+Component(report, "Report", "Asynchronous Subroutine")
+
+Component(resolver, "PlaceholderResolver", "Abstraction")
+
+Component(wordUtilities, "WordUtilities", "Utility Class")
+
+Rel(template, report, "spawns")
+Rel(report, resolver, "resolves against")
+Rel(report, wordUtilities, "uses")
+
+@enduml

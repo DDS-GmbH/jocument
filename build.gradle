@@ -13,9 +13,21 @@ targetCompatibility = 11
 
 repositories {
     mavenCentral()
+    maven { url 'https://jitpack.io' }
 }
 
 dependencies {
+    implementation('commons-beanutils:commons-beanutils:1.9.4')
+
+    implementation("org.apache.poi:poi:4.1.1")
+    implementation("org.apache.poi:poi-ooxml:4.1.1")
+    implementation("org.apache.poi:poi-ooxml-schemas:4.1.1")
+
+    implementation("com.github.codecitizen:jlibvips:f9df6c8")
+
+    testImplementation('org.junit.jupiter:junit-jupiter:5.6.0')
+    testImplementation("org.hamcrest:hamcrest:2.2")
+
     checkstyle 'com.puppycrawl.tools:checkstyle:8.27'
 }
 

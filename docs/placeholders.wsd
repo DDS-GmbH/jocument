@@ -1,0 +1,50 @@
+@startuml
+
+interface PlaceholderResolver {
+    Optional<PlaceholderData> resolve(String placeholderName)
+}
+
+interface PlaceholderData {
+
+    PlaceholderType getType()
+
+    Stream<PlaceholderResolver> stream();
+
+    long count();
+
+    void transform(Object placeholder);
+
+}
+
+enum PlaceholderType {
+    SINGLE,
+    LIST,
+    CUSTOM
+}
+
+PlaceholderData *-- PlaceholderType : has
+
+PlaceholderResolver --> PlaceholderData : resolves
+PlaceholderData --> PlaceholderResolver
+
+class RefelectiveResolver {
+}
+
+PlaceholderResolver <|-- RefelectiveResolver
+
+class SinglePlaceholerData {
+}
+
+class IterablePlaceholderData {
+
+}
+
+class CustomWordPlaceholderDate {
+
+}
+
+PlaceholderData <|-- SinglePlaceholerData
+PlaceholderData <|-- IterablePlaceholderData
+PlaceholderData <|-- CustomWordPlaceholderDate
+
+@enduml
