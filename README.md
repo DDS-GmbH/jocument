@@ -1,4 +1,5 @@
-# jocument
+![jocuments logo](docs/logos/twitter_header_photo_2.png)
+
 JVM based template enginer for DOCX and XLSX.
 
 ## Concept
