@@ -23,7 +23,7 @@ public class ResolvingPlaceholder {
     PlaceholderData data = resolver.resolve("name")
             .orElseThrow();
     // Assert
-    assertThat(data.getType(), is(PlaceholderType.SINGLE));
+    assertThat(data.getType(), is(PlaceholderType.SCALAR));
     assertThat(data.toString(), equalTo("James T. Kirk"));
   }
 
@@ -40,7 +40,7 @@ public class ResolvingPlaceholder {
             .map(PlaceholderData::toString)
             .collect(Collectors.toList());
     // Assert
-    assertThat(data.getType(), is(PlaceholderType.LIST));
+    assertThat(data.getType(), is(PlaceholderType.SET));
     assertThat(data.count(), is(2L));
     assertThat(values, contains("USS Enterprise", "US Defiant"));
   }

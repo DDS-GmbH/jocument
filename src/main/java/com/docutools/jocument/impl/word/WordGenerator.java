@@ -77,7 +77,7 @@ class WordGenerator {
   private void unrollLoop(XWPFParagraph start, List<IBodyElement> remaining) {
     var placeholderName = extractPlaceholderName(start);
     var placeholderData = resolver.resolve(placeholderName)
-            .filter(p -> p.getType() == PlaceholderType.LIST)
+            .filter(p -> p.getType() == PlaceholderType.SET)
             .orElseThrow();
     var content = getLoopBody(placeholderName, remaining);
 
@@ -106,7 +106,7 @@ class WordGenerator {
             ParsingUtils.stripBrackets(
                     WordUtilities.toString((XWPFParagraph) element)
             )).map(PlaceholderData::getType)
-            .map(type -> type == PlaceholderType.LIST)
+            .map(type -> type == PlaceholderType.SET)
             .orElse(false);
   }
 

@@ -9,14 +9,14 @@ package com.docutools.jocument;
  */
 public enum PlaceholderType {
   /**
-   * A single value to be inserted into the report.
+   * A scalar/primitive value to be inserted into the report.
    */
-  SINGLE,
+  SCALAR,
   /**
-   * A list of values, indicating the placeholder object should be copied for each and the value injected in form of a
+   * A set of values, indicating the placeholder object should be copied for each and the value injected in form of a
    * new {@link com.docutools.jocument.PlaceholderResolver}.
    */
-  LIST,
+  SET,
   /**
    * The transformation of the placeholder object is implemented by the {@link com.docutools.jocument.PlaceholderData}
    * object.

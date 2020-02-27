@@ -18,7 +18,7 @@ public class IterablePlaceholderData implements PlaceholderData {
 
   @Override
   public PlaceholderType getType() {
-    return PlaceholderType.LIST;
+    return PlaceholderType.SET;
   }
 
   @Override
