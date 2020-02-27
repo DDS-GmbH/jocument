@@ -3,7 +3,7 @@ package com.docutools.jocument;
 import java.util.stream.Stream;
 
 /**
- * Used by {@link com.docutools.jocument.Report}s to insert data on pre-defined placeholders.
+ * Used by {@link Document}s to insert data on pre-defined placeholders.
  *
  * <p>If the {@link this#getType()} returns {@link com.docutools.jocument.PlaceholderType#SINGLE} use the return value
  * of {@link this#toString()}.</p>

@@ -1,10 +1,10 @@
 package com.docutools.jocument.impl;
 
+import com.docutools.jocument.Document;
 import com.docutools.jocument.MimeType;
 import com.docutools.jocument.PlaceholderResolver;
-import com.docutools.jocument.Report;
 import com.docutools.jocument.Template;
-import com.docutools.jocument.impl.word.WordReportImpl;
+import com.docutools.jocument.impl.word.WordDocumentImpl;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -25,8 +25,8 @@ public class TemplateImpl implements Template {
   }
 
   @Override
-  public Report startGeneration(PlaceholderResolver resolver) {
-    var report = new WordReportImpl(this, resolver);
+  public Document startGeneration(PlaceholderResolver resolver) {
+    var report = new WordDocumentImpl(this, resolver);
     report.start();
     return report;
   }

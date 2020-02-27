@@ -7,14 +7,14 @@ import java.util.Optional;
 
 /**
  * A template for a given {@link com.docutools.jocument.MimeType}. You can generate
- * {@link com.docutools.jocument.Report}s from this template by calling {@link this#startGeneration(PlaceholderResolver)},
+ * {@link Document}s from this template by calling {@link this#startGeneration(PlaceholderResolver)},
  * which runs asynchronously.
  *
  * @author codecitizen
  * @since 1.0-SNAPSHOT
  * @see com.docutools.jocument.MimeType
  * @see com.docutools.jocument.PlaceholderResolver
- * @see com.docutools.jocument.Report
+ * @see Document
  */
 public interface Template {
 
@@ -43,9 +43,9 @@ public interface Template {
    * Starts the generation of a report for the given {@link com.docutools.jocument.PlaceholderResolver} asynchronously.
    *
    * @param resolver the {@link com.docutools.jocument.PlaceholderResolver}
-   * @return the {@link com.docutools.jocument.Report}
+   * @return the {@link Document}
    */
-  Report startGeneration(PlaceholderResolver resolver);
+  Document startGeneration(PlaceholderResolver resolver);
 
   /**
    * Opens a {@link java.io.InputStream} to the template file. Intended for internal use.

@@ -3,14 +3,14 @@
 
 Component(template, "Template", "Class")
 
-Component(report, "Report", "Asynchronous Subroutine")
+Component(document, "Report", "Asynchronous Subroutine")
 
 Component(resolver, "PlaceholderResolver", "Abstraction")
 
 Component(wordUtilities, "WordUtilities", "Utility Class")
 
-Rel(template, report, "spawns")
-Rel(report, resolver, "resolves against")
-Rel(report, wordUtilities, "uses")
+Rel(template, document, "spawns")
+Rel(document, resolver, "resolves against")
+Rel(document, wordUtilities, "uses")
 
 @enduml

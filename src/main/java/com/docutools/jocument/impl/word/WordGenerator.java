@@ -1,6 +1,6 @@
 package com.docutools.jocument.impl.word;
 
-import static com.docutools.jocument.impl.ReportImpl.TAG_PATTERN;
+import static com.docutools.jocument.impl.DocumentImpl.TAG_PATTERN;
 
 import com.docutools.jocument.PlaceholderData;
 import com.docutools.jocument.PlaceholderResolver;

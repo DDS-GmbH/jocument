@@ -27,7 +27,7 @@ var template = Template.fromClassPath("templates/MyTemplate.docx");
 
 1. It's easy to load templates from various sources (classpath, filesystem, network, ...).
 2. After loading the template file and MIME Type it gets immediately validated.
-3. The template instance provides an interface to start report generations asynchronously
+3. The template instance provides an interface to start document generations asynchronously
 and synchronously.
 
 ### Report
@@ -102,11 +102,11 @@ class TestCase {
       .orElseThrow();
     var resolver = new ReflectiveResolver(captain);
     
-    Report report = template.start(resolver);
-    report.blockUntilCompletion(60000L);
+    Report document = template.start(resolver);
+    document.blockUntilCompletion(60000L);
 
-    assert report.isComplete() == true;
-    assert report.getPath() != null;
+    assert document.isComplete() == true;
+    assert document.getPath() != null;
   }
 
 }
