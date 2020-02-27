@@ -50,10 +50,10 @@ public class ReflectionResolver implements PlaceholderResolver {
         return Optional.empty();
       }
       if (type.isPrimitive() || type.equals(String.class) || type.isEnum()) {
-        return Optional.of(new SinglePlaceholderData(bub.getProperty(bean, placeholderName)));
+        return Optional.of(new ScalarPlaceholderData(bub.getProperty(bean, placeholderName)));
       } else if (LocalDate.class.isAssignableFrom(type)) {
         LocalDate date = (LocalDate) pub.getProperty(bean, placeholderName);
-        return Optional.of(new SinglePlaceholderData(date.format(DateTimeFormatter.ISO_DATE)));
+        return Optional.of(new ScalarPlaceholderData(date.format(DateTimeFormatter.ISO_DATE)));
       } else if (Collection.class.isAssignableFrom(type)) {
         Collection<Object> property = (Collection<Object>) pub.getProperty(bean, placeholderName);
         List<PlaceholderResolver> list = property.stream()

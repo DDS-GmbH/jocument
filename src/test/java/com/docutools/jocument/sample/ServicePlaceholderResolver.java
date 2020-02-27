@@ -2,7 +2,7 @@ package com.docutools.jocument.sample;
 
 import com.docutools.jocument.PlaceholderData;
 import com.docutools.jocument.PlaceholderResolver;
-import com.docutools.jocument.impl.SinglePlaceholderData;
+import com.docutools.jocument.impl.ScalarPlaceholderData;
 
 import java.util.Optional;
 
@@ -18,7 +18,7 @@ public class ServicePlaceholderResolver implements PlaceholderResolver {
   public Optional<PlaceholderData> resolve(String placeholderName) {
     switch (placeholderName) {
       case "name":
-        return Optional.of(new SinglePlaceholderData(name));
+        return Optional.of(new ScalarPlaceholderData(name));
       default:
         return Optional.empty();
     }

@@ -11,8 +11,8 @@ import java.io.IOException;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 
-@DisplayName("Generating Word Reports")
-public class WordReports {
+@DisplayName("Generating Word Documents")
+public class WordDocuments {
 
   @Test
   @DisplayName("Load word templates from classpath.")
@@ -36,21 +36,21 @@ public class WordReports {
   }
 
   @Test
-  @DisplayName("Generate a report from a simple template.")
-  void shouldGenerateSimpleReport() throws InterruptedException, IOException {
+  @DisplayName("Generate a document from a simple template.")
+  void shouldGenerateSimpleDocument() throws InterruptedException, IOException {
     // Arrange
     Template template = Template.fromClassPath("/templates/word/UserProfileTemplate.docx")
             .orElseThrow();
     PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.PICARD_PERSON);
 
     // Act
-    Report report = template.startGeneration(resolver);
-    report.blockUntilCompletion(60000L); // 1 minute
+    Document document = template.startGeneration(resolver);
+    document.blockUntilCompletion(60000L); // 1 minute
 
     // Assert
-    assertThat(report.completed(), is(true));
+    assertThat(document.completed(), is(true));
 
-    Desktop.getDesktop().open(report.getPath().toFile());
+    Desktop.getDesktop().open(document.getPath().toFile());
   }
 
   @Test
@@ -62,13 +62,13 @@ public class WordReports {
     PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.PICARD_PERSON);
 
     // Act
-    Report report = template.startGeneration(resolver);
-    report.blockUntilCompletion(60000L); // 1 minute
+    Document document = template.startGeneration(resolver);
+    document.blockUntilCompletion(60000L); // 1 minute
 
     // Assert
-    assertThat(report.completed(), is(true));
+    assertThat(document.completed(), is(true));
 
-    Desktop.getDesktop().open(report.getPath().toFile());
+    Desktop.getDesktop().open(document.getPath().toFile());
   }
 
   @Test
@@ -80,13 +80,13 @@ public class WordReports {
     PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.PICARD);
 
     // Act
-    Report report = template.startGeneration(resolver);
-    report.blockUntilCompletion(60000L); // 1 minute
+    Document document = template.startGeneration(resolver);
+    document.blockUntilCompletion(60000L); // 1 minute
 
     // Assert
-    assertThat(report.completed(), is(true));
+    assertThat(document.completed(), is(true));
 
-    Desktop.getDesktop().open(report.getPath().toFile());
+    Desktop.getDesktop().open(document.getPath().toFile());
   }
 
   @Test
@@ -98,12 +98,12 @@ public class WordReports {
     PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.PICARD);
 
     // Act
-    Report report = template.startGeneration(resolver);
-    report.blockUntilCompletion(60000L); // 1 minute
+    Document document = template.startGeneration(resolver);
+    document.blockUntilCompletion(60000L); // 1 minute
 
     // Assert
-    assertThat(report.completed(), is(true));
+    assertThat(document.completed(), is(true));
 
-    Desktop.getDesktop().open(report.getPath().toFile());
+    Desktop.getDesktop().open(document.getPath().toFile());
   }
 }

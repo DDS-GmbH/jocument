@@ -4,12 +4,12 @@ import java.util.Optional;
 
 /**
  * Resolves string / placeholder names to {@link com.docutools.jocument.PlaceholderData}. Used in
- * {@link com.docutools.jocument.Report}s.
+ * {@link Document}s.
  *
  * @author codecitizen
  * @since 1.0-SNAPSHOT
  * @see com.docutools.jocument.PlaceholderData
- * @see com.docutools.jocument.Report
+ * @see Document
  */
 public interface PlaceholderResolver {
 

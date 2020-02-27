@@ -12,7 +12,7 @@ JVM based template enginer for DOCX and XLSX.
 
 A template is defined by a MIME-Type and template file.
 
-The **MIME-Type** (e.g. `DOCX`) defines the format of the reports that can be based on
+The **MIME-Type** (e.g. `DOCX`) defines the format of the documents that can be based on
 this template.
 
 The **template file** is a file/document/spreadsheet that represents the actual template
@@ -27,17 +27,16 @@ var template = Template.fromClassPath("templates/MyTemplate.docx");
 
 1. It's easy to load templates from various sources (classpath, filesystem, network, ...).
 2. After loading the template file and MIME Type it gets immediately validated.
-3. The template instance provides an interface to start report generations asynchronously
+3. The template instance provides an interface to start document generations asynchronously
 and synchronously.
 
-### Report
+### Document
 
-![Word Report UML Diagram](out/docs/word-reports/word-reports.png)
+![Word Document UML Diagram](out/docs/word-document/word-document.png)
 
-Shows the Reports implementation by the example of word / DOCX reports. The `Template`
-returns upon start a `Report` instance. In this case a `WordReportImpl`. Which in turn
-calls the `WordGenerator` with the passed placeholder which uses `WordUtilities` for 
-the generation.
+Shows the Documents implementation by the example of word / DOCX documents. The `Template`
+returns upon start a `Document` instance. In this case a `WordDocumentImpl`. Which in turn
+calls the `WordGenerator` with the passed placeholder which uses `WordUtilities` for the generation.
 
 ### Placeholders
 
@@ -59,14 +58,14 @@ Age: {{age}}
 
  A `PlaceholderData` of type `SINGLE` can just evaluated to a String by calling `.toString()`.
  
- A `PlaceholderData` of type `CUSTOM` takes the Placeholder object of a `Report` (e.g. a
+ A `PlaceholderData` of type `CUSTOM` takes the Placeholder object of a `Document` (e.g. a
  `XWPFParagraph`) and transforms it to the desired content.
  
- #### Example: Generate a Simple Word Report
+ #### Example: Generate a Simple Word Document
  
  The Word / `.docx` Template (we assume it's stored as classpath resource under `templates/1.docx`):
  
- ![Word Report Example](docs/WordReportExample.png)
+ ![Word Document Example](docs/WordDocumentExample.png)
  
  The corresponding class:
  
@@ -90,23 +89,23 @@ class Service {
 }
 ```
 
-Generating the Report:
+Generating the Document:
 
 ```java
 package myapp;
 
 class TestCase {
   
-  void shouldGenerateReport(Captain captain) {
+  void shouldGenerateDocument(Captain captain) {
     var template = Template.fromClasspath(getClass().getResource("/templates/1.doxc"))
       .orElseThrow();
     var resolver = new ReflectiveResolver(captain);
     
-    Report report = template.start(resolver);
-    report.blockUntilCompletion(60000L);
+    var document = template.start(resolver);
+    document.blockUntilCompletion(60000L);
 
-    assert report.isComplete() == true;
-    assert report.getPath() != null;
+    assert document.isComplete() == true;
+    assert document.getPath() != null;
   }
 
 }

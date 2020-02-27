@@ -2,7 +2,7 @@ package com.docutools.jocument;
 
 import java.nio.file.Path;
 
-public interface Report {
+public interface Document {
 
   void blockUntilCompletion(long time) throws InterruptedException;
 

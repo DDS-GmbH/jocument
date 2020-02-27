@@ -1,13 +1,13 @@
 package com.docutools.jocument.impl;
 
+import com.docutools.jocument.Document;
 import com.docutools.jocument.PlaceholderResolver;
-import com.docutools.jocument.Report;
 import com.docutools.jocument.Template;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.regex.Pattern;
 
-public abstract class ReportImpl extends Thread implements Report {
+public abstract class DocumentImpl extends Thread implements Document {
 
   public static final Pattern TAG_PATTERN = Pattern.compile("\\{\\{([A-Za-z0-9[\u00c4\u00e4\u00d6\u00f6\u00dc\u00fc\u00df]-/#]+?)}}");
 
@@ -17,7 +17,7 @@ public abstract class ReportImpl extends Thread implements Report {
   private boolean complete = false;
   private Path path;
 
-  public ReportImpl(Template template, PlaceholderResolver resolver) {
+  public DocumentImpl(Template template, PlaceholderResolver resolver) {
     this.template = template;
     this.resolver = resolver;
   }
