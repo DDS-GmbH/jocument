@@ -40,7 +40,7 @@ public interface Template {
   MimeType getMimeType();
 
   /**
-   * Starts the generation of a report for the given {@link com.docutools.jocument.PlaceholderResolver} asynchronously.
+   * Starts the generation of a document for the given {@link com.docutools.jocument.PlaceholderResolver} asynchronously.
    *
    * @param resolver the {@link com.docutools.jocument.PlaceholderResolver}
    * @return the {@link Document}

@@ -20,7 +20,7 @@ public class WordDocumentImpl extends DocumentImpl {
 
   @Override
   protected Path generate() throws IOException {
-    Path file = Files.createTempFile("report", ".docx");
+    Path file = Files.createTempFile("document", ".docx");
     try (XWPFDocument document = new XWPFDocument(template.openStream())) {
 
       List<IBodyElement> bodyElements = new ArrayList<>(document.getBodyElements().size());

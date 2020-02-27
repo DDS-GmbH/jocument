@@ -9,7 +9,7 @@ package com.docutools.jocument;
  */
 public enum PlaceholderType {
   /**
-   * A scalar/primitive value to be inserted into the report.
+   * A scalar/primitive value to be inserted into the document.
    */
   SCALAR,
   /**

@@ -26,9 +26,9 @@ public class TemplateImpl implements Template {
 
   @Override
   public Document startGeneration(PlaceholderResolver resolver) {
-    var report = new WordDocumentImpl(this, resolver);
-    report.start();
-    return report;
+    var document = new WordDocumentImpl(this, resolver);
+    document.start();
+    return document;
   }
 
   @Override
