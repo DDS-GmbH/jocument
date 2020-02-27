@@ -17,8 +17,8 @@ interface PlaceholderData {
 }
 
 enum PlaceholderType {
-    SINGLE,
-    LIST,
+    SCALAR,
+    SET,
     CUSTOM
 }
 
@@ -32,7 +32,7 @@ class RefelectiveResolver {
 
 PlaceholderResolver <|-- RefelectiveResolver
 
-class SinglePlaceholerData {
+class ScalarPlaceholerData {
 }
 
 class IterablePlaceholderData {
@@ -43,7 +43,7 @@ class CustomWordPlaceholderDate {
 
 }
 
-PlaceholderData <|-- SinglePlaceholerData
+PlaceholderData <|-- ScalarPlaceholerData
 PlaceholderData <|-- IterablePlaceholderData
 PlaceholderData <|-- CustomWordPlaceholderDate
 

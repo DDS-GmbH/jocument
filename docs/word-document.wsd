@@ -1,6 +1,6 @@
 @startuml
 
-class WordReportImpl {
+class WordDocumentImpl {
     Template template
     PlaceholderResolver resolver
 }
@@ -12,7 +12,7 @@ class WordGenerator {
 Class WordUtilities {
 }
 
-WordReportImpl --> WordGenerator
+WordDocumentImpl --> WordGenerator
 WordGenerator --> WordUtilities
 
 @enduml

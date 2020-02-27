@@ -3,7 +3,7 @@
 
 Component(template, "Template", "Class")
 
-Component(document, "Report", "Asynchronous Subroutine")
+Component(document, "Document", "Asynchronous Subroutine")
 
 Component(resolver, "PlaceholderResolver", "Abstraction")
 
