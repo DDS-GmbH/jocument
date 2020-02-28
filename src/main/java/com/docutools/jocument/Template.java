@@ -3,6 +3,7 @@ package com.docutools.jocument;
 import com.docutools.jocument.impl.TemplateImpl;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Locale;
 import java.util.Optional;
 
 /**
@@ -26,10 +27,22 @@ public interface Template {
    * @throws java.lang.IllegalArgumentException when the files MIME type is not supported.
    */
   static Optional<Template> fromClassPath(String path) {
+    return fromClassPath(path, Locale.getDefault());
+  }
+
+  /**
+   * Creates a {@link com.docutools.jocument.Template} instance from a template file on the classpath.
+   *
+   * @param path the resource path
+   * @param locale the templates {@link java.util.Locale}
+   * @return the {@link com.docutools.jocument.Template} when the resource was found.
+   * @throws java.lang.IllegalArgumentException when the files MIME type is not supported.
+   */
+  static Optional<Template> fromClassPath(String path, Locale locale) {
     var mimeType = MimeType.fromFileExtension(path)
             .orElseThrow(() -> new IllegalArgumentException("Unsupported MIME-Type: " + path));
     return Optional.ofNullable(Template.class.getResource(path))
-            .map(url -> new TemplateImpl(url, mimeType));
+            .map(url -> new TemplateImpl(url, mimeType, locale));
   }
 
   /**
@@ -38,6 +51,13 @@ public interface Template {
    * @return {@link java.awt.image.MemoryImageSource}
    */
   MimeType getMimeType();
+
+  /**
+   * Gets the {@link java.util.Locale} setting of the template.
+   *
+   * @return the {@link java.util.Locale}
+   */
+  Locale getLocale();
 
   /**
    * Starts the generation of a document for the given {@link com.docutools.jocument.PlaceholderResolver} asynchronously.
