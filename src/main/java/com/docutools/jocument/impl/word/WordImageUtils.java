@@ -1,19 +1,22 @@
 package com.docutools.jocument.impl.word;
 
-import java.awt.Dimension;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
-import java.util.Map;
-import java.util.Optional;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.util.Units;
 import org.apache.poi.xwpf.usermodel.Document;
 import org.apache.poi.xwpf.usermodel.XWPFParagraph;
 import org.apache.poi.xwpf.usermodel.XWPFPicture;
-import org.jlibvips.VipsImage;
-import org.jlibvips.jna.VipsBindingsSingleton;
+
+import javax.imageio.ImageIO;
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
+import java.util.Map;
+import java.util.Optional;
 
 public class WordImageUtils {
 
@@ -33,10 +36,6 @@ public class WordImageUtils {
    */
   private static final int MAX_PICTURE_HEIGHT = 860;
   private static final Dimension DEFAULT_DIM = new Dimension(100, 100);
-
-  static {
-    VipsBindingsSingleton.configure("/usr/local/Cellar/vips/8.9.1/lib/libvips.42.dylib");
-  }
 
   private WordImageUtils() {
   }
@@ -64,16 +63,13 @@ public class WordImageUtils {
   }
 
   private static Optional<Dimension> probeDimensions(Path path) {
-    VipsImage image = null;
-    try {
-      image = VipsImage.fromFile(path);
-      return Optional.of(new Dimension(image.getWidth(), image.getHeight()));
-    } catch (Exception e) {
+    try (InputStream is = new FileInputStream(path.toFile())) {
+      BufferedImage readImage = ImageIO.read(is);
+      int width = readImage.getWidth();
+      int height = readImage.getHeight();
+      return Optional.of(new Dimension(width, height));
+    } catch (Exception ignored) {
       return Optional.empty();
-    } finally {
-      if (image != null) {
-        image.unref();
-      }
     }
   }
 

@@ -1,5 +1,6 @@
 package com.docutools.jocument;
 
+import com.docutools.jocument.impl.JsonResolver;
 import com.docutools.jocument.impl.ReflectionResolver;
 import com.docutools.jocument.sample.model.SampleModelData;
 import org.junit.jupiter.api.DisplayName;
@@ -96,6 +97,26 @@ public class WordDocuments {
     Template template = Template.fromClassPath("/templates/word/CustomPlaceholderTemplate.docx")
             .orElseThrow();
     PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.PICARD);
+
+    // Act
+    Document document = template.startGeneration(resolver);
+    document.blockUntilCompletion(60000L); // 1 minute
+
+    // Assert
+    assertThat(document.completed(), is(true));
+
+    Desktop.getDesktop().open(document.getPath().toFile());
+  }
+
+  @Test
+  @DisplayName("Apply custom word placeholder from json data.")
+  void shouldApplyCustomWordPlaceholderFromJson() throws InterruptedException, IOException {
+    // Arrange
+    Template template = Template.fromClassPath("/templates/word/CustomPlaceholderTemplate.docx")
+            .orElseThrow();
+
+    String json = TestUtils.getText("json/picard.json");
+    PlaceholderResolver resolver = new JsonResolver(json);
 
     // Act
     Document document = template.startGeneration(resolver);

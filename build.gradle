@@ -23,7 +23,8 @@ dependencies {
     implementation("org.apache.poi:poi-ooxml:4.1.1")
     implementation("org.apache.poi:poi-ooxml-schemas:4.1.1")
 
-    implementation("com.github.codecitizen:jlibvips:f9df6c8")
+    implementation("com.google.code.gson:gson:2.8.6")
+    implementation("org.apache.tika:tika-core:1.23")
 
     testImplementation('org.junit.jupiter:junit-jupiter:5.6.0')
     testImplementation("org.hamcrest:hamcrest:2.2")

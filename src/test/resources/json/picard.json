@@ -1,0 +1,19 @@
+{
+  "name": "Jean-Luc Picard",
+  "rank": 4,
+  "uniform": "Red",
+  "profilePic": "https://i.4pcdn.org/tv/1534222545416.jpg",
+  "officer": {
+    "name": "Riker",
+    "rank": 3,
+    "uniform": "Red"
+  },
+  "services": [
+    {
+      "shipName": "USS Enterprise"
+    },
+    {
+      "shipName": "US Defiant"
+    }
+  ]
+}
