@@ -63,9 +63,14 @@ public class JsonResolver implements PlaceholderResolver {
     }
 
     private boolean isImage(String data) {
-        String detected = tika.detect(data);
-        MediaType mediaType = MediaType.parse(detected);
-        return mediaType != null && Objects.equals(mediaType.getType(), "image");
+        try {
+            String detected = tika.detect(data);
+            MediaType mediaType = MediaType.parse(detected);
+            return mediaType != null && "image".equals(mediaType.getType());
+        } catch (IllegalStateException ignored) {
+            return false;
+        }
+
     }
 
     private Optional<Path> fromUrlContent(String url) {
