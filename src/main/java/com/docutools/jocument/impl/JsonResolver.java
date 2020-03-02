@@ -85,10 +85,8 @@ public class JsonResolver implements PlaceholderResolver {
 
     private Optional<PlaceholderData> fromArray(JsonArray jsonArray) {
         Spliterator<JsonElement> spliterator = jsonArray.spliterator();
-        Collection<String> property = StreamSupport.stream(spliterator,false)
+        List<PlaceholderResolver> list = StreamSupport.stream(spliterator,false)
                 .map(JsonElement::toString)
-                .collect(Collectors.toList());
-        List<PlaceholderResolver> list = property.stream()
                 .map(JsonResolver::new)
                 .collect(Collectors.toList());
         return Optional.of(new IterablePlaceholderData(list, list.size()));
