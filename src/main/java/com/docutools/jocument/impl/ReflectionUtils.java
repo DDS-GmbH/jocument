@@ -3,8 +3,12 @@ package com.docutools.jocument.impl;
 import java.lang.annotation.Annotation;
 import java.time.temporal.Temporal;
 import java.util.Optional;
+import java.util.Set;
 
 public class ReflectionUtils {
+
+  private static final Set<Class<?>> NUMERIC_PRIMITIVES =
+          Set.of(byte.class, short.class, int.class, long.class, float.class, double.class);
 
   public static boolean isJsr310Type(Class<?> type) {
     return Temporal.class.isAssignableFrom(type);
@@ -26,6 +30,11 @@ public class ReflectionUtils {
     } catch (NoSuchFieldException e) {
       return Optional.empty();
     }
+  }
+
+  public static boolean isNumeric(Class<?> type) {
+    return type != null &&
+            (Number.class.isAssignableFrom(type) || NUMERIC_PRIMITIVES.contains(type));
   }
 
   private ReflectionUtils() {

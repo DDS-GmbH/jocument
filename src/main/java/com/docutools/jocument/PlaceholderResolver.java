@@ -1,5 +1,6 @@
 package com.docutools.jocument;
 
+import java.util.Locale;
 import java.util.Optional;
 
 /**
@@ -19,6 +20,17 @@ public interface PlaceholderResolver {
    * @param placeholderName the name of the paceholder
    * @return if the name could've been resolved the {@link com.docutools.jocument.PlaceholderData}
    */
-  Optional<PlaceholderData> resolve(String placeholderName);
+  default Optional<PlaceholderData> resolve(String placeholderName) {
+    return resolve(placeholderName, Locale.getDefault());
+  }
+
+  /**
+   * Resolves the given placeholder name String to a localised {@link com.docutools.jocument.PlaceholderData}.
+   *
+   * @param placeholderName the name of the placeholder
+   * @param locale the localisation settings
+   * @return if the name could've been resolved the localised {@link com.docutools.jocument.PlaceholderData}
+   */
+  Optional<PlaceholderData> resolve(String placeholderName, Locale locale);
 
 }

@@ -4,6 +4,7 @@ import com.docutools.jocument.PlaceholderData;
 import com.docutools.jocument.PlaceholderResolver;
 import com.docutools.jocument.impl.ScalarPlaceholderData;
 
+import java.util.Locale;
 import java.util.Optional;
 
 public class ServicePlaceholderResolver implements PlaceholderResolver {
@@ -15,7 +16,7 @@ public class ServicePlaceholderResolver implements PlaceholderResolver {
   }
 
   @Override
-  public Optional<PlaceholderData> resolve(String placeholderName) {
+  public Optional<PlaceholderData> resolve(String placeholderName, Locale locale) {
     switch (placeholderName) {
       case "name":
         return Optional.of(new ScalarPlaceholderData(name));
