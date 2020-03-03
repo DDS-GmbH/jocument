@@ -4,26 +4,57 @@ import com.docutools.jocument.PlaceholderData;
 import com.docutools.jocument.PlaceholderResolver;
 import com.docutools.jocument.impl.word.placeholders.ImagePlaceholderData;
 import com.google.gson.*;
+import com.google.gson.stream.JsonReader;
 import org.apache.poi.util.IOUtils;
 import org.apache.tika.Tika;
 import org.apache.tika.mime.MediaType;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.List;
+import java.util.Optional;
+import java.util.Spliterator;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
+/**
+ * Takes a {@link java.lang.String} or {@link java.net.URL} of a JSON and resolves placeholder names.
+ *
+ * @author betorcs
+ * @see com.docutools.jocument.PlaceholderResolver
+ * @since 1.0-SNAPSHOT
+ */
 public class JsonResolver implements PlaceholderResolver {
 
     private JsonElement jsonElement;
     private final Tika tika = new Tika();
 
+    /**
+     * Creates a JsonResolver using the given JSON string.
+     *
+     * @param json JSON string content.
+     * @throws JsonParseException if the specified text is not valid JSON
+     */
     public JsonResolver(String json) {
         this.jsonElement = JsonParser.parseString(json);
+    }
+
+    /**
+     * Creates a JsonResolver using the given URL from a JSON string.
+     *
+     * @param url A valid JSON url.
+     * @throws IOException        if an I/O exception occurs.
+     * @throws JsonParseException if the downloaded text is not valid JSON
+     */
+    public JsonResolver(URL url) throws IOException {
+        try (InputStream stream = url.openStream()) {
+            JsonReader reader = new JsonReader(new InputStreamReader(stream));
+            this.jsonElement = JsonParser.parseReader(reader);
+        }
     }
 
     @Override
@@ -85,7 +116,7 @@ public class JsonResolver implements PlaceholderResolver {
 
     private Optional<PlaceholderData> fromArray(JsonArray jsonArray) {
         Spliterator<JsonElement> spliterator = jsonArray.spliterator();
-        List<PlaceholderResolver> list = StreamSupport.stream(spliterator,false)
+        List<PlaceholderResolver> list = StreamSupport.stream(spliterator, false)
                 .map(JsonElement::toString)
                 .map(JsonResolver::new)
                 .collect(Collectors.toList());
