@@ -8,6 +8,7 @@ import com.docutools.jocument.impl.ReflectionResolver;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.math.RoundingMode;
 import java.util.Locale;
 
 import static org.hamcrest.MatcherAssert.*;
@@ -22,7 +23,14 @@ class NumberFormatting {
     private double p;
     @Money(currencyCode = "EUR")
     private double c;
-    @Numeric(maxIntDigits = 3)
+    @Numeric(maxFractionDigits = 4,
+            minFractionDigits = 2,
+            maxIntDigits = 6,
+            minIntDigits = 2,
+            currencyCode = "EUR",
+            groupingUsed = true,
+            parseIntegerOnly = false,
+            roundingMode = RoundingMode.HALF_EVEN)
     private double f;
 
     public double getD() {
@@ -36,6 +44,8 @@ class NumberFormatting {
     public double getC() {
       return c;
     }
+
+    public double getF() { return f; }
   }
 
   @Test
@@ -81,5 +91,22 @@ class NumberFormatting {
             .orElse("");
     // Assert
     assertThat(actual, equalTo("13,75\u00A0€"));
+  }
+
+  @Test
+  @DisplayName("Format numeric with the correct amount of integer places")
+  void shouldFormatNumericMaxIntDigits() {
+    // Arrange
+    var instance = new Clazz();
+    instance.f = 1123456.45675;
+    var resolver = new ReflectionResolver(instance);
+
+    // Act
+    var actual = resolver.resolve("f", Locale.GERMAN)
+            .map(PlaceholderData::toString)
+            .orElse("");
+
+    // Assert
+    assertThat(actual, equalTo("123.456,4567"));
   }
 }

@@ -2,16 +2,14 @@ package com.docutools.jocument.impl;
 
 import com.docutools.jocument.PlaceholderData;
 import com.docutools.jocument.PlaceholderResolver;
-import com.docutools.jocument.annotations.Format;
-import com.docutools.jocument.annotations.Image;
-import com.docutools.jocument.annotations.Money;
-import com.docutools.jocument.annotations.Percentage;
+import com.docutools.jocument.annotations.*;
 import com.docutools.jocument.impl.word.placeholders.ImagePlaceholderData;
 import org.apache.commons.beanutils.BeanUtilsBean;
 import org.apache.commons.beanutils.PropertyUtilsBean;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
+import java.math.RoundingMode;
 import java.nio.file.Path;
 import java.text.NumberFormat;
 import java.time.ZoneId;
@@ -90,6 +88,8 @@ public class ReflectionResolver implements PlaceholderResolver {
             .map(percentage -> toNumberFormat(percentage, locale))
             .or(() -> ReflectionUtils.findFieldAnnotation(bean.getClass(), fieldName, Money.class)
                     .map(money -> toNumberFormat(money, locale)))
+            .or(() -> ReflectionUtils.findFieldAnnotation(bean.getClass(), fieldName, Numeric.class)
+                    .map(numeric -> toNumberFormat(numeric, locale)))
             .orElseGet(() -> NumberFormat.getInstance(locale));
   }
 
@@ -107,6 +107,31 @@ public class ReflectionResolver implements PlaceholderResolver {
             Currency.getInstance(locale);
     var format = NumberFormat.getCurrencyInstance(locale);
     format.setCurrency(currency);
+    return format;
+  }
+
+  private static NumberFormat toNumberFormat(Numeric numeric, Locale locale) {
+    var format = NumberFormat.getNumberInstance(locale);
+    if (numeric.maxFractionDigits() != -1) {
+      format.setMaximumFractionDigits(numeric.maxFractionDigits());
+    }
+    if (numeric.minFractionDigits() != -1) {
+      format.setMinimumFractionDigits(numeric.minFractionDigits());
+    }
+    if (numeric.maxIntDigits() != -1) {
+      format.setMaximumIntegerDigits(numeric.maxIntDigits());
+    }
+    if (numeric.minIntDigits() != -1) {
+      format.setMinimumIntegerDigits(numeric.minIntDigits());
+    }
+    if (!numeric.currencyCode().equals("")) {
+      format.setCurrency(Currency.getInstance(numeric.currencyCode()));
+    }
+    format.setGroupingUsed(numeric.groupingUsed());
+    format.setParseIntegerOnly(numeric.parseIntegerOnly());
+    if (numeric.roundingMode() != RoundingMode.UNNECESSARY) {
+      format.setRoundingMode(numeric.roundingMode());
+    }
     return format;
   }
 
