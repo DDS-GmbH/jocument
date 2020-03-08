@@ -1,11 +1,16 @@
 package com.docutools.jocument.impl.word;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import org.apache.poi.xwpf.usermodel.IBodyElement;
+import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.apache.poi.xwpf.usermodel.XWPFParagraph;
 import org.apache.poi.xwpf.usermodel.XWPFRun;
 import org.apache.poi.xwpf.usermodel.XWPFTable;
@@ -138,6 +143,28 @@ public class WordUtilities {
     } else {
       return Optional.empty();
     }
+  }
+
+  /**
+   * Returns all languages used in {@link org.apache.poi.xwpf.usermodel.XWPFRun}s for out the given
+   * {@link org.apache.poi.xwpf.usermodel.XWPFDocument}.
+   *
+   * @param document the document to parse
+   * @return distinct languages as {@link java.util.Locale} instances
+   */
+  public static Collection<Locale> detectLanguages(XWPFDocument document) {
+    // TODO Consider XWPFParagraphs inside of tables.
+    // TODO We could validate the resulting Locales as suggested here: https://stackoverflow.com/a/3684832
+    return document.getBodyElements()
+            .stream()
+            .map(element -> element instanceof XWPFParagraph paragraph? paragraph : null)
+            .filter(Objects::nonNull)
+            .flatMap(paragraph -> paragraph.getRuns().stream())
+            .map(XWPFRun::getLang)
+            .filter(Objects::nonNull)
+            .distinct()
+            .map(Locale::forLanguageTag)
+            .collect(Collectors.toList());
   }
 
   private static XWPFTable copyTableTo(XWPFTable sourceTable, XmlCursor cursor) {
