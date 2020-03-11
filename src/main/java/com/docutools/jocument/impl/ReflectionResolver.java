@@ -30,7 +30,6 @@ public class ReflectionResolver implements PlaceholderResolver {
 
   private final Object bean;
   private final PropertyUtilsBean pub = new PropertyUtilsBean();
-  private final BeanUtilsBean bub = new BeanUtilsBean();
 
   public ReflectionResolver(Object value) {
     this.bean = value;
@@ -48,25 +47,20 @@ public class ReflectionResolver implements PlaceholderResolver {
   @Override
   public Optional<PlaceholderData> resolve(String placeholderName) {
     try {
-      var type = pub.getPropertyType(bean, placeholderName);
-      if (type == null) {
-        return Optional.empty();
-      }
-      if (type.isPrimitive() || type.equals(String.class) || type.isEnum()) {
-        return Optional.of(new ScalarPlaceholderData(bub.getProperty(bean, placeholderName)));
-      } else if (Collection.class.isAssignableFrom(type)) {
-        Collection<Object> property = (Collection<Object>) pub.getProperty(bean, placeholderName);
-        List<PlaceholderResolver> list = property.stream()
+      var property = pub.getProperty(bean, placeholderName);
+      if (property instanceof Enum || property instanceof String || property.getClass().isPrimitive()) {
+        return Optional.of(new ScalarPlaceholderData(property.toString()));
+      } else if (property instanceof Collection<?> collection) {
+        List<PlaceholderResolver> list = collection.stream()
                 .map(ReflectionResolver::new)
                 .collect(Collectors.toList());
         return Optional.of(new IterablePlaceholderData(list, list.size()));
-      } else if (ReflectionUtils.isJsr310Type(type) && isFieldAnnotatedWith(bean.getClass(), placeholderName, Format.class)) {
-        var value = (Temporal) pub.getProperty(bean, placeholderName);
+      } else if (property instanceof Temporal time && isFieldAnnotatedWith(bean.getClass(), placeholderName, Format.class)) {
         return ReflectionUtils.findFieldAnnotation(bean.getClass(), placeholderName, Format.class)
                 .map(ReflectionResolver::toDateTimeFormatter)
-                .map(formatter -> formatter.format(value))
+                .map(formatter -> formatter.format(time))
                 .map(ScalarPlaceholderData::new);
-      } else if (Path.class.isAssignableFrom(type) && isFieldAnnotatedWith(bean.getClass(), placeholderName, Image.class)) {
+      } else if (property instanceof Path && isFieldAnnotatedWith(bean.getClass(), placeholderName, Image.class)) {
         return Optional.of(new ImagePlaceholderData((Path) pub.getProperty(bean, placeholderName)));
       } else {
         var value = pub.getProperty(bean, placeholderName);
