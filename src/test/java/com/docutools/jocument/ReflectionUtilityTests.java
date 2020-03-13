@@ -68,21 +68,4 @@ public class ReflectionUtilityTests {
     assertThat(result, notNullValue());
     assertThat(result.isEmpty(), is(true));
   }
-
-  @ParameterizedTest(name = "Should detect {0} as numeric type.")
-  @ValueSource(classes = {
-          byte.class, short.class, int.class, long.class, float.class, double.class,
-          Byte.class, Short.class, Integer.class, Long.class, Float.class, Double.class
-  })
-  void shouldDetectNumericTypes(Class<?> type) {
-    // Act + Assert
-    assertThat(ReflectionUtils.isNumeric(type), is(true));
-  }
-
-  @ParameterizedTest(name = "Should detect {0} as non-numeric type.")
-  @ValueSource(classes = {Object.class, String.class, Adler32.class, Date.class})
-  void shouldDetectNonNumericTypes(Class<?> type) {
-    // Act + Assert
-    assertThat(ReflectionUtils.isNumeric(type), is(false));
-  }
 }

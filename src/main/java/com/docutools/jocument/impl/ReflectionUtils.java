@@ -7,12 +7,19 @@ import java.util.Set;
 
 public class ReflectionUtils {
 
-  private static final Set<Class<?>> NUMERIC_PRIMITIVES =
-          Set.of(byte.class, short.class, int.class, long.class, float.class, double.class);
-
   public static boolean isJsr310Type(Class<?> type) {
     return Temporal.class.isAssignableFrom(type);
   }
+
+  private static Set<Class<?>> WRAPPER_TYPES = Set.of(Boolean.class,
+          Character.class,
+          Byte.class,
+          Short.class,
+          Integer.class,
+          Long.class,
+          Float.class,
+          Double.class,
+          Void.class);
 
   /**
    * Gets the annotation instance on the given field in the base class.
@@ -32,9 +39,8 @@ public class ReflectionUtils {
     }
   }
 
-  public static boolean isNumeric(Class<?> type) {
-    return type != null &&
-            (Number.class.isAssignableFrom(type) || NUMERIC_PRIMITIVES.contains(type));
+  public static boolean isWrapperType(Class<?> class_) {
+    return WRAPPER_TYPES.contains(class_);
   }
 
   private ReflectionUtils() {

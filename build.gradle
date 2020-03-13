@@ -8,8 +8,8 @@ plugins {
 group 'com.docutools'
 version '1.0-SNAPSHOT'
 
-sourceCompatibility = 11
-targetCompatibility = 11
+sourceCompatibility = 14
+targetCompatibility = 14
 
 repositories {
     mavenCentral()
@@ -41,4 +41,16 @@ dependencyCheck {
     junitFailOnCVSS = 7.0
     failBuildOnCVSS = 9.0
     suppressionFile = 'config/dependency-check/suppression.xml'
+}
+
+// Enable support for records, patterns and text blocks
+compileJava {
+    options.compilerArgs += ["--enable-preview"]
+}
+compileTestJava {
+    options.compilerArgs += ["--enable-preview"]
+}
+test {
+    jvmArgs '--enable-preview'
+    useJUnitPlatform()
 }
