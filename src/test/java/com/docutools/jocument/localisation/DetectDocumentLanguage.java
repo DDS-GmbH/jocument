@@ -33,4 +33,20 @@ public class DetectDocumentLanguage {
     }
   }
 
+  @Test
+  @DisplayName("Find german and english from paragraphs in tables from GermanEnglishTableTemplate.docx")
+  void shouldDetectGermanAndEnglishFromTableInDocx() throws IOException {
+    // Arrange
+    try (var in = new BufferedInputStream(
+            getClass().getResourceAsStream("/templates/word/GermanEnglishTableTemplate.docx"))) {
+      var document = new XWPFDocument(in);
+
+      // Act
+      Collection<Locale> actualLanguages = WordUtilities.detectLanguages(document);
+
+      // Assert
+      assertThat(actualLanguages, hasItems(Locale.forLanguageTag("en-GB"),
+              Locale.forLanguageTag("de-AT")));
+    }
+  }
 }

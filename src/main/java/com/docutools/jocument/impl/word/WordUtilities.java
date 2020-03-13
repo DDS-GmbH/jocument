@@ -1,14 +1,10 @@
 package com.docutools.jocument.impl.word;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Locale;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.OptionalInt;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
+
 import org.apache.poi.xwpf.usermodel.IBodyElement;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.apache.poi.xwpf.usermodel.XWPFParagraph;
@@ -153,18 +149,32 @@ public class WordUtilities {
    * @return distinct languages as {@link java.util.Locale} instances
    */
   public static Collection<Locale> detectLanguages(XWPFDocument document) {
-    // TODO Consider XWPFParagraphs inside of tables.
-    // TODO We could validate the resulting Locales as suggested here: https://stackoverflow.com/a/3684832
-    return document.getBodyElements()
+    var tableParagraphs = document.getTables()
             .stream()
-            .map(element -> element instanceof XWPFParagraph paragraph? paragraph : null)
-            .filter(Objects::nonNull)
+            .flatMap(table -> getTableEmbeddedParagraphs(table).stream());
+
+    var documentParagraphs = document.getParagraphs().stream();
+
+    return Stream.concat(tableParagraphs, documentParagraphs)
             .flatMap(paragraph -> paragraph.getRuns().stream())
             .map(XWPFRun::getLang)
             .filter(Objects::nonNull)
             .distinct()
             .map(Locale::forLanguageTag)
             .collect(Collectors.toList());
+  }
+
+  public static Collection<XWPFParagraph> getTableEmbeddedParagraphs(XWPFTable table) {
+    var paragraphs = new LinkedList<XWPFParagraph>();
+      for (XWPFTableRow row : table.getRows()) {
+          for (XWPFTableCell cell : row.getTableCells()) {
+            paragraphs.addAll(cell.getParagraphs());
+            for (XWPFTable subtable : cell.getTables()) {
+              paragraphs.addAll(getTableEmbeddedParagraphs(subtable));
+            }
+          }
+      }
+      return paragraphs;
   }
 
   private static XWPFTable copyTableTo(XWPFTable sourceTable, XmlCursor cursor) {
