@@ -13,6 +13,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
+import java.util.Date;
 import java.util.Optional;
 import java.util.zip.Adler32;
 
@@ -67,5 +68,4 @@ public class ReflectionUtilityTests {
     assertThat(result, notNullValue());
     assertThat(result.isEmpty(), is(true));
   }
-
 }

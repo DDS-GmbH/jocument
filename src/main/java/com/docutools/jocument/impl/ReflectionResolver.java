@@ -2,22 +2,25 @@ package com.docutools.jocument.impl;
 
 import com.docutools.jocument.PlaceholderData;
 import com.docutools.jocument.PlaceholderResolver;
-import com.docutools.jocument.annotations.Format;
-import com.docutools.jocument.annotations.Image;
+import com.docutools.jocument.annotations.*;
 import com.docutools.jocument.impl.word.placeholders.ImagePlaceholderData;
+import org.apache.commons.beanutils.BeanUtilsBean;
+import org.apache.commons.beanutils.PropertyUtilsBean;
+
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
+import java.math.RoundingMode;
 import java.nio.file.Path;
+import java.text.NumberFormat;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.Temporal;
 import java.util.Collection;
+import java.util.Currency;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import org.apache.commons.beanutils.BeanUtilsBean;
-import org.apache.commons.beanutils.PropertyUtilsBean;
 
 /**
  * Takes a {@link java.lang.Object} of any type and resolves placeholder names with reflective access to its type.
@@ -45,10 +48,14 @@ public class ReflectionResolver implements PlaceholderResolver {
   }
 
   @Override
-  public Optional<PlaceholderData> resolve(String placeholderName) {
+  public Optional<PlaceholderData> resolve(String placeholderName, Locale locale) {
     try {
       var property = pub.getProperty(bean, placeholderName);
-      if (property instanceof Enum || property instanceof String || ReflectionUtils.isWrapperType(property.getClass())) {
+        if (property instanceof Number number) {
+          var numberFormat = findNumberFormat(placeholderName, locale);
+          return Optional.of(new ScalarPlaceholderData(numberFormat.format(number)));
+        }
+      else if (property instanceof Enum || property instanceof String || ReflectionUtils.isWrapperType(property.getClass())) {
         return Optional.of(new ScalarPlaceholderData(property.toString()));
       } else if (property instanceof Collection<?> collection) {
         List<PlaceholderResolver> list = collection.stream()
@@ -71,6 +78,58 @@ public class ReflectionResolver implements PlaceholderResolver {
     } catch (IllegalAccessException | InvocationTargetException e ) {
       throw new IllegalStateException("Could not resolve placeholderName against type.", e);
     }
+  }
+
+  private NumberFormat findNumberFormat(String fieldName, Locale locale) {
+    return ReflectionUtils.findFieldAnnotation(bean.getClass(), fieldName, Percentage.class)
+            .map(percentage -> toNumberFormat(percentage, locale))
+            .or(() -> ReflectionUtils.findFieldAnnotation(bean.getClass(), fieldName, Money.class)
+                    .map(money -> toNumberFormat(money, locale)))
+            .or(() -> ReflectionUtils.findFieldAnnotation(bean.getClass(), fieldName, Numeric.class)
+                    .map(numeric -> toNumberFormat(numeric, locale)))
+            .orElseGet(() -> NumberFormat.getInstance(locale));
+  }
+
+  private static NumberFormat toNumberFormat(Percentage percentage, Locale locale) {
+    var format = NumberFormat.getPercentInstance(locale);
+    if(percentage.maxFractionDigits() > -1) {
+      format.setMaximumFractionDigits(percentage.maxFractionDigits());
+    }
+    return format;
+  }
+
+  private static NumberFormat toNumberFormat(Money money, Locale locale) {
+    var currency = !money.currencyCode().isBlank()?
+            Currency.getInstance(money.currencyCode()) :
+            Currency.getInstance(locale);
+    var format = NumberFormat.getCurrencyInstance(locale);
+    format.setCurrency(currency);
+    return format;
+  }
+
+  private static NumberFormat toNumberFormat(Numeric numeric, Locale locale) {
+    var format = NumberFormat.getNumberInstance(locale);
+    if (numeric.maxFractionDigits() != -1) {
+      format.setMaximumFractionDigits(numeric.maxFractionDigits());
+    }
+    if (numeric.minFractionDigits() != -1) {
+      format.setMinimumFractionDigits(numeric.minFractionDigits());
+    }
+    if (numeric.maxIntDigits() != -1) {
+      format.setMaximumIntegerDigits(numeric.maxIntDigits());
+    }
+    if (numeric.minIntDigits() != -1) {
+      format.setMinimumIntegerDigits(numeric.minIntDigits());
+    }
+    if (!numeric.currencyCode().equals("")) {
+      format.setCurrency(Currency.getInstance(numeric.currencyCode()));
+    }
+    format.setGroupingUsed(numeric.groupingUsed());
+    format.setParseIntegerOnly(numeric.parseIntegerOnly());
+    if (numeric.roundingMode() != RoundingMode.UNNECESSARY) {
+      format.setRoundingMode(numeric.roundingMode());
+    }
+    return format;
   }
 
   private static DateTimeFormatter toDateTimeFormatter(Format format) {
