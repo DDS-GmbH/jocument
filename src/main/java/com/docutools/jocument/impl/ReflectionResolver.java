@@ -66,7 +66,9 @@ public class ReflectionResolver implements PlaceholderResolver {
         var value = pub.getProperty(bean, placeholderName);
         return Optional.of(new IterablePlaceholderData(List.of(new ReflectionResolver(value)), 1));
       }
-    } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
+    } catch (NoSuchMethodException | IllegalArgumentException e) {
+      return Optional.empty();
+    } catch (IllegalAccessException | InvocationTargetException e ) {
       throw new IllegalStateException("Could not resolve placeholderName against type.", e);
     }
   }
