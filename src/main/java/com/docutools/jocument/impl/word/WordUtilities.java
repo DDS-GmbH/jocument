@@ -161,6 +161,7 @@ public class WordUtilities {
             .filter(Objects::nonNull)
             .distinct()
             .map(Locale::forLanguageTag)
+            .filter(WordUtilities::isValid)
             .collect(Collectors.toList());
   }
 
@@ -175,6 +176,15 @@ public class WordUtilities {
           }
       }
       return paragraphs;
+  }
+
+  private static boolean isValid(Locale locale) {
+    //Taken from https://stackoverflow.com/a/3684832
+    try {
+      return locale.getISO3Language() != null && locale.getISO3Country() != null;
+    } catch (MissingResourceException e) {
+      return false;
+    }
   }
 
   private static XWPFTable copyTableTo(XWPFTable sourceTable, XmlCursor cursor) {
