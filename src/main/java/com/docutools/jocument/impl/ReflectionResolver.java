@@ -48,7 +48,7 @@ public class ReflectionResolver implements PlaceholderResolver {
   public Optional<PlaceholderData> resolve(String placeholderName) {
     try {
       var property = pub.getProperty(bean, placeholderName);
-      if (property instanceof Enum || property instanceof String || property.getClass().isPrimitive()) {
+      if (property instanceof Enum || property instanceof String || ReflectionUtils.isWrapperType(property.getClass())) {
         return Optional.of(new ScalarPlaceholderData(property.toString()));
       } else if (property instanceof Collection<?> collection) {
         List<PlaceholderResolver> list = collection.stream()
