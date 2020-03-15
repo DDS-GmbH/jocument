@@ -8,8 +8,10 @@ import org.junit.jupiter.api.Test;
 
 import java.awt.*;
 import java.io.IOException;
+import java.util.Locale;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 
 @DisplayName("Generating Word Documents")
@@ -34,6 +36,17 @@ public class WordDocuments {
 
     // Assert
     assertThat(result.isEmpty(), is(true));
+  }
+
+  @Test
+  @DisplayName("Template should assume systems default Locale, if none is passed with resource.")
+  void shouldAssumeDefaultLocale() {
+    // Act
+    var result = Template.fromClassPath("/templates/word/UserProfileTemplate.docx")
+            .orElseThrow();
+
+    // Assert
+    assertThat(result.getLocale(), equalTo(Locale.getDefault()));
   }
 
   @Test

@@ -2,19 +2,25 @@ package com.docutools.jocument.impl;
 
 import com.docutools.jocument.PlaceholderData;
 import com.docutools.jocument.PlaceholderResolver;
-import com.docutools.jocument.annotations.Image;
+import com.docutools.jocument.annotations.*;
 import com.docutools.jocument.impl.word.placeholders.ImagePlaceholderData;
-import java.lang.annotation.Annotation;
-import java.lang.reflect.InvocationTargetException;
-import java.nio.file.Path;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 import org.apache.commons.beanutils.BeanUtilsBean;
 import org.apache.commons.beanutils.PropertyUtilsBean;
+
+import java.lang.annotation.Annotation;
+import java.lang.reflect.InvocationTargetException;
+import java.math.RoundingMode;
+import java.nio.file.Path;
+import java.text.NumberFormat;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.Temporal;
+import java.util.Collection;
+import java.util.Currency;
+import java.util.List;
+import java.util.Locale;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * Takes a {@link java.lang.Object} of any type and resolves placeholder names with reflective access to its type.
@@ -27,7 +33,6 @@ public class ReflectionResolver implements PlaceholderResolver {
 
   private final Object bean;
   private final PropertyUtilsBean pub = new PropertyUtilsBean();
-  private final BeanUtilsBean bub = new BeanUtilsBean();
 
   public ReflectionResolver(Object value) {
     this.bean = value;
@@ -43,31 +48,98 @@ public class ReflectionResolver implements PlaceholderResolver {
   }
 
   @Override
-  public Optional<PlaceholderData> resolve(String placeholderName) {
+  public Optional<PlaceholderData> resolve(String placeholderName, Locale locale) {
     try {
-      var type = pub.getPropertyType(bean, placeholderName);
-      if (type == null) {
-        return Optional.empty();
-      }
-      if (type.isPrimitive() || type.equals(String.class) || type.isEnum()) {
-        return Optional.of(new ScalarPlaceholderData(bub.getProperty(bean, placeholderName)));
-      } else if (LocalDate.class.isAssignableFrom(type)) {
-        LocalDate date = (LocalDate) pub.getProperty(bean, placeholderName);
-        return Optional.of(new ScalarPlaceholderData(date.format(DateTimeFormatter.ISO_DATE)));
-      } else if (Collection.class.isAssignableFrom(type)) {
-        Collection<Object> property = (Collection<Object>) pub.getProperty(bean, placeholderName);
-        List<PlaceholderResolver> list = property.stream()
+      var property = pub.getProperty(bean, placeholderName);
+        if (property instanceof Number number) {
+          var numberFormat = findNumberFormat(placeholderName, locale);
+          return Optional.of(new ScalarPlaceholderData(numberFormat.format(number)));
+        }
+      else if (property instanceof Enum || property instanceof String || ReflectionUtils.isWrapperType(property.getClass())) {
+        return Optional.of(new ScalarPlaceholderData(property.toString()));
+      } else if (property instanceof Collection<?> collection) {
+        List<PlaceholderResolver> list = collection.stream()
                 .map(ReflectionResolver::new)
                 .collect(Collectors.toList());
         return Optional.of(new IterablePlaceholderData(list, list.size()));
-      } else if (Path.class.isAssignableFrom(type) && isFieldAnnotatedWith(bean.getClass(), placeholderName, Image.class)) {
+      } else if (property instanceof Temporal time && isFieldAnnotatedWith(bean.getClass(), placeholderName, Format.class)) {
+        return ReflectionUtils.findFieldAnnotation(bean.getClass(), placeholderName, Format.class)
+                .map(ReflectionResolver::toDateTimeFormatter)
+                .map(formatter -> formatter.format(time))
+                .map(ScalarPlaceholderData::new);
+      } else if (property instanceof Path && isFieldAnnotatedWith(bean.getClass(), placeholderName, Image.class)) {
         return Optional.of(new ImagePlaceholderData((Path) pub.getProperty(bean, placeholderName)));
       } else {
         var value = pub.getProperty(bean, placeholderName);
         return Optional.of(new IterablePlaceholderData(List.of(new ReflectionResolver(value)), 1));
       }
-    } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
+    } catch (NoSuchMethodException | IllegalArgumentException e) {
+      return Optional.empty();
+    } catch (IllegalAccessException | InvocationTargetException e ) {
       throw new IllegalStateException("Could not resolve placeholderName against type.", e);
     }
+  }
+
+  private NumberFormat findNumberFormat(String fieldName, Locale locale) {
+    return ReflectionUtils.findFieldAnnotation(bean.getClass(), fieldName, Percentage.class)
+            .map(percentage -> toNumberFormat(percentage, locale))
+            .or(() -> ReflectionUtils.findFieldAnnotation(bean.getClass(), fieldName, Money.class)
+                    .map(money -> toNumberFormat(money, locale)))
+            .or(() -> ReflectionUtils.findFieldAnnotation(bean.getClass(), fieldName, Numeric.class)
+                    .map(numeric -> toNumberFormat(numeric, locale)))
+            .orElseGet(() -> NumberFormat.getInstance(locale));
+  }
+
+  private static NumberFormat toNumberFormat(Percentage percentage, Locale locale) {
+    var format = NumberFormat.getPercentInstance(locale);
+    if(percentage.maxFractionDigits() > -1) {
+      format.setMaximumFractionDigits(percentage.maxFractionDigits());
+    }
+    return format;
+  }
+
+  private static NumberFormat toNumberFormat(Money money, Locale locale) {
+    var currency = !money.currencyCode().isBlank()?
+            Currency.getInstance(money.currencyCode()) :
+            Currency.getInstance(locale);
+    var format = NumberFormat.getCurrencyInstance(locale);
+    format.setCurrency(currency);
+    return format;
+  }
+
+  private static NumberFormat toNumberFormat(Numeric numeric, Locale locale) {
+    var format = NumberFormat.getNumberInstance(locale);
+    if (numeric.maxFractionDigits() != -1) {
+      format.setMaximumFractionDigits(numeric.maxFractionDigits());
+    }
+    if (numeric.minFractionDigits() != -1) {
+      format.setMinimumFractionDigits(numeric.minFractionDigits());
+    }
+    if (numeric.maxIntDigits() != -1) {
+      format.setMaximumIntegerDigits(numeric.maxIntDigits());
+    }
+    if (numeric.minIntDigits() != -1) {
+      format.setMinimumIntegerDigits(numeric.minIntDigits());
+    }
+    if (!numeric.currencyCode().equals("")) {
+      format.setCurrency(Currency.getInstance(numeric.currencyCode()));
+    }
+    format.setGroupingUsed(numeric.groupingUsed());
+    format.setParseIntegerOnly(numeric.parseIntegerOnly());
+    if (numeric.roundingMode() != RoundingMode.UNNECESSARY) {
+      format.setRoundingMode(numeric.roundingMode());
+    }
+    return format;
+  }
+
+  private static DateTimeFormatter toDateTimeFormatter(Format format) {
+    var formatter = DateTimeFormatter.ofPattern(format.value());
+    if (!format.zone().isBlank()) {
+      formatter = formatter.withZone(ZoneId.of(format.zone()));
+    }
+    if (!format.locale().isBlank()) {
+      formatter = formatter.withLocale(Locale.forLanguageTag(format.locale()));
+    }
+    return formatter;
   }
 }
