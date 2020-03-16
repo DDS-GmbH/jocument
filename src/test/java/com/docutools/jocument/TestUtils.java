@@ -1,17 +1,24 @@
 package com.docutools.jocument;
 
 
-import org.apache.tika.io.IOUtils;
-
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.stream.Collectors;
 
 public final class TestUtils {
 
     public static String getText(String resName) throws IOException {
-        InputStream inputStream = ClassLoader.getSystemResourceAsStream(resName);
-        return IOUtils.toString(inputStream);
+        try (InputStream inputStream = ClassLoader.getSystemResourceAsStream(resName)) {
+            assert inputStream != null;
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
+                return reader.lines()
+                        .collect(Collectors.joining());
+            }
+        }
     }
 
-    private TestUtils() {}
+    private TestUtils() {
+    }
 }
