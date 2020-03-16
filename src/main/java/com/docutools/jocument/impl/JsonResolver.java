@@ -9,6 +9,7 @@ import org.apache.poi.util.IOUtils;
 import org.apache.tika.Tika;
 import org.apache.tika.mime.MediaType;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -16,6 +17,7 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.Spliterator;
 import java.util.stream.Collectors;
@@ -52,13 +54,18 @@ public class JsonResolver implements PlaceholderResolver {
      */
     public JsonResolver(URL url) throws IOException {
         try (InputStream stream = url.openStream()) {
-            JsonReader reader = new JsonReader(new InputStreamReader(stream));
+            JsonReader reader = new JsonReader(new BufferedReader(new InputStreamReader(stream)));
             this.jsonElement = JsonParser.parseReader(reader);
         }
     }
 
     @Override
     public Optional<PlaceholderData> resolve(String placeholderName) {
+        return resolve(placeholderName, Locale.getDefault());
+    }
+
+    @Override
+    public Optional<PlaceholderData> resolve(String placeholderName, Locale locale) {
         if (jsonElement.isJsonObject()) {
             return fromObject(placeholderName, jsonElement.getAsJsonObject());
         } else if (jsonElement.isJsonArray()) {
