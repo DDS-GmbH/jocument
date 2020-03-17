@@ -1,5 +1,7 @@
 package com.docutools.jocument;
 
+import org.apache.poi.util.LocaleUtil;
+
 import java.util.Locale;
 import java.util.Optional;
 
@@ -21,7 +23,7 @@ public interface PlaceholderResolver {
    * @return if the name could've been resolved the {@link com.docutools.jocument.PlaceholderData}
    */
   default Optional<PlaceholderData> resolve(String placeholderName) {
-    return resolve(placeholderName, Locale.getDefault());
+    return resolve(placeholderName, LocaleUtil.getUserLocale());
   }
 
   /**

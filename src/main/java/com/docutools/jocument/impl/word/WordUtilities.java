@@ -1,27 +1,14 @@
 package com.docutools.jocument.impl.word;
 
+import org.apache.poi.xwpf.usermodel.*;
+import org.apache.xmlbeans.XmlCursor;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.*;
+
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
-
-import org.apache.poi.xwpf.usermodel.IBodyElement;
-import org.apache.poi.xwpf.usermodel.XWPFDocument;
-import org.apache.poi.xwpf.usermodel.XWPFParagraph;
-import org.apache.poi.xwpf.usermodel.XWPFRun;
-import org.apache.poi.xwpf.usermodel.XWPFTable;
-import org.apache.poi.xwpf.usermodel.XWPFTableCell;
-import org.apache.poi.xwpf.usermodel.XWPFTableRow;
-import org.apache.xmlbeans.XmlCursor;
-import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTPPr;
-import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTRPr;
-import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTRow;
-import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTTbl;
-import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTTblPr;
-import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTTc;
-import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTTcPr;
-import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTTrPr;
 
 public class WordUtilities {
 
@@ -149,7 +136,7 @@ public class WordUtilities {
    * @param document the document to parse
    * @return distinct languages as {@link java.util.Locale} instances
    */
-  public static Locale detectMostCommonLocale(XWPFDocument document) {
+  public static Optional<Locale> detectMostCommonLocale(XWPFDocument document) {
     var tableParagraphs = document.getTables()
             .stream()
             .flatMap(table -> getTableEmbeddedParagraphs(table).stream());
@@ -166,8 +153,7 @@ public class WordUtilities {
             .entrySet()
             .stream()
             .max(Map.Entry.comparingByValue())
-            .orElseThrow()
-            .getKey();
+            .map(Map.Entry::getKey);
   }
 
   /**

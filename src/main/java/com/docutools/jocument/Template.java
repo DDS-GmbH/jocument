@@ -1,6 +1,8 @@
 package com.docutools.jocument;
 
 import com.docutools.jocument.impl.TemplateImpl;
+import org.apache.poi.util.LocaleUtil;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Locale;
@@ -27,7 +29,7 @@ public interface Template {
    * @throws java.lang.IllegalArgumentException when the files MIME type is not supported.
    */
   static Optional<Template> fromClassPath(String path) {
-    return fromClassPath(path, Locale.getDefault());
+    return fromClassPath(path, LocaleUtil.getUserLocale());
   }
 
   /**

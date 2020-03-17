@@ -2,6 +2,7 @@ package com.docutools.jocument;
 
 import com.docutools.jocument.impl.ReflectionResolver;
 import com.docutools.jocument.sample.model.SampleModelData;
+import org.apache.poi.util.LocaleUtil;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -45,7 +46,7 @@ public class WordDocuments {
             .orElseThrow();
 
     // Assert
-    assertThat(result.getLocale(), equalTo(Locale.getDefault()));
+    assertThat(result.getLocale(), equalTo(LocaleUtil.getUserLocale()));
   }
 
   @Test

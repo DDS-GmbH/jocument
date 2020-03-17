@@ -52,15 +52,15 @@ public class DetectDocumentLanguage {
   }
 
   @Test
-  @DisplayName("Detect english correctly as most common locale")
-  void shouldDetectEnglistAsMostCommonLocale() throws IOException {
+  @DisplayName("Detect English correctly as most common locale")
+  void shouldDetectEnglishAsMostCommonLocale() throws IOException {
     // Arrange
     try (var in = new BufferedInputStream(
             getClass().getResourceAsStream("/templates/word/GermanEnglishTableTemplate.docx"))) {
       var document = new XWPFDocument(in);
 
       // Act
-      Locale mostCommonLocale = WordUtilities.detectMostCommonLocale(document);
+      Locale mostCommonLocale = WordUtilities.detectMostCommonLocale(document).get();
 
       // Assert
       assertThat(mostCommonLocale, Matchers.equalTo(Locale.forLanguageTag("en-GB")));
