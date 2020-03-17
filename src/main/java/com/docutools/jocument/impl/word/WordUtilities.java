@@ -73,10 +73,10 @@ public class WordUtilities {
    */
   public static OptionalInt findPos(IBodyElement element) {
     var document = element.getBody().getXWPFDocument();
-    if (element instanceof XWPFParagraph) {
-      return OptionalInt.of(document.getPosOfParagraph((XWPFParagraph) element));
-    } else if (element instanceof XWPFTable) {
-      return OptionalInt.of(document.getPosOfTable((XWPFTable) element));
+    if (element instanceof XWPFParagraph xwpfParagraph) {
+      return OptionalInt.of(document.getPosOfParagraph(xwpfParagraph));
+    } else if (element instanceof XWPFTable xwpfTable) {
+      return OptionalInt.of(document.getPosOfTable(xwpfTable));
     }
     return OptionalInt.empty();
   }
@@ -104,11 +104,11 @@ public class WordUtilities {
   public static IBodyElement copyBefore(IBodyElement element, IBodyElement destination) {
     var destinationCursor = openCursor(destination).orElseThrow();
 
-    if (element instanceof XWPFTable) {
-      return copyTableTo((XWPFTable) element, destinationCursor);
+    if (element instanceof XWPFTable xwpfTable) {
+      return copyTableTo(xwpfTable, destinationCursor);
     }
-    if (element instanceof XWPFParagraph) {
-      return copyParagraphTo((XWPFParagraph) element, destinationCursor);
+    if (element instanceof XWPFParagraph xwpfParagraph) {
+      return copyParagraphTo(xwpfParagraph, destinationCursor);
     }
 
     throw new IllegalArgumentException("Can only copy XWPFParagraph or XWPFTable instances.");
@@ -131,10 +131,10 @@ public class WordUtilities {
    * @return the cursor
    */
   public static Optional<XmlCursor> openCursor(IBodyElement element) {
-    if (element instanceof XWPFParagraph) {
-      return Optional.of(((XWPFParagraph) element).getCTP().newCursor());
-    } else if (element instanceof XWPFTable) {
-      return Optional.of(((XWPFTable) element).getCTTbl().newCursor());
+    if (element instanceof XWPFParagraph xwpfParagraph) {
+      return Optional.of((xwpfParagraph).getCTP().newCursor());
+    } else if (element instanceof XWPFTable xwpfTable) {
+      return Optional.of((xwpfTable).getCTTbl().newCursor());
     } else {
       return Optional.empty();
     }
