@@ -1,11 +1,12 @@
 package com.docutools.jocument.impl.word;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.OptionalInt;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
+
 import org.apache.poi.xwpf.usermodel.IBodyElement;
+import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.apache.poi.xwpf.usermodel.XWPFParagraph;
 import org.apache.poi.xwpf.usermodel.XWPFRun;
 import org.apache.poi.xwpf.usermodel.XWPFTable;
@@ -137,6 +138,52 @@ public class WordUtilities {
       return Optional.of(((XWPFTable) element).getCTTbl().newCursor());
     } else {
       return Optional.empty();
+    }
+  }
+
+  /**
+   * Returns all languages used in {@link org.apache.poi.xwpf.usermodel.XWPFRun}s for out the given
+   * {@link org.apache.poi.xwpf.usermodel.XWPFDocument}.
+   *
+   * @param document the document to parse
+   * @return distinct languages as {@link java.util.Locale} instances
+   */
+  public static Collection<Locale> detectLanguages(XWPFDocument document) {
+    var tableParagraphs = document.getTables()
+            .stream()
+            .flatMap(table -> getTableEmbeddedParagraphs(table).stream());
+
+    var documentParagraphs = document.getParagraphs().stream();
+
+    return Stream.concat(tableParagraphs, documentParagraphs)
+            .flatMap(paragraph -> paragraph.getRuns().stream())
+            .map(XWPFRun::getLang)
+            .filter(Objects::nonNull)
+            .distinct()
+            .map(Locale::forLanguageTag)
+            .filter(WordUtilities::isValid)
+            .collect(Collectors.toList());
+  }
+
+  public static Collection<XWPFParagraph> getTableEmbeddedParagraphs(XWPFTable table) {
+    var paragraphs = new LinkedList<XWPFParagraph>();
+      for (XWPFTableRow row : table.getRows()) {
+          for (XWPFTableCell cell : row.getTableCells()) {
+            paragraphs.addAll(cell.getParagraphs());
+            for (XWPFTable subtable : cell.getTables()) {
+              paragraphs.addAll(getTableEmbeddedParagraphs(subtable));
+            }
+          }
+      }
+      return paragraphs;
+  }
+
+  private static boolean isValid(Locale locale) {
+    //Taken from https://stackoverflow.com/a/3684832
+    try {
+      return locale.getISO3Language() != null && locale.getISO3Country() != null;
+    } catch (MissingResourceException e) {
+      return false;
     }
   }
 
