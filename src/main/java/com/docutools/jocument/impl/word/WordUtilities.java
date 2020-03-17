@@ -285,4 +285,18 @@ public class WordUtilities {
     clone.setText(text != null ? text : "");
   }
 
+  public static Optional<Locale> detectMostCommonLocale(XWPFParagraph paragraph) {
+    return paragraph
+            .getRuns()
+            .stream()
+            .map(XWPFRun::getLang)
+            .filter(Objects::nonNull)
+            .map(Locale::forLanguageTag)
+            .filter(WordUtilities::isValid)
+            .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()))
+            .entrySet()
+            .stream()
+            .max(Map.Entry.comparingByValue())
+            .map(Map.Entry::getKey);
+  }
 }

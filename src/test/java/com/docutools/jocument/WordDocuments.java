@@ -68,6 +68,25 @@ public class WordDocuments {
   }
 
   @Test
+  @DisplayName("Generate a document from a template with multiple locales.")
+  void shouldGenerateMultiLocaleDocument() throws InterruptedException, IOException {
+    // Arrange
+    Template template = Template.fromClassPath("/templates/word/UserProfileTemplateWithDifferentLocales.docx")
+            .orElseThrow();
+    PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.PICARD_PERSON);
+
+    // Act
+    Document document = template.startGeneration(resolver);
+    document.blockUntilCompletion(60000L); // 1 minute
+
+    // Assert
+    assertThat(document.completed(), is(true));
+
+    Desktop.getDesktop().open(document.getPath().toFile());
+  }
+
+
+  @Test
   @DisplayName("Replace placeholders in tables.")
   void shouldReplacePlaceholdersInTables() throws InterruptedException, IOException {
     // Arrange

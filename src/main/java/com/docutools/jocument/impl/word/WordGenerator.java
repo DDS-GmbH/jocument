@@ -1,19 +1,18 @@
 package com.docutools.jocument.impl.word;
 
-import static com.docutools.jocument.impl.DocumentImpl.TAG_PATTERN;
-
 import com.docutools.jocument.PlaceholderData;
 import com.docutools.jocument.PlaceholderResolver;
 import com.docutools.jocument.PlaceholderType;
 import com.docutools.jocument.impl.ParsingUtils;
+import org.apache.poi.util.LocaleUtil;
+import org.apache.poi.xwpf.usermodel.*;
+
 import java.util.List;
+import java.util.Locale;
 import java.util.regex.MatchResult;
 import java.util.stream.Collectors;
-import org.apache.poi.xwpf.usermodel.IBodyElement;
-import org.apache.poi.xwpf.usermodel.XWPFParagraph;
-import org.apache.poi.xwpf.usermodel.XWPFTable;
-import org.apache.poi.xwpf.usermodel.XWPFTableCell;
-import org.apache.poi.xwpf.usermodel.XWPFTableRow;
+
+import static com.docutools.jocument.impl.DocumentImpl.TAG_PATTERN;
 
 class WordGenerator {
 
@@ -66,11 +65,13 @@ class WordGenerator {
   }
 
   private void transform(XWPFParagraph paragraph) {
+    Locale locale = WordUtilities.detectMostCommonLocale(paragraph)
+            .orElse(LocaleUtil.getUserLocale());
     WordUtilities.replaceText(
             paragraph,
             TAG_PATTERN
                     .matcher(WordUtilities.toString(paragraph))
-                    .replaceAll(this::fillPlaceholder)
+                    .replaceAll(matchResult -> fillPlaceholder(matchResult, locale))
     );
   }
 
@@ -126,10 +127,10 @@ class WordGenerator {
     return ParsingUtils.stripBrackets(WordUtilities.toString(paragraph));
   }
 
-  private String fillPlaceholder(MatchResult result) {
+  private String fillPlaceholder(MatchResult result, Locale locale) {
     String placeholder = result.group();
     String placeholderName = ParsingUtils.stripBrackets(placeholder);
-    return resolver.resolve(placeholderName)
+    return resolver.resolve(placeholderName, locale)
             .map(PlaceholderData::toString)
             .orElse("-");
   }
