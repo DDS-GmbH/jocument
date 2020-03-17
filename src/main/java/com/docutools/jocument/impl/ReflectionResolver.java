@@ -67,8 +67,8 @@ public class ReflectionResolver implements PlaceholderResolver {
                 .map(ReflectionResolver::toDateTimeFormatter)
                 .map(formatter -> formatter.format(time))
                 .map(ScalarPlaceholderData::new);
-      } else if (property instanceof Path && isFieldAnnotatedWith(bean.getClass(), placeholderName, Image.class)) {
-        return Optional.of(new ImagePlaceholderData((Path) pub.getProperty(bean, placeholderName)));
+      } else if (property instanceof Path path && isFieldAnnotatedWith(bean.getClass(), placeholderName, Image.class)) {
+        return Optional.of(new ImagePlaceholderData(path));
       } else {
         var value = pub.getProperty(bean, placeholderName);
         return Optional.of(new IterablePlaceholderData(List.of(new ReflectionResolver(value)), 1));
