@@ -1,6 +1,7 @@
 package com.docutools.jocument.impl.word;
 
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -139,6 +140,34 @@ public class WordUtilities {
     } else {
       return Optional.empty();
     }
+  }
+
+  /**
+   * Returns all languages used in {@link org.apache.poi.xwpf.usermodel.XWPFRun}s for out the given
+   * {@link org.apache.poi.xwpf.usermodel.XWPFDocument}.
+   *
+   * @param document the document to parse
+   * @return distinct languages as {@link java.util.Locale} instances
+   */
+  public static Locale detectMostCommonLocale(XWPFDocument document) {
+    var tableParagraphs = document.getTables()
+            .stream()
+            .flatMap(table -> getTableEmbeddedParagraphs(table).stream());
+
+    var documentParagraphs = document.getParagraphs().stream();
+
+    return Stream.concat(tableParagraphs, documentParagraphs)
+            .flatMap(paragraph -> paragraph.getRuns().stream())
+            .map(XWPFRun::getLang)
+            .filter(Objects::nonNull)
+            .map(Locale::forLanguageTag)
+            .filter(WordUtilities::isValid)
+            .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()))
+            .entrySet()
+            .stream()
+            .max(Map.Entry.comparingByValue())
+            .orElseThrow()
+            .getKey();
   }
 
   /**
