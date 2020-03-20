@@ -4,6 +4,7 @@ import com.docutools.jocument.impl.JsonResolver;
 import com.docutools.jocument.impl.word.placeholders.ImagePlaceholderData;
 import com.docutools.jocument.sample.model.SampleModelData;
 import com.docutools.jocument.sample.model.Uniform;
+import com.google.gson.JsonParseException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -14,6 +15,7 @@ import java.util.stream.Collectors;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @DisplayName("Resolve placeholders from a JSON.")
@@ -96,6 +98,15 @@ public class JsonResolving {
         // Assert
         assertTrue(data.isPresent());
         assertThat(data.get(), isA(ImagePlaceholderData.class));
+    }
+
+    @Test
+    @DisplayName("Throw error when parsing invalid JSON")
+    void shouldThrowErrorWhenParsingInvalidJson() throws IOException {
+        // Given
+        final String invalidJson = TestUtils.getText("json/invalid-json.txt");
+
+        assertThrows(JsonParseException.class, () -> new JsonResolver(invalidJson));
     }
 
 }
