@@ -48,10 +48,10 @@ class WordGenerator {
     } else if (isCustomPlaceholder(element)) {
       resolver.resolve(extractPlaceholderName((XWPFParagraph) element))
               .ifPresent(placeholderData -> placeholderData.transform(element));
-    } else if (element instanceof XWPFParagraph) {
-      transform((XWPFParagraph) element);
-    } else if (element instanceof XWPFTable) {
-      transform((XWPFTable) element);
+    } else if (element instanceof XWPFParagraph xwpfParagraph) {
+      transform(xwpfParagraph);
+    } else if (element instanceof XWPFTable xwpfTable) {
+      transform(xwpfTable);
     }
   }
 
@@ -96,25 +96,27 @@ class WordGenerator {
   private List<IBodyElement> getLoopBody(String placeholderName, List<IBodyElement> remaining) {
     var endLoopMarker = String.format("{{/%s}}", placeholderName);
     return remaining.stream()
-            .takeWhile(element -> !(element instanceof XWPFParagraph) || !endLoopMarker.equals(WordUtilities.toString((XWPFParagraph) element)))
+            //Could be written nice with `takeUntil(element -> (element instanceof XP xp && eLM.equals(WU.toString(xp)))
+            .takeWhile(element -> !(element instanceof XWPFParagraph xwpfParagraph &&
+                                  endLoopMarker.equals(WordUtilities.toString(xwpfParagraph))))
             .collect(Collectors.toList());
   }
 
   private boolean isLoopStart(IBodyElement element) {
-    return element instanceof XWPFParagraph
+    return element instanceof XWPFParagraph xwpfParagraph
             && resolver.resolve(
             ParsingUtils.stripBrackets(
-                    WordUtilities.toString((XWPFParagraph) element)
+                    WordUtilities.toString(xwpfParagraph)
             )).map(PlaceholderData::getType)
             .map(type -> type == PlaceholderType.SET)
             .orElse(false);
   }
 
   private boolean isCustomPlaceholder(IBodyElement element) {
-    return element instanceof XWPFParagraph
+    return element instanceof XWPFParagraph xwpfParagraph
             && resolver.resolve(
             ParsingUtils.stripBrackets(
-                    WordUtilities.toString((XWPFParagraph) element).trim()
+                    WordUtilities.toString(xwpfParagraph).trim()
             )).map(PlaceholderData::getType)
             .map(type -> type == PlaceholderType.CUSTOM)
             .orElse(false);

@@ -19,9 +19,9 @@ repositories {
 dependencies {
     implementation('commons-beanutils:commons-beanutils:1.9.4')
 
-    implementation("org.apache.poi:poi:4.1.1")
-    implementation("org.apache.poi:poi-ooxml:4.1.1")
-    implementation("org.apache.poi:poi-ooxml-schemas:4.1.1")
+    implementation("org.apache.poi:poi:4.1.2")
+    implementation("org.apache.poi:poi-ooxml:4.1.2")
+    implementation("org.apache.poi:poi-ooxml-schemas:4.1.2")
 
     implementation("com.google.code.gson:gson:2.8.6")
     implementation("org.apache.tika:tika-core:1.23")

@@ -11,7 +11,7 @@ public class ReflectionUtils {
     return Temporal.class.isAssignableFrom(type);
   }
 
-  private static Set<Class<?>> WRAPPER_TYPES = Set.of(Boolean.class,
+  private static final Set<Class<?>> WRAPPER_TYPES = Set.of(Boolean.class,
           Character.class,
           Byte.class,
           Short.class,
