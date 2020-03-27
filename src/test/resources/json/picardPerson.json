@@ -1,0 +1,9 @@
+{
+  "firstName": "Jean-Luc",
+  "lastName": "Picard",
+  "birthDate": {
+    "year": 1948,
+    "month": 9,
+    "day": 23
+  }
+}
