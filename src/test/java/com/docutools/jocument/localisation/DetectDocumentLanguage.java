@@ -2,6 +2,7 @@ package com.docutools.jocument.localisation;
 
 import com.docutools.jocument.impl.word.WordUtilities;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -49,4 +50,21 @@ public class DetectDocumentLanguage {
               Locale.forLanguageTag("de-AT")));
     }
   }
+
+  @Test
+  @DisplayName("Detect English correctly as most common locale")
+  void shouldDetectEnglishAsMostCommonLocale() throws IOException {
+    // Arrange
+    try (var in = new BufferedInputStream(
+            getClass().getResourceAsStream("/templates/word/GermanEnglishTableTemplate.docx"))) {
+      var document = new XWPFDocument(in);
+
+      // Act
+      Locale mostCommonLocale = WordUtilities.detectMostCommonLocale(document).get();
+
+      // Assert
+      assertThat(mostCommonLocale, Matchers.equalTo(Locale.forLanguageTag("en-GB")));
+    }
+  }
+
 }
