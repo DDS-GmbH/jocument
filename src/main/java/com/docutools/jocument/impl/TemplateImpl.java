@@ -4,6 +4,7 @@ import com.docutools.jocument.Document;
 import com.docutools.jocument.MimeType;
 import com.docutools.jocument.PlaceholderResolver;
 import com.docutools.jocument.Template;
+import com.docutools.jocument.impl.excel.ExcelDocumentImpl;
 import com.docutools.jocument.impl.word.WordDocumentImpl;
 
 import java.io.IOException;
@@ -35,7 +36,10 @@ public class TemplateImpl implements Template {
 
   @Override
   public Document startGeneration(PlaceholderResolver resolver) {
-    var document = new WordDocumentImpl(this, resolver);
+    var document = switch (mimeType) {
+      case DOCX -> new WordDocumentImpl(this, resolver);
+      case XLSX -> new ExcelDocumentImpl(this, resolver);
+    };
     document.start();
     return document;
   }
