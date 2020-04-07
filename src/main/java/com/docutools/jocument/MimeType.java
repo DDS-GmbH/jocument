@@ -36,6 +36,9 @@ public enum MimeType {
     if ("docx".equals(extension)) {
       return Optional.of(DOCX);
     }
+    if ("xlsx".equals(extension)) {
+      return Optional.of(XLSX);
+    }
     return Optional.empty();
   }
 

@@ -4,7 +4,7 @@ import com.docutools.jocument.Document;
 import com.docutools.jocument.MimeType;
 import com.docutools.jocument.PlaceholderResolver;
 import com.docutools.jocument.Template;
-import com.docutools.jocument.impl.excel.ExcelDocumentImpl;
+import com.docutools.jocument.impl.excel.implementations.ExcelDocumentImpl;
 import com.docutools.jocument.impl.word.WordDocumentImpl;
 
 import java.io.IOException;

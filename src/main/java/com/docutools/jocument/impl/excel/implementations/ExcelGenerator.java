@@ -12,7 +12,6 @@ import org.apache.poi.ss.usermodel.Row;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.NoSuchElementException;
 
 public class ExcelGenerator {
     private final ExcelWriter excelWriter;
@@ -38,7 +37,7 @@ public class ExcelGenerator {
                 var placeholderData = getPlaceholderData(row);
                 placeholderData.stream()
                         .forEach(placeholderResolver -> ExcelGenerator.apply(placeholderResolver, loopBody.iterator(), excelWriter));
-            } else {
+            } else if (!ExcelUtils.isLoopEnd(row)){
                 excelWriter.newRow(row);
                 for (Cell cell : row) {
                     if (ExcelUtils.isSimpleCell(cell)) {
@@ -54,21 +53,20 @@ public class ExcelGenerator {
         }
     }
 
+
     private List<Row> unrollLoop(Row row, Iterator<Row> iterator) {
         var placeholder = ParsingUtils.stripBrackets(row.getCell(row.getFirstCellNum()).getStringCellValue());
         LinkedList<Row> rowBuffer = new LinkedList<>();
         var rowInFocus = iterator.next();
-        while (!isMatchingLoopEnd(rowInFocus, placeholder)) {
+        while (isMatchingLoopEnd(rowInFocus, placeholder)) {
             rowBuffer.addLast(rowInFocus);
-        }
-        if (rowBuffer.size() == 0) {
-            throw new NoSuchElementException("The %s loop does not seem to be closed".formatted(placeholder));
+            rowInFocus = iterator.next();
         }
         return rowBuffer;
     }
 
     private PlaceholderData getPlaceholderData(Row row) {
-        var placeholder = row.getCell(row.getFirstCellNum()).getStringCellValue();
+        var placeholder = ExcelUtils.getPlaceholder(row.getCell(row.getFirstCellNum()));
         return resolver
                 .resolve(placeholder)
                 .filter(p -> p.getType() == PlaceholderType.SET)
