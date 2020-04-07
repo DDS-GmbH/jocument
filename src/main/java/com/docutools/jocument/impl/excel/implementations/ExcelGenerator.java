@@ -1,66 +1,104 @@
 package com.docutools.jocument.impl.excel.implementations;
 
-import com.docutools.jocument.Template;
+import com.docutools.jocument.PlaceholderData;
+import com.docutools.jocument.PlaceholderResolver;
+import com.docutools.jocument.PlaceholderType;
+import com.docutools.jocument.impl.ParsingUtils;
 import com.docutools.jocument.impl.excel.interfaces.ExcelWriter;
-import com.docutools.jocument.impl.excel.interfaces.JocumentEventHandler;
-import com.docutools.jocument.impl.excel.interfaces.LoopBuffer;
 import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
 
-import java.nio.file.Path;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.NoSuchElementException;
 
-public class ExcelGenerator implements JocumentEventHandler {
-    private final Template template;
-    private final LoopBuffer loopBuffer;
-    private final ExcelWriter directWriter;
-    private ExcelWriter excelWriter;
+public class ExcelGenerator {
+    private final ExcelWriter excelWriter;
+    private final PlaceholderResolver resolver;
+    private final Iterator<Row> rowIterator;
 
-    public ExcelGenerator(Template template, Path outFile) {
-        this.template = template;
-        this.directWriter = new SXSSFWriter(outFile);
-        this.excelWriter = directWriter;
-        this.loopBuffer = new LoopBufferImpl();
+    private ExcelGenerator(Iterator<Row> rowIterator, ExcelWriter excelWriter, PlaceholderResolver resolver) {
+        this.rowIterator = rowIterator;
+        this.excelWriter = excelWriter;
+        this.resolver = resolver;
     }
 
-    @Override
-    public void simpleCell(Cell cell) {
-        excelWriter.addCell(cell);
+    static void apply(PlaceholderResolver resolver, Iterator<Row> rowIterator, ExcelWriter excelWriter) {
+        new ExcelGenerator(rowIterator, excelWriter, resolver).generate();
     }
 
-    @Override
-    public void startLoop() {
-        loopBuffer.startLoop();
-        excelWriter = loopBuffer;
+    private void generate() {
+        for (Iterator<Row> iterator = rowIterator; iterator.hasNext(); ) {
+            Row row = iterator.next();
+
+            if (isLoopStart(row)) {
+                var loopBody = unrollLoop(row, iterator);
+                var placeholderData = getPlaceholderData(row);
+                placeholderData.stream()
+                        .forEach(placeholderResolver -> ExcelGenerator.apply(placeholderResolver, loopBody.iterator(), excelWriter));
+            } else {
+                excelWriter.newRow(row);
+                for (Cell cell : row) {
+                    if (ExcelUtils.isSimpleCell(cell)) {
+                        excelWriter.addCell(cell);
+                    } else {
+                        var substitutedCell = resolver.resolve(ExcelUtils.getPlaceholder(cell))
+                                .map(placeholderData -> ExcelUtils.replaceCellContent(cell, placeholderData.toString()))
+                                .orElseThrow();
+                        excelWriter.addCell(substitutedCell);
+                    }
+                }
+            }
+        }
     }
 
-    @Override
-    public void endLoop() {
-        excelWriter = directWriter;
-        var rowCellsTuples = loopBuffer.endLoop();
-        rowCellsTuples.forEach(
-                rowCellsTuple -> {
-                    this.directWriter.newRow(rowCellsTuple.getRow());
-                    rowCellsTuple.getCells().forEach(this.directWriter::addCell);
-                });
+    private List<Row> unrollLoop(Row row, Iterator<Row> iterator) {
+        var placeholder = ParsingUtils.stripBrackets(row.getCell(row.getFirstCellNum()).getStringCellValue());
+        LinkedList<Row> rowBuffer = new LinkedList<>();
+        var rowInFocus = iterator.next();
+        while (!isMatchingLoopEnd(rowInFocus, placeholder)) {
+            rowBuffer.addLast(rowInFocus);
+        }
+        if (rowBuffer.size() == 0) {
+            throw new NoSuchElementException("The %s loop does not seem to be closed".formatted(placeholder));
+        }
+        return rowBuffer;
     }
 
-    @Override
-    public void newSheet(Sheet sheet) {
-        excelWriter.newSheet(sheet);
+    private PlaceholderData getPlaceholderData(Row row) {
+        var placeholder = row.getCell(row.getFirstCellNum()).getStringCellValue();
+        return resolver
+                .resolve(placeholder)
+                .filter(p -> p.getType() == PlaceholderType.SET)
+                .orElseThrow();
     }
 
-    @Override
-    public void newRow(Row row) {
-        excelWriter.newRow(row);
+    private boolean isMatchingLoopEnd(Row row, String placeholder) {
+        var endPlaceholder = ParsingUtils.getMatchingLoopEnd(placeholder);
+        if (row.getPhysicalNumberOfCells() == 1) {
+            var cell = row.getCell(row.getFirstCellNum());
+            if (cell.getCellType() == CellType.STRING) {
+                return cell.getStringCellValue().equals(endPlaceholder);
+            }
+        }
+        return false;
     }
 
-    @Override
-    public void placeholderCell(String placeholder, Cell cell) {
-
+    private boolean isLoopStart(Row row) {
+        if (row.getPhysicalNumberOfCells() == 1) {
+            var cell = row.getCell(row.getFirstCellNum());
+            if (cell.getCellType() == CellType.STRING) {
+                return resolver.resolve(
+                        ParsingUtils.stripBrackets(
+                                cell.getStringCellValue()
+                        )).map(PlaceholderData::getType)
+                        .map(type -> type == PlaceholderType.SET)
+                        .orElse(false);
+            }
+        }
+        return false;
     }
 
-    public void generate() {
-
-    }
 }
