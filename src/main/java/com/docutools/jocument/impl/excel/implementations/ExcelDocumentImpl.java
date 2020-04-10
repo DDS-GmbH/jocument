@@ -5,14 +5,12 @@ import com.docutools.jocument.Template;
 import com.docutools.jocument.impl.DocumentImpl;
 import com.docutools.jocument.impl.excel.interfaces.ExcelWriter;
 import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.util.LocaleUtil;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Iterator;
-import java.util.Locale;
 
 public class ExcelDocumentImpl extends DocumentImpl {
     public ExcelDocumentImpl(Template template, PlaceholderResolver resolver) {

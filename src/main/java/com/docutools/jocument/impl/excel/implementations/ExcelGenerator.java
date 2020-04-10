@@ -5,6 +5,7 @@ import com.docutools.jocument.PlaceholderResolver;
 import com.docutools.jocument.PlaceholderType;
 import com.docutools.jocument.impl.ParsingUtils;
 import com.docutools.jocument.impl.excel.interfaces.ExcelWriter;
+import com.docutools.jocument.impl.excel.util.ExcelUtils;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
@@ -58,7 +59,7 @@ public class ExcelGenerator {
         var placeholder = ParsingUtils.stripBrackets(row.getCell(row.getFirstCellNum()).getStringCellValue());
         LinkedList<Row> rowBuffer = new LinkedList<>();
         var rowInFocus = iterator.next();
-        while (isMatchingLoopEnd(rowInFocus, placeholder)) {
+        while (!isMatchingLoopEnd(rowInFocus, placeholder)) {
             rowBuffer.addLast(rowInFocus);
             rowInFocus = iterator.next();
         }

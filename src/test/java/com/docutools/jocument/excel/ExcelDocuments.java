@@ -50,4 +50,78 @@ public class ExcelDocuments {
 
         Desktop.getDesktop().open(document.getPath().toFile());
     }
+
+    @Test
+    @DisplayName("Resolve collection placeholders.")
+    void shouldResolveCollectionPlaceholders() throws InterruptedException, IOException {
+        // Arrange
+        Template template = Template.fromClassPath("/templates/excel/CollectionsTemplate.xlsx")
+                .orElseThrow();
+        PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.PICARD);
+
+        // Act
+        Document document = template.startGeneration(resolver);
+        document.blockUntilCompletion(60000L); // 1 minute
+
+        // Assert
+        assertThat(document.completed(), is(true));
+
+        Desktop.getDesktop().open(document.getPath().toFile());
+    }
+
+    @Test
+    @DisplayName("Resolve picture placeholder.")
+    void shouldResolvePicturePlaceholder() throws InterruptedException, IOException {
+        // Arrange
+        Template template = Template.fromClassPath("/templates/excel/PictureTemplate.xlsx")
+                .orElseThrow();
+        PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.PICARD);
+
+        // Act
+        Document document = template.startGeneration(resolver);
+        document.blockUntilCompletion(60000L); // 1 minute
+
+        // Assert
+        assertThat(document.completed(), is(true));
+
+        Desktop.getDesktop().open(document.getPath().toFile());
+    }
+
+    @Test
+    @DisplayName("Resolve user profile placeholders.")
+    void shouldResolveUserProfilePlaceholders() throws InterruptedException, IOException {
+        // Arrange
+        Template template = Template.fromClassPath("/templates/excel/UserProfileTemplate.xlsx")
+                .orElseThrow();
+        PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.PICARD_PERSON);
+
+        // Act
+        Document document = template.startGeneration(resolver);
+        document.blockUntilCompletion(60000L); // 1 minute
+
+        // Assert
+        assertThat(document.completed(), is(true));
+
+        Desktop.getDesktop().open(document.getPath().toFile());
+    }
+
+
+    @Test
+    @DisplayName("Process formulas.")
+    void shouldCopyFormulas() throws InterruptedException, IOException {
+        // Arrange
+        Template template = Template.fromClassPath("/templates/excel/FormulaTemplate.xlsx")
+                .orElseThrow();
+        PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.PICARD);
+
+        // Act
+        Document document = template.startGeneration(resolver);
+        document.blockUntilCompletion(60000L); // 1 minute
+
+        // Assert
+        assertThat(document.completed(), is(true));
+
+        Desktop.getDesktop().open(document.getPath().toFile());
+    }
+
 }

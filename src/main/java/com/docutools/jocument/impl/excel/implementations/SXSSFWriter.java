@@ -2,6 +2,7 @@ package com.docutools.jocument.impl.excel.implementations;
 
 import com.docutools.jocument.impl.excel.interfaces.ExcelWriter;
 import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
@@ -20,6 +21,7 @@ public class SXSSFWriter implements ExcelWriter {
 
     public SXSSFWriter(Path path) {
         workbook = new SXSSFWorkbook();
+        workbook.setForceFormulaRecalculation(true);
         this.path = path;
     }
 
@@ -37,7 +39,6 @@ public class SXSSFWriter implements ExcelWriter {
         currentSheet.setDisplayRowColHeadings(sheet.isDisplayRowColHeadings());
         currentSheet.setDisplayZeros(sheet.isDisplayZeros());
         currentSheet.setFitToPage(sheet.getFitToPage());
-        currentSheet.setForceFormulaRecalculation(true); //done since we cannot access every cell at the same time for recalculation
         currentSheet.setHorizontallyCenter(sheet.getHorizontallyCenter());
         currentSheet.setPrintGridlines(sheet.isPrintGridlines());
         currentSheet.setPrintRowAndColumnHeadings(sheet.isPrintRowAndColumnHeadings());
@@ -62,6 +63,9 @@ public class SXSSFWriter implements ExcelWriter {
     @Override
     public void addCell(Cell cell) {
         var newCell = currentRow.createCell(cell.getColumnIndex(), cell.getCellType());
+        if (workbook.getCellStyleAt(cell.getCellStyle().getIndex()) == null) {
+            copyCellStyle(cell.getCellStyle());
+        }
         newCell.setCellComment(cell.getCellComment());
         newCell.setCellStyle(cell.getCellStyle());
         newCell.setHyperlink(cell.getHyperlink());
@@ -75,6 +79,11 @@ public class SXSSFWriter implements ExcelWriter {
             case BOOLEAN -> newCell.setCellValue(cell.getBooleanCellValue());
             case ERROR -> newCell.setCellErrorValue(cell.getErrorCellValue());
         }
+    }
+
+    private void copyCellStyle(CellStyle cellStyle) {
+        var newStyle = workbook.createCellStyle();
+        newStyle.cloneStyleFrom(cellStyle);
     }
 
     @Override

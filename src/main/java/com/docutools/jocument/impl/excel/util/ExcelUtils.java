@@ -1,4 +1,4 @@
-package com.docutools.jocument.impl.excel.implementations;
+package com.docutools.jocument.impl.excel.util;
 
 import com.docutools.jocument.impl.DocumentImpl;
 import com.docutools.jocument.impl.ParsingUtils;
