@@ -12,11 +12,33 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Iterator;
 
+
+/**
+ * This class is responsible for setting up the necessary streams for generating excel document from templates
+ * and for passing each sheet of a workbook to the excel generator.
+ *
+ * @author Anton Oellerer
+ * @since 2020-04
+ * @version 1.1.0
+ */
 public class ExcelDocumentImpl extends DocumentImpl {
+
+
+    /**
+     * The constructor for a new ExcelDocument report generator
+     * @param template The template to generate the report from
+     * @param resolver The resolver to use for filling placeholders
+     */
     public ExcelDocumentImpl(Template template, PlaceholderResolver resolver) {
         super(template, resolver);
     }
 
+    /**
+     * Start generation of a excel report from the template supplied in the constructor, using the also supplied
+     * resolver for resolving placeholders.
+     * @return The path to the generated report
+     * @throws IOException If reading of the template or writing of the report fails.
+     */
     @Override
     protected Path generate() throws IOException {
         Path file = Files.createTempFile("document", ".xlsx");

@@ -20,6 +20,7 @@ public class ExcelDocuments {
     @Test
     @DisplayName("Clone a simple excel file.")
     void shouldCloneSimpleExcel() throws InterruptedException, IOException {
+        // Arrange
         Template template = Template.fromClassPath("/templates/excel/SimpleDocument.xlsx")
                 .orElseThrow();
         PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.PICARD_PERSON);
@@ -37,6 +38,7 @@ public class ExcelDocuments {
     @Test
     @DisplayName("Clone a simple excel file with a loop.")
     void shouldCloneSimpleExcelWithLoop() throws InterruptedException, IOException {
+        // Arrange
         Template template = Template.fromClassPath("/templates/excel/SimpleDocumentWithLoop.xlsx")
                 .orElseThrow();
         PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.PICARD);

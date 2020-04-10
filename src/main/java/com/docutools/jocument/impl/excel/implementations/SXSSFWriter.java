@@ -13,12 +13,29 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 
+/**
+ * This is a streamed implementation of the @link com.docutools.jocument.impl.excel.ExcelWriter interface.
+ * The streaming is done so memory can be saved.
+ * For now, the amount of rows kept in memory is set to the default, 100.
+ * SXSSFWriter works by keeping a reference to the current sheet and row being edited, and copying/cloning required
+ * values on the creation of new objects.
+ * This is why to the `new...`/`add...` methods the original references of the template should be passed.
+ * If one would like to use objects created somewhere else directly, a new implementation considering this would have
+ * to be created.
+ * @author Anton Oellerer
+ * @since 2020-05
+ * @version 1.1.0
+ */
 public class SXSSFWriter implements ExcelWriter {
     private final Path path;
     private final SXSSFWorkbook workbook;
     private Sheet currentSheet;
     private Row currentRow;
 
+    /**
+     * Creates a new SXSSFWriter
+     * @param path The path to save the finished report to.
+     */
     public SXSSFWriter(Path path) {
         workbook = new SXSSFWorkbook();
         workbook.setForceFormulaRecalculation(true);

@@ -14,6 +14,16 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
+
+/**
+ * This class is responsible for creating excel report rows from template rows.
+ * It is used recursively when resolving nested loops.
+ * Because of this, the generator is agnostic of enclosing structures like sheets and workbooks.
+ *
+ * @author Anton Oellerer
+ * @since 2020-04
+ * @version 1.1.0
+ */
 public class ExcelGenerator {
     private final ExcelWriter excelWriter;
     private final PlaceholderResolver resolver;
@@ -25,6 +35,12 @@ public class ExcelGenerator {
         this.resolver = resolver;
     }
 
+    /**
+     * This function starts the generating process for the supplied row iterator.
+     * @param resolver The resolver to use for looking up placeholders
+     * @param rowIterator An iterator over the template row which should be processed
+     * @param excelWriter The writer to write the report out to.
+     */
     static void apply(PlaceholderResolver resolver, Iterator<Row> rowIterator, ExcelWriter excelWriter) {
         new ExcelGenerator(rowIterator, excelWriter, resolver).generate();
     }
