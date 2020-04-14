@@ -1,5 +1,7 @@
 package com.docutools.jocument.impl.word;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.poi.xwpf.usermodel.*;
 import org.apache.xmlbeans.XmlCursor;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.*;
@@ -11,6 +13,7 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 public class WordUtilities {
+  private static final Logger logger = LogManager.getLogger();
 
   private WordUtilities() {
   }
@@ -67,6 +70,7 @@ public class WordUtilities {
     } else if (element instanceof XWPFTable xwpfTable) {
       return OptionalInt.of(document.getPosOfTable(xwpfTable));
     }
+    logger.warn("Failed to find position of element {}", element);
     return OptionalInt.empty();
   }
 
@@ -99,7 +103,7 @@ public class WordUtilities {
     if (element instanceof XWPFParagraph xwpfParagraph) {
       return copyParagraphTo(xwpfParagraph, destinationCursor);
     }
-
+    logger.error("Failed to copy {} before {}", element, destination);
     throw new IllegalArgumentException("Can only copy XWPFParagraph or XWPFTable instances.");
   }
 
@@ -125,6 +129,7 @@ public class WordUtilities {
     } else if (element instanceof XWPFTable xwpfTable) {
       return Optional.of((xwpfTable).getCTTbl().newCursor());
     } else {
+      logger.warn("Failed to open cursor to element {}", element);
       return Optional.empty();
     }
   }
@@ -198,6 +203,7 @@ public class WordUtilities {
     try {
       return locale.getISO3Language() != null && locale.getISO3Country() != null;
     } catch (MissingResourceException e) {
+      logger.warn("Encountered missing resource exception when trying to verify locale {}".formatted(locale), e);
       return false;
     }
   }
@@ -221,6 +227,7 @@ public class WordUtilities {
     if (rawText != null && !rawText.isBlank()) {
       return Optional.of(rawText);
     }
+    logger.info("Failed to get text from paragraph {}", paragraph);
     return Optional.empty();
   }
 

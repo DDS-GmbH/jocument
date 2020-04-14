@@ -5,6 +5,8 @@ import com.docutools.jocument.PlaceholderResolver;
 import com.docutools.jocument.impl.word.placeholders.ImagePlaceholderData;
 import com.google.gson.*;
 import com.google.gson.stream.JsonReader;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.poi.util.IOUtils;
 import org.apache.tika.Tika;
 import org.apache.tika.mime.MediaType;
@@ -31,6 +33,7 @@ import java.util.stream.StreamSupport;
  * @since 1.0-SNAPSHOT
  */
 public class JsonResolver implements PlaceholderResolver {
+    private static final Logger logger = LogManager.getLogger();
 
     private JsonElement jsonElement;
     private final Tika tika = new Tika();
@@ -66,6 +69,7 @@ public class JsonResolver implements PlaceholderResolver {
 
     @Override
     public Optional<PlaceholderData> resolve(String placeholderName, Locale locale) {
+        logger.debug("Trying to resolve placeholder {}", placeholderName);
         if (jsonElement.isJsonObject()) {
             return fromObject(placeholderName, jsonElement.getAsJsonObject());
         } else if (jsonElement.isJsonArray()) {
@@ -75,8 +79,10 @@ public class JsonResolver implements PlaceholderResolver {
     }
 
     private Optional<PlaceholderData> fromObject(String placeholderName, JsonObject jsonObject) {
-        if (!jsonObject.has(placeholderName))
+        if (!jsonObject.has(placeholderName)) {
+            logger.info("Did not find placeholder {} in JSON Object {}", placeholderName, jsonObject);
             return Optional.empty();
+        }
 
         JsonElement element = jsonObject.get(placeholderName);
         if (element.isJsonPrimitive()) {
@@ -88,6 +94,7 @@ public class JsonResolver implements PlaceholderResolver {
             return Optional.of(new IterablePlaceholderData(List.of(new JsonResolver(json)), 1));
         }
 
+        logger.warn("Failed to resolve placeholder {} in JSON Object {} to placeholder data", placeholderName, jsonObject);
         return Optional.empty();
     }
 
@@ -105,7 +112,8 @@ public class JsonResolver implements PlaceholderResolver {
             String detected = tika.detect(data);
             MediaType mediaType = MediaType.parse(detected);
             return mediaType != null && "image".equals(mediaType.getType());
-        } catch (IllegalStateException ignored) {
+        } catch (IllegalStateException e) {
+            logger.warn("Encountered illegal state exception", e);
             return false;
         }
 
@@ -117,6 +125,7 @@ public class JsonResolver implements PlaceholderResolver {
             IOUtils.copy(stream, tmp.toFile());
             return Optional.of(tmp);
         } catch (IOException e) {
+            logger.warn("Encountered IOException when trying to resolve URL {}".formatted(url), e);
             return Optional.empty();
         }
     }

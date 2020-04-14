@@ -5,6 +5,8 @@ import com.docutools.jocument.MimeType;
 import com.docutools.jocument.PlaceholderResolver;
 import com.docutools.jocument.Template;
 import com.docutools.jocument.impl.word.WordDocumentImpl;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -12,6 +14,7 @@ import java.net.URL;
 import java.util.Locale;
 
 public class TemplateImpl implements Template {
+    private static final Logger logger = LogManager.getLogger();
 
   private final URL url;
   private final MimeType mimeType;
@@ -35,9 +38,11 @@ public class TemplateImpl implements Template {
 
   @Override
   public Document startGeneration(PlaceholderResolver resolver) {
-    var document = new WordDocumentImpl(this, resolver);
-    document.start();
-    return document;
+      logger.info("Starting generating from template {} with resolver {}", this, resolver);
+      var document = new WordDocumentImpl(this, resolver);
+      document.start();
+      logger.info("Finished generating from template {} with resolver {}", this, resolver);
+      return document;
   }
 
   @Override

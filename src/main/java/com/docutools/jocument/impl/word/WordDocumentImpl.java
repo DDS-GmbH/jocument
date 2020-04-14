@@ -3,6 +3,8 @@ package com.docutools.jocument.impl.word;
 import com.docutools.jocument.PlaceholderResolver;
 import com.docutools.jocument.Template;
 import com.docutools.jocument.impl.DocumentImpl;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.poi.util.LocaleUtil;
 import org.apache.poi.xwpf.usermodel.IBodyElement;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
@@ -16,6 +18,7 @@ import java.util.List;
 import java.util.Locale;
 
 public class WordDocumentImpl extends DocumentImpl {
+  private static final Logger logger = LogManager.getLogger();
 
   public WordDocumentImpl(Template template, PlaceholderResolver resolver) {
     super(template, resolver);
@@ -23,6 +26,7 @@ public class WordDocumentImpl extends DocumentImpl {
 
   @Override
   protected Path generate() throws IOException {
+    logger.info("Starting generation");
     Path file = Files.createTempFile("document", ".docx");
     try (XWPFDocument document = new XWPFDocument(template.openStream())) {
       LocaleUtil.setUserLocale(WordUtilities.detectMostCommonLocale(document).orElse(Locale.getDefault()));
@@ -35,6 +39,7 @@ public class WordDocumentImpl extends DocumentImpl {
         document.write(os);
       }
     }
+    logger.info("Finished generation");
     return file;
   }
 

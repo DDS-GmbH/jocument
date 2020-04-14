@@ -4,6 +4,8 @@ import com.docutools.jocument.PlaceholderData;
 import com.docutools.jocument.PlaceholderResolver;
 import com.docutools.jocument.PlaceholderType;
 import com.docutools.jocument.impl.ParsingUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.poi.util.LocaleUtil;
 import org.apache.poi.xwpf.usermodel.*;
 
@@ -15,6 +17,7 @@ import java.util.stream.Collectors;
 import static com.docutools.jocument.impl.DocumentImpl.TAG_PATTERN;
 
 class WordGenerator {
+  private static final Logger logger = LogManager.getLogger();
 
   private final PlaceholderResolver resolver;
   private final List<IBodyElement> elements;
@@ -25,6 +28,7 @@ class WordGenerator {
   }
 
   static void apply(PlaceholderResolver resolver, List<IBodyElement> elements) {
+    logger.debug("Generating by applying resolver {} to elements {}", resolver, elements);
     new WordGenerator(resolver, elements).generate();
   }
 
@@ -52,6 +56,7 @@ class WordGenerator {
     } else if (element instanceof XWPFTable xwpfTable) {
       transform(xwpfTable);
     }
+    logger.info("Failed to transform element {}", element);
   }
 
   private void transform(XWPFTable table) {
