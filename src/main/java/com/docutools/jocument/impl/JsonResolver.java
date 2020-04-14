@@ -125,7 +125,7 @@ public class JsonResolver implements PlaceholderResolver {
             IOUtils.copy(stream, tmp.toFile());
             return Optional.of(tmp);
         } catch (IOException e) {
-            logger.warn("Encountered IOException when trying to resolve URL {}".formatted(url), e);
+            logger.warn("Encountered IOException when trying to resolve URL %s".formatted(url), e);
             return Optional.empty();
         }
     }

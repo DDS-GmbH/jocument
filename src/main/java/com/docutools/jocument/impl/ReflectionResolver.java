@@ -77,7 +77,7 @@ public class ReflectionResolver implements PlaceholderResolver {
       logger.debug("Did not find placeholder {}", placeholderName);
       return Optional.empty();
     } catch (IllegalAccessException | InvocationTargetException e) {
-      logger.error("Could not resolve placeholder {}".formatted(placeholderName), e);
+      logger.error("Could not resolve placeholder %s".formatted(placeholderName), e);
       throw new IllegalStateException("Could not resolve placeholderName against type.", e);
     }
   }
