@@ -203,7 +203,7 @@ public class WordUtilities {
     try {
       return locale.getISO3Language() != null && locale.getISO3Country() != null;
     } catch (MissingResourceException e) {
-      logger.warn("Encountered missing resource exception when trying to verify locale {}".formatted(locale), e);
+      logger.warn("Encountered missing resource exception when trying to verify locale %s".formatted(locale), e);
       return false;
     }
   }
