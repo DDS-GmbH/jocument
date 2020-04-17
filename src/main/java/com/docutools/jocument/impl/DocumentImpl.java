@@ -43,6 +43,7 @@ public abstract class DocumentImpl extends Thread implements Document {
 
   @Override
   public void blockUntilCompletion(long millis) throws InterruptedException {
+    logger.info("Waiting for completion for {} milliseconds", millis);
     super.join(millis);
   }
 

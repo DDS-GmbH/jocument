@@ -29,13 +29,18 @@ public class WordDocumentImpl extends DocumentImpl {
     logger.info("Starting generation");
     Path file = Files.createTempFile("document", ".docx");
     try (XWPFDocument document = new XWPFDocument(template.openStream())) {
-      LocaleUtil.setUserLocale(WordUtilities.detectMostCommonLocale(document).orElse(Locale.getDefault()));
+      var locale = WordUtilities.detectMostCommonLocale(document).orElse(Locale.getDefault());
+      LocaleUtil.setUserLocale(locale);
+      logger.info("Set user locale to {}", locale);
+
       List<IBodyElement> bodyElements = new ArrayList<>(document.getBodyElements().size());
       bodyElements.addAll(document.getBodyElements());
 
+      logger.debug("Retrieved all body elements, starting WordGenerator");
       WordGenerator.apply(resolver, bodyElements);
 
       try (OutputStream os = Files.newOutputStream(file)) {
+        logger.info("Writing document to {}", os);
         document.write(os);
       }
     }

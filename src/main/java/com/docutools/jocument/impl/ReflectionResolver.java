@@ -44,7 +44,8 @@ public class ReflectionResolver implements PlaceholderResolver {
     try {
       return clazz.getDeclaredField(fieldName)
               .getDeclaredAnnotation(annotation) != null;
-    } catch (Exception ignored) {
+    } catch (Exception e) {
+      logger.debug("Class %s not annotated with %s".formatted(clazz, fieldName), e);
       return false;
     }
   }
@@ -110,7 +111,10 @@ public class ReflectionResolver implements PlaceholderResolver {
                     .map(money -> toNumberFormat(money, locale)))
             .or(() -> ReflectionUtils.findFieldAnnotation(bean.getClass(), fieldName, Numeric.class)
                     .map(numeric -> toNumberFormat(numeric, locale)))
-            .orElseGet(() -> NumberFormat.getInstance(locale));
+            .orElseGet(() -> {
+              logger.info("Did not find formatting directive for {}, formatting according to locale {}", fieldName, locale);
+              return NumberFormat.getInstance(locale);
+            });
   }
 
   private static NumberFormat toNumberFormat(Percentage percentage, Locale locale) {

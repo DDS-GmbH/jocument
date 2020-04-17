@@ -45,6 +45,7 @@ public class JsonResolver implements PlaceholderResolver {
      * @throws JsonParseException if the specified text is not valid JSON
      */
     public JsonResolver(String json) {
+        logger.info("Creating JSON resolver from {}", json);
         this.jsonElement = JsonParser.parseString(json);
     }
 
@@ -56,6 +57,7 @@ public class JsonResolver implements PlaceholderResolver {
      * @throws JsonParseException if the downloaded text is not valid JSON
      */
     public JsonResolver(URL url) throws IOException {
+        logger.info("Trying to create JSON resolver from {}", url);
         try (InputStream stream = url.openStream()) {
             JsonReader reader = new JsonReader(new BufferedReader(new InputStreamReader(stream)));
             this.jsonElement = JsonParser.parseReader(reader);
@@ -75,6 +77,7 @@ public class JsonResolver implements PlaceholderResolver {
         } else if (jsonElement.isJsonArray()) {
             return fromArray(jsonElement.getAsJsonArray());
         }
+        logger.debug("Did not manage to resolver placeholder {}", placeholderName);
         return Optional.empty();
     }
 
@@ -94,7 +97,7 @@ public class JsonResolver implements PlaceholderResolver {
             return Optional.of(new IterablePlaceholderData(List.of(new JsonResolver(json)), 1));
         }
 
-        logger.warn("Failed to resolve placeholder {} in JSON Object {} to placeholder data", placeholderName, jsonObject);
+        logger.warn("Failed to resolve placeholder {} as JSON Object {} to placeholder data", placeholderName, jsonObject);
         return Optional.empty();
     }
 
