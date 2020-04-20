@@ -6,6 +6,7 @@ import com.docutools.jocument.PlaceholderType;
 import com.docutools.jocument.impl.ParsingUtils;
 import com.docutools.jocument.impl.excel.interfaces.ExcelWriter;
 import com.docutools.jocument.impl.excel.util.ExcelUtils;
+import com.google.common.collect.Lists;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
@@ -13,6 +14,7 @@ import org.apache.poi.ss.usermodel.Row;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 
 
 /**
@@ -51,31 +53,52 @@ public class ExcelGenerator {
 
             if (isLoopStart(row)) {
                 var loopBody = unrollLoop(row, iterator);
+                var loopBodySize = getLoopBodySize(loopBody);
                 var placeholderData = getPlaceholderData(row);
                 placeholderData.stream()
-                        .forEach(placeholderResolver -> ExcelGenerator.apply(placeholderResolver, loopBody.iterator(), excelWriter));
-            } else if (!ExcelUtils.isLoopEnd(row)){
+                        .forEach(placeholderResolver -> {
+                            excelWriter.addRowOffset(-1); //So we also fill the cell of the loop start placeholder
+                            ExcelGenerator.apply(placeholderResolver, loopBody.iterator(), excelWriter);
+                            excelWriter.addRowOffset(1); //To avoid subtracting the placeholder size multiple times
+                            excelWriter.addRowOffset(loopBodySize);
+                        });
+            } else if (!ExcelUtils.isLoopEnd(row)) {
                 excelWriter.newRow(row);
                 for (Cell cell : row) {
                     if (ExcelUtils.isSimpleCell(cell)) {
                         excelWriter.addCell(cell);
                     } else {
-                        var substitutedCell = resolver.resolve(ExcelUtils.getPlaceholder(cell))
-                                .map(placeholderData -> ExcelUtils.replaceCellContent(cell, placeholderData.toString()))
-                                .orElseThrow();
-                        excelWriter.addCell(substitutedCell);
+                        var newCellText = resolver.resolve(ExcelUtils.getPlaceholder(cell)).orElseThrow();
+                        excelWriter.addCell(cell, newCellText.toString());
                     }
                 }
+            } else {
+                excelWriter.addRowOffset(-1);
             }
         }
     }
 
+    private int getLoopBodySize(List<Row> loopBody) {
+        var size = 0;
+        Optional<String> inLoop = Optional.empty();
+        for (Row row : Lists.reverse(loopBody)) {
+            if (inLoop.isEmpty() && !ExcelUtils.isLoopEnd(row)) {
+                size += 1;
+            } else if (inLoop.isEmpty() && ExcelUtils.isLoopEnd(row)) {
+                inLoop = Optional.of(ExcelUtils.getPlaceholderFromLoopEnd(row));
+            } else if (inLoop.isPresent() && ExcelUtils.isMatchingLoopStart(row, inLoop.get())) {
+                inLoop = Optional.empty();
+            }
+        }
+        return size;
+    }
+
 
     private List<Row> unrollLoop(Row row, Iterator<Row> iterator) {
-        var placeholder = ParsingUtils.stripBrackets(row.getCell(row.getFirstCellNum()).getStringCellValue());
+        var placeholder = ExcelUtils.getPlaceholder(row);
         LinkedList<Row> rowBuffer = new LinkedList<>();
         var rowInFocus = iterator.next();
-        while (!isMatchingLoopEnd(rowInFocus, placeholder)) {
+        while (!ExcelUtils.isMatchingLoopEnd(rowInFocus, placeholder)) {
             rowBuffer.addLast(rowInFocus);
             rowInFocus = iterator.next();
         }
@@ -90,16 +113,6 @@ public class ExcelGenerator {
                 .orElseThrow();
     }
 
-    private boolean isMatchingLoopEnd(Row row, String placeholder) {
-        var endPlaceholder = ParsingUtils.getMatchingLoopEnd(placeholder);
-        if (row.getPhysicalNumberOfCells() == 1) {
-            var cell = row.getCell(row.getFirstCellNum());
-            if (cell.getCellType() == CellType.STRING) {
-                return cell.getStringCellValue().equals(endPlaceholder);
-            }
-        }
-        return false;
-    }
 
     private boolean isLoopStart(Row row) {
         if (row.getPhysicalNumberOfCells() == 1) {

@@ -31,6 +31,7 @@ public class SXSSFWriter implements ExcelWriter {
     private final SXSSFWorkbook workbook;
     private Sheet currentSheet;
     private Row currentRow;
+    private int rowOffset = 0;
 
     /**
      * Creates a new SXSSFWriter
@@ -71,10 +72,10 @@ public class SXSSFWriter implements ExcelWriter {
 
     @Override
     public void newRow(Row row) {
-        currentRow = currentSheet.createRow(row.getRowNum());
-        row.setHeight(row.getHeight());
-        row.setRowStyle(row.getRowStyle());
-        row.setZeroHeight(row.getZeroHeight());
+        currentRow = currentSheet.createRow(row.getRowNum() + rowOffset);
+        currentRow.setHeight(row.getHeight());
+        currentRow.setRowStyle(row.getRowStyle());
+        currentRow.setZeroHeight(row.getZeroHeight());
     }
 
     @Override
@@ -86,6 +87,7 @@ public class SXSSFWriter implements ExcelWriter {
         newCell.setCellComment(cell.getCellComment());
         newCell.setCellStyle(cell.getCellStyle());
         newCell.setHyperlink(cell.getHyperlink());
+        currentSheet.setColumnWidth(cell.getColumnIndex(), cell.getSheet().getColumnWidth(cell.getColumnIndex()));
         switch (cell.getCellType()) {
             case _NONE -> {
             }
@@ -109,5 +111,23 @@ public class SXSSFWriter implements ExcelWriter {
         workbook.write(outputStream);
         outputStream.close();
         workbook.dispose();
+    }
+
+    @Override
+    public void addRowOffset(int size) {
+        rowOffset += size;
+    }
+
+    @Override
+    public void addCell(Cell templateCell, String newCellText) {
+        var newCell = currentRow.createCell(templateCell.getColumnIndex(), templateCell.getCellType());
+        if (workbook.getCellStyleAt(templateCell.getCellStyle().getIndex()) == null) {
+            copyCellStyle(templateCell.getCellStyle());
+        }
+        newCell.setCellComment(templateCell.getCellComment());
+        newCell.setCellStyle(templateCell.getCellStyle());
+        newCell.setHyperlink(templateCell.getHyperlink());
+        currentSheet.setColumnWidth(templateCell.getColumnIndex(), templateCell.getSheet().getColumnWidth(templateCell.getColumnIndex()));
+        newCell.setCellValue(newCellText);
     }
 }

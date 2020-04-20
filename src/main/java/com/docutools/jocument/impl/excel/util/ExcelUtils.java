@@ -30,4 +30,33 @@ public class ExcelUtils {
         }
         return false;
     }
+
+    public static String getPlaceholder(Row row) {
+        return ParsingUtils.stripBrackets(row.getCell(row.getFirstCellNum()).getStringCellValue());
+    }
+
+    public static String getPlaceholderFromLoopEnd(Row row) {
+        return ParsingUtils.stripBrackets(row.getCell(row.getFirstCellNum()).getStringCellValue()).substring(1);
+    }
+
+    public static boolean isMatchingLoopEnd(Row row, String placeholder) {
+        var endPlaceholder = ParsingUtils.getMatchingLoopEnd(placeholder);
+        if (row.getPhysicalNumberOfCells() == 1) {
+            var cell = row.getCell(row.getFirstCellNum());
+            if (cell.getCellType() == CellType.STRING) {
+                return cell.getStringCellValue().equals(endPlaceholder);
+            }
+        }
+        return false;
+    }
+
+    public static boolean isMatchingLoopStart(Row row, String placeholder) {
+        if (row.getPhysicalNumberOfCells() == 1) {
+            var cell = row.getCell(row.getFirstCellNum());
+            if (cell.getCellType() == CellType.STRING) {
+                return ParsingUtils.stripBrackets(cell.getStringCellValue()).equals(placeholder);
+            }
+        }
+        return false;
+    }
 }

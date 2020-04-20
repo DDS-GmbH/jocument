@@ -126,4 +126,21 @@ public class ExcelDocuments {
         Desktop.getDesktop().open(document.getPath().toFile());
     }
 
+    @Test
+    @DisplayName("Resolve nested loops.")
+    void shouldResolveNestedLoops() throws InterruptedException, IOException {
+        // Arrange
+        Template template = Template.fromClassPath("/templates/excel/NestedLoopDocument.xlsx")
+                .orElseThrow();
+        PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.PICARD);
+
+        // Act
+        Document document = template.startGeneration(resolver);
+        document.blockUntilCompletion(60000L); // 1 minute
+
+        // Assert
+        assertThat(document.completed(), is(true));
+
+        Desktop.getDesktop().open(document.getPath().toFile());
+    }
 }
