@@ -6,6 +6,8 @@ import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
 
+import java.util.Iterator;
+
 public class ExcelUtils {
     public static String getPlaceholder(Cell cell) {
         return ParsingUtils.stripBrackets(cell.getStringCellValue());
@@ -58,5 +60,14 @@ public class ExcelUtils {
             }
         }
         return false;
+    }
+
+    public static boolean isSimpleRow(Row row) {
+        var isSimpleRow = true;
+        for (Iterator<Cell> it = row.cellIterator(); it.hasNext(); ) {
+            Cell cell = it.next();
+            isSimpleRow &= isSimpleCell(cell);
+        }
+        return isSimpleRow;
     }
 }
