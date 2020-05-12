@@ -9,7 +9,6 @@ import org.junit.jupiter.api.Test;
 
 import java.awt.*;
 import java.io.IOException;
-import java.util.Locale;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
@@ -150,6 +149,24 @@ public class WordDocuments {
 
     String json = TestUtils.getText("json/picard.json");
     PlaceholderResolver resolver = new JsonResolver(json);
+
+    // Act
+    Document document = template.startGeneration(resolver);
+    document.blockUntilCompletion(60000L); // 1 minute
+
+    // Assert
+    assertThat(document.completed(), is(true));
+
+    Desktop.getDesktop().open(document.getPath().toFile());
+  }
+
+  @Test
+  @DisplayName("Generate a document from a simple template.")
+  void shouldGenerateSimpleDocumentWithTOC() throws InterruptedException, IOException {
+    // Arrange
+    Template template = Template.fromClassPath("/templates/word/TOCTemplate.docx")
+            .orElseThrow();
+    PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.PICARD_PERSON);
 
     // Act
     Document document = template.startGeneration(resolver);

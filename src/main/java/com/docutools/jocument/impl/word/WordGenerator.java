@@ -45,7 +45,7 @@ class WordGenerator {
     if (isLoopStart(element)) {
       unrollLoop((XWPFParagraph) element, remaining);
     } else if (isCustomPlaceholder(element)) {
-      resolver.resolve(extractPlaceholderName((XWPFParagraph) element))
+      resolver.resolve(WordUtilities.extractPlaceholderName((XWPFParagraph) element))
               .ifPresent(placeholderData -> placeholderData.transform(element));
     } else if (element instanceof XWPFParagraph xwpfParagraph) {
       transform(xwpfParagraph);
@@ -76,7 +76,7 @@ class WordGenerator {
   }
 
   private void unrollLoop(XWPFParagraph start, List<IBodyElement> remaining) {
-    var placeholderName = extractPlaceholderName(start);
+    var placeholderName = WordUtilities.extractPlaceholderName(start);
     var placeholderData = resolver.resolve(placeholderName)
             .filter(p -> p.getType() == PlaceholderType.SET)
             .orElseThrow();
@@ -123,15 +123,11 @@ class WordGenerator {
             .orElse(false);
   }
 
-  private String extractPlaceholderName(XWPFParagraph paragraph) {
-    return ParsingUtils.stripBrackets(WordUtilities.toString(paragraph));
-  }
-
   private String fillPlaceholder(MatchResult result, Locale locale) {
     String placeholder = result.group();
     String placeholderName = ParsingUtils.stripBrackets(placeholder);
     return resolver.resolve(placeholderName, locale)
             .map(PlaceholderData::toString)
-            .orElse("-");
+            .orElse(placeholder); // leave placeholder for post processing
   }
 }

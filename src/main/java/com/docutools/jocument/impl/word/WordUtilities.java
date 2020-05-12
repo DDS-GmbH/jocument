@@ -1,5 +1,6 @@
 package com.docutools.jocument.impl.word;
 
+import com.docutools.jocument.impl.ParsingUtils;
 import org.apache.poi.xwpf.usermodel.*;
 import org.apache.xmlbeans.XmlCursor;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.*;
@@ -40,7 +41,7 @@ public class WordUtilities {
       run.setText(newText, 0);
     } else {
       runs.get(0).setText(newText, 0);
-      IntStream.range(1, runs.size()).forEach(paragraph::removeRun);
+      IntStream.range(1, runs.size()).forEach(value -> paragraph.removeRun(1)); //List collapses on delete
     }
   }
 
@@ -227,6 +228,7 @@ public class WordUtilities {
   private static String joinRuns(XWPFParagraph paragraph) {
     return paragraph.getRuns().stream()
             .map(run -> run.getText(0))
+            .filter(Objects::nonNull)       // if run is "", run.getText(0) returns null
             .collect(Collectors.joining());
   }
 
@@ -298,5 +300,9 @@ public class WordUtilities {
             .stream()
             .max(Map.Entry.comparingByValue())
             .map(Map.Entry::getKey);
+  }
+
+  public static String extractPlaceholderName(XWPFParagraph paragraph) {
+    return ParsingUtils.stripBrackets(WordUtilities.toString(paragraph));
   }
 }
