@@ -1,6 +1,7 @@
 package com.docutools.jocument.impl.word;
 
 import com.docutools.jocument.PlaceholderResolver;
+import com.docutools.jocument.PostProcessor;
 import com.docutools.jocument.Template;
 import com.docutools.jocument.impl.DocumentImpl;
 import org.apache.poi.util.LocaleUtil;
@@ -17,8 +18,15 @@ import java.util.Locale;
 
 public class WordDocumentImpl extends DocumentImpl {
 
+  private PostProcessor<XWPFDocument> postProcessor;
+
   public WordDocumentImpl(Template template, PlaceholderResolver resolver) {
     super(template, resolver);
+  }
+
+  public WordDocumentImpl(Template template, PlaceholderResolver resolver, PostProcessor<XWPFDocument> postProcessor) {
+    super(template, resolver);
+    this.postProcessor = postProcessor;
   }
 
   @Override
@@ -30,6 +38,10 @@ public class WordDocumentImpl extends DocumentImpl {
       bodyElements.addAll(document.getBodyElements());
 
       WordGenerator.apply(resolver, bodyElements);
+
+      if (postProcessor != null) {
+        postProcessor.process(document, resolver);
+      }
 
       try (OutputStream os = Files.newOutputStream(file)) {
         document.write(os);

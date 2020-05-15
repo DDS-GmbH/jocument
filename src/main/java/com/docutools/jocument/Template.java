@@ -70,6 +70,16 @@ public interface Template {
   Document startGeneration(PlaceholderResolver resolver);
 
   /**
+   * Starts the generation of a document for the given {@link com.docutools.jocument.PlaceholderResolver} asynchronously.
+   *
+   * @param resolver the {@link com.docutools.jocument.PlaceholderResolver}
+   * @param postProcessor the {@link com.docutools.jocument.PostProcessor} to use
+   * @return the {@link Document}
+   */
+  Document startGeneration(PlaceholderResolver resolver, PostProcessor postProcessor);
+
+
+  /**
    * Opens a {@link java.io.InputStream} to the template file. Intended for internal use.
    *
    * @return {@link java.io.InputStream}, caller has to close.

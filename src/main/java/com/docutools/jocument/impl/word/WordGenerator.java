@@ -45,7 +45,7 @@ class WordGenerator {
     if (isLoopStart(element)) {
       unrollLoop((XWPFParagraph) element, remaining);
     } else if (isCustomPlaceholder(element)) {
-      resolver.resolve(WordUtilities.extractPlaceholderName((XWPFParagraph) element))
+      resolver.resolve(WordUtilities.extractPlaceholder((XWPFParagraph) element))
               .ifPresent(placeholderData -> placeholderData.transform(element));
     } else if (element instanceof XWPFParagraph xwpfParagraph) {
       transform(xwpfParagraph);
@@ -76,7 +76,7 @@ class WordGenerator {
   }
 
   private void unrollLoop(XWPFParagraph start, List<IBodyElement> remaining) {
-    var placeholderName = WordUtilities.extractPlaceholderName(start);
+    var placeholderName = WordUtilities.extractPlaceholder(start);
     var placeholderData = resolver.resolve(placeholderName)
             .filter(p -> p.getType() == PlaceholderType.SET)
             .orElseThrow();

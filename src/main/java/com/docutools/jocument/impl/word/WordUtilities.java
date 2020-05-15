@@ -62,6 +62,9 @@ public class WordUtilities {
    * @return the index
    */
   public static OptionalInt findPos(IBodyElement element) {
+    if (element.getBody() == null) {
+      return OptionalInt.empty();
+    }
     var document = element.getBody().getXWPFDocument();
     if (element instanceof XWPFParagraph xwpfParagraph) {
       return OptionalInt.of(document.getPosOfParagraph(xwpfParagraph));
@@ -302,7 +305,23 @@ public class WordUtilities {
             .map(Map.Entry::getKey);
   }
 
-  public static String extractPlaceholderName(XWPFParagraph paragraph) {
+  public static String extractPlaceholder(XWPFParagraph paragraph) {
     return ParsingUtils.stripBrackets(WordUtilities.toString(paragraph));
+  }
+
+  public static Stream<XWPFParagraph> getAllParagraphs(XWPFDocument document) {
+    var documentParagraphs = document.getParagraphs().stream();
+    var tableParagraphs = document.getTables()
+            .stream()
+            .flatMap(table -> WordUtilities.getTableEmbeddedParagraphs(table).stream());
+
+    return Stream.concat(documentParagraphs, tableParagraphs);
+  }
+
+  public static Stream<XWPFParagraph> getAllParagraphsMatchingPlaceholder(String placeholder, XWPFDocument document) {
+    return WordUtilities.getAllParagraphs(document)
+            .filter(xwpfParagraph ->
+                    WordUtilities.extractPlaceholder(xwpfParagraph).matches(placeholder));
+
   }
 }
