@@ -1,5 +1,7 @@
 package com.docutools.jocument.impl.word;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.poi.xwpf.usermodel.*;
 import org.apache.xmlbeans.XmlCursor;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.*;
@@ -11,6 +13,7 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 public class WordUtilities {
+  private static final Logger logger = LogManager.getLogger();
 
   private WordUtilities() {
   }
@@ -67,6 +70,7 @@ public class WordUtilities {
     } else if (element instanceof XWPFTable xwpfTable) {
       return OptionalInt.of(document.getPosOfTable(xwpfTable));
     }
+    logger.warn("Failed to find position of element {}", element);
     return OptionalInt.empty();
   }
 
@@ -99,7 +103,7 @@ public class WordUtilities {
     if (element instanceof XWPFParagraph xwpfParagraph) {
       return copyParagraphTo(xwpfParagraph, destinationCursor);
     }
-
+    logger.error("Failed to copy {} before {}", element, destination);
     throw new IllegalArgumentException("Can only copy XWPFParagraph or XWPFTable instances.");
   }
 
@@ -109,6 +113,7 @@ public class WordUtilities {
    * @param element the element to be removed
    */
   public static void removeIfExists(IBodyElement element) {
+    logger.debug("Removing element {}", element);
     findPos(element)
             .ifPresent(element.getBody().getXWPFDocument()::removeBodyElement);
   }
@@ -121,10 +126,13 @@ public class WordUtilities {
    */
   public static Optional<XmlCursor> openCursor(IBodyElement element) {
     if (element instanceof XWPFParagraph xwpfParagraph) {
+      logger.debug("Opening cursor to paragraph {}", xwpfParagraph);
       return Optional.of((xwpfParagraph).getCTP().newCursor());
     } else if (element instanceof XWPFTable xwpfTable) {
+      logger.debug("Opening cursor to table {}", xwpfTable);
       return Optional.of((xwpfTable).getCTTbl().newCursor());
     } else {
+      logger.warn("Failed to open cursor to element {}", element);
       return Optional.empty();
     }
   }
@@ -198,11 +206,13 @@ public class WordUtilities {
     try {
       return locale.getISO3Language() != null && locale.getISO3Country() != null;
     } catch (MissingResourceException e) {
+      logger.warn("Encountered missing resource exception when trying to verify locale %s".formatted(locale), e);
       return false;
     }
   }
 
   private static XWPFTable copyTableTo(XWPFTable sourceTable, XmlCursor cursor) {
+    logger.debug("Copying table {} before {}", sourceTable, cursor);
     var document = sourceTable.getBody().getXWPFDocument();
     XWPFTable table = document.insertNewTbl(cursor);
     cloneTable(sourceTable, table);
@@ -210,6 +220,7 @@ public class WordUtilities {
   }
 
   private static XWPFParagraph copyParagraphTo(XWPFParagraph sourceParagraph, XmlCursor cursor) {
+    logger.debug("Copying paragraph {} before {}", sourceParagraph, cursor);
     var document = sourceParagraph.getDocument();
     XWPFParagraph paragraph = document.insertNewParagraph(cursor);
     cloneParagraph(sourceParagraph, paragraph);
@@ -221,6 +232,7 @@ public class WordUtilities {
     if (rawText != null && !rawText.isBlank()) {
       return Optional.of(rawText);
     }
+    logger.info("Failed to get text from paragraph {}", paragraph);
     return Optional.empty();
   }
 
@@ -231,6 +243,7 @@ public class WordUtilities {
   }
 
   private static void cloneTable(XWPFTable original, XWPFTable clone) {
+    logger.debug("Cloning table {} to table {}", original, clone);
     CTTbl tbl = clone.getCTTbl();
     tbl.setTblGrid(original.getCTTbl().getTblGrid());
     CTTblPr tblPr = tbl.getTblPr();
@@ -269,6 +282,7 @@ public class WordUtilities {
   }
 
   private static void cloneParagraph(XWPFParagraph original, XWPFParagraph clone) {
+    logger.debug("Cloning table {} to table {}", original, clone);
     CTPPr ppr = clone.getCTP().isSetPPr()
             ? clone.getCTP().getPPr() : clone.getCTP().addNewPPr();
     ppr.set(original.getCTP().getPPr());
@@ -279,6 +293,7 @@ public class WordUtilities {
   }
 
   private static void cloneRun(XWPFRun original, XWPFRun clone) {
+    logger.debug("Cloning run {} to run {}", original, clone);
     CTRPr rpr = clone.getCTR().isSetRPr() ? clone.getCTR().getRPr() : clone.getCTR().addNewRPr();
     rpr.set(original.getCTR().getRPr());
     String text = original.getText(0);

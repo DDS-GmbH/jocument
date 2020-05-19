@@ -5,6 +5,8 @@ import com.docutools.jocument.PlaceholderResolver;
 import com.docutools.jocument.annotations.*;
 import com.docutools.jocument.impl.word.placeholders.ImagePlaceholderData;
 import org.apache.commons.beanutils.PropertyUtilsBean;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
@@ -29,6 +31,7 @@ import java.util.stream.Collectors;
  * @since 1.0-SNAPSHOT
  */
 public class ReflectionResolver implements PlaceholderResolver {
+  private static final Logger logger = LogManager.getLogger();
 
   private final Object bean;
   private final PropertyUtilsBean pub = new PropertyUtilsBean();
@@ -41,13 +44,15 @@ public class ReflectionResolver implements PlaceholderResolver {
     try {
       return clazz.getDeclaredField(fieldName)
               .getDeclaredAnnotation(annotation) != null;
-    } catch (Exception ignored) {
+    } catch (Exception e) {
+      logger.debug("Class %s not annotated with %s".formatted(clazz, fieldName), e);
       return false;
     }
   }
 
   @Override
   public Optional<PlaceholderData> resolve(String placeholderName, Locale locale) {
+    logger.debug("Trying to resolve placeholder {}", placeholderName);
     try {
       var property = pub.getProperty(bean, placeholderName);
         if (property instanceof Number number) {
@@ -70,8 +75,10 @@ public class ReflectionResolver implements PlaceholderResolver {
           return Optional.of(new IterablePlaceholderData(List.of(new ReflectionResolver(value)), 1));
         }
     } catch (NoSuchMethodException | IllegalArgumentException e) {
+      logger.debug("Did not find placeholder {}", placeholderName);
       return Optional.empty();
     } catch (IllegalAccessException | InvocationTargetException e) {
+      logger.error("Could not resolve placeholder %s".formatted(placeholderName), e);
       throw new IllegalStateException("Could not resolve placeholderName against type.", e);
     }
   }
@@ -89,6 +96,7 @@ public class ReflectionResolver implements PlaceholderResolver {
       } else if (time instanceof LocalDateTime) {
         formatter = Optional.of(DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT));
       } else {
+        logger.warn("Failed to format placeholder {} as temporal {}", placeholderName, time);
         formatter = Optional.empty();
       }
       formatter.map(dateTimeFormatter -> dateTimeFormatter.withLocale(locale));
@@ -103,7 +111,10 @@ public class ReflectionResolver implements PlaceholderResolver {
                     .map(money -> toNumberFormat(money, locale)))
             .or(() -> ReflectionUtils.findFieldAnnotation(bean.getClass(), fieldName, Numeric.class)
                     .map(numeric -> toNumberFormat(numeric, locale)))
-            .orElseGet(() -> NumberFormat.getInstance(locale));
+            .orElseGet(() -> {
+              logger.info("Did not find formatting directive for {}, formatting according to locale {}", fieldName, locale);
+              return NumberFormat.getInstance(locale);
+            });
   }
 
   private static NumberFormat toNumberFormat(Percentage percentage, Locale locale) {

@@ -1,11 +1,15 @@
 package com.docutools.jocument.impl;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import java.lang.annotation.Annotation;
 import java.time.temporal.Temporal;
 import java.util.Optional;
 import java.util.Set;
 
 public class ReflectionUtils {
+  private static final Logger logger = LogManager.getLogger();
 
   public static boolean isJsr310Type(Class<?> type) {
     return Temporal.class.isAssignableFrom(type);
@@ -31,10 +35,12 @@ public class ReflectionUtils {
    * @return the annotated instance on the field
    */
   public static <A extends Annotation> Optional<A> findFieldAnnotation(Class<?> baseClass, String fieldName, Class<A> annotationType) {
+    logger.debug("Searching for annotation {} in class {}", fieldName, baseClass);
     try {
       return Optional.ofNullable(baseClass.getDeclaredField(fieldName)
               .getDeclaredAnnotation(annotationType));
     } catch (NoSuchFieldException e) {
+      logger.info("Did not find annotation {} in class {}", fieldName, baseClass);
       return Optional.empty();
     }
   }

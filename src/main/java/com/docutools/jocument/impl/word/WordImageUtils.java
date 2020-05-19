@@ -1,12 +1,7 @@
 package com.docutools.jocument.impl.word;
 
-import java.awt.Dimension;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
-import java.util.Map;
-import java.util.Optional;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.util.Units;
 import org.apache.poi.xwpf.usermodel.Document;
@@ -15,7 +10,16 @@ import org.apache.poi.xwpf.usermodel.XWPFPicture;
 import org.jlibvips.VipsImage;
 import org.jlibvips.jna.VipsBindingsSingleton;
 
+import java.awt.*;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
+import java.util.Map;
+import java.util.Optional;
+
 public class WordImageUtils {
+  private static final Logger logger = LogManager.getLogger();
 
   public static final Map<String, Integer> XWPF_CONTENT_TYPE_MAPPING =
           Map.of(
@@ -59,6 +63,7 @@ public class WordImageUtils {
       return paragraph.createRun()
               .addPicture(in, contentType, path.getFileName().toString(), dim.width, dim.height);
     } catch (InvalidFormatException | IOException e) {
+      logger.error("Could not insert image from given Path %s.".formatted(path), e);
       throw new IllegalArgumentException("Could not insert image form given Path.", e);
     }
   }
@@ -69,6 +74,7 @@ public class WordImageUtils {
       image = VipsImage.fromFile(path);
       return Optional.of(new Dimension(image.getWidth(), image.getHeight()));
     } catch (Exception e) {
+      logger.warn("Failed to get dimensions of image from path %s".formatted(path), e);
       return Optional.empty();
     } finally {
       if (image != null) {
@@ -110,7 +116,8 @@ public class WordImageUtils {
     try {
       return Optional.ofNullable(Files.probeContentType(path))
               .filter(contentType -> !contentType.isBlank());
-    } catch (Exception ignored) {
+    } catch (Exception e) {
+      logger.warn("Failed to probe content type of path %s".formatted(path), e);
       return Optional.empty();
     }
   }
