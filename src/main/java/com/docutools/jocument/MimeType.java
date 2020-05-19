@@ -8,7 +8,8 @@ import java.util.Optional;
  * @since 1.0-SNAPSHOT
  */
 public enum MimeType {
-  DOCX("application/vnd.openxmlformats-officedocument.wordprocessingml.document");
+  DOCX("application/vnd.openxmlformats-officedocument.wordprocessingml.document"),
+  XLSX("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
 
   private final String value;
 
@@ -34,6 +35,9 @@ public enum MimeType {
 
     if ("docx".equals(extension)) {
       return Optional.of(DOCX);
+    }
+    if ("xlsx".equals(extension)) {
+      return Optional.of(XLSX);
     }
     return Optional.empty();
   }

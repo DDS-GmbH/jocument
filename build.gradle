@@ -6,7 +6,7 @@ plugins {
 }
 
 group 'com.docutools'
-version '1.0-SNAPSHOT'
+version '1.1'
 
 sourceCompatibility = 14
 targetCompatibility = 14
@@ -25,6 +25,12 @@ dependencies {
 
     implementation("com.google.code.gson:gson:2.8.6")
     implementation("org.apache.tika:tika-core:1.23")
+
+    implementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.13.1'
+    runtimeOnly group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.13.1'
+
+    implementation 'com.codepoetics:protonpack:1.16'
+    implementation("com.google.guava:guava:29.0-jre")
 
     implementation("com.github.codecitizen:jlibvips:f9df6c8")
 

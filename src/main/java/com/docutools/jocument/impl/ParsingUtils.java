@@ -18,4 +18,8 @@ public class ParsingUtils {
     return value.substring(2, value.length() - 2);
   }
 
+  public static String getMatchingLoopEnd(String placeholder) {
+    return String.format("{{/%s}}", placeholder);
+  }
+
 }
