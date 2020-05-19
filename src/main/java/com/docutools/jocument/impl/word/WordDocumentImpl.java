@@ -25,7 +25,7 @@ public class WordDocumentImpl extends DocumentImpl {
   protected Path generate() throws IOException {
     Path file = Files.createTempFile("document", ".docx");
     try (XWPFDocument document = new XWPFDocument(template.openStream())) {
-      LocaleUtil.setUserLocale(WordUtilities.detectMostCommonLocale(document).orElse(Locale.getDefault()));
+      LocaleUtil.setUserLocale(WordUtilities.getDocumentLanguage(document).orElse(Locale.getDefault()));
       List<IBodyElement> bodyElements = new ArrayList<>(document.getBodyElements().size());
       bodyElements.addAll(document.getBodyElements());
 

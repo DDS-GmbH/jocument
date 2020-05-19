@@ -299,4 +299,9 @@ public class WordUtilities {
             .max(Map.Entry.comparingByValue())
             .map(Map.Entry::getKey);
   }
+
+  public static Optional<Locale> getDocumentLanguage(XWPFDocument document) {
+    var documentLanguage = document.getProperties().getCoreProperties().getUnderlyingProperties().getLanguageProperty();
+    return documentLanguage.map(Locale::forLanguageTag).or(() -> detectMostCommonLocale(document));
+  }
 }
