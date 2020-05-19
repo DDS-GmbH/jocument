@@ -41,7 +41,10 @@ public class WordUtilities {
       run.setText(newText, 0);
     } else {
       runs.get(0).setText(newText, 0);
-      IntStream.range(1, runs.size()).forEach(value -> paragraph.removeRun(1)); //List collapses on delete
+      // When deleting a run from a paragraph, the collection keeping the runs shrinks to fit to the new size
+      // If we delete the runs with indices 1,2,3...,x,  the second half of the delete operations fails silently
+      // To avoid this, we simply delete the first run x times.
+      IntStream.range(1, runs.size()).forEach(value -> paragraph.removeRun(1));
     }
   }
 
