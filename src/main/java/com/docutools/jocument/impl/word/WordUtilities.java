@@ -1,5 +1,6 @@
 package com.docutools.jocument.impl.word;
 
+import com.docutools.jocument.impl.ParsingUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.poi.xwpf.usermodel.*;
@@ -43,7 +44,10 @@ public class WordUtilities {
       run.setText(newText, 0);
     } else {
       runs.get(0).setText(newText, 0);
-      IntStream.range(1, runs.size()).forEach(paragraph::removeRun);
+      // When deleting a run from a paragraph, the collection keeping the runs shrinks to fit to the new size
+      // If we delete the runs with indices 1,2,3...,x,  the second half of the delete operations fails silently
+      // To avoid this, we simply delete the first run x times.
+      IntStream.range(1, runs.size()).forEach(value -> paragraph.removeRun(1));
     }
   }
 
@@ -239,6 +243,7 @@ public class WordUtilities {
   private static String joinRuns(XWPFParagraph paragraph) {
     return paragraph.getRuns().stream()
             .map(run -> run.getText(0))
+            .filter(Objects::nonNull)       // if run is "", run.getText(0) returns null
             .collect(Collectors.joining());
   }
 
@@ -318,5 +323,9 @@ public class WordUtilities {
   public static Optional<Locale> getDocumentLanguage(XWPFDocument document) {
     var documentLanguage = document.getProperties().getCoreProperties().getUnderlyingProperties().getLanguageProperty();
     return documentLanguage.map(Locale::forLanguageTag).or(() -> detectMostCommonLocale(document));
+  }
+
+  public static String extractPlaceholderName(XWPFParagraph paragraph) {
+    return ParsingUtils.stripBrackets(WordUtilities.toString(paragraph));
   }
 }
