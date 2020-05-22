@@ -1,9 +1,11 @@
 package com.docutools.jocument.impl;
 
+import com.docutools.jocument.CustomPlaceholderRegistry;
 import com.docutools.jocument.PlaceholderData;
 import com.docutools.jocument.PlaceholderResolver;
 import com.docutools.jocument.annotations.*;
 import com.docutools.jocument.impl.word.placeholders.ImagePlaceholderData;
+import com.docutools.jocument.impl.word.placeholders.TableOfContentsPlaceholderData;
 import org.apache.commons.beanutils.PropertyUtilsBean;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -35,9 +37,16 @@ public class ReflectionResolver implements PlaceholderResolver {
 
   private final Object bean;
   private final PropertyUtilsBean pub = new PropertyUtilsBean();
+  private final CustomPlaceholderRegistry customPlaceholderRegistry;
 
   public ReflectionResolver(Object value) {
     this.bean = value;
+    this.customPlaceholderRegistry = new CustomPlaceholderRegistryImpl(); //NoOp CustomPlaceholderRegistry
+  }
+
+  public ReflectionResolver(Object value, CustomPlaceholderRegistry customPlaceholderRegistry) {
+    this.bean = value;
+    this.customPlaceholderRegistry = customPlaceholderRegistry;
   }
 
   private static boolean isFieldAnnotatedWith(Class<?> clazz, String fieldName, Class<? extends Annotation> annotation) {
@@ -54,6 +63,9 @@ public class ReflectionResolver implements PlaceholderResolver {
   public Optional<PlaceholderData> resolve(String placeholderName, Locale locale) {
     logger.debug("Trying to resolve placeholder {}", placeholderName);
     try {
+      if (customPlaceholderRegistry.governs(placeholderName)) {
+        return customPlaceholderRegistry.resolve(placeholderName);
+      }
       var property = pub.getProperty(bean, placeholderName);
         if (property instanceof Number number) {
           var numberFormat = findNumberFormat(placeholderName, locale);
@@ -63,7 +75,7 @@ public class ReflectionResolver implements PlaceholderResolver {
         return Optional.of(new ScalarPlaceholderData(property.toString()));
       } else if (property instanceof Collection<?> collection) {
           List<PlaceholderResolver> list = collection.stream()
-                  .map(ReflectionResolver::new)
+                  .map(o -> new ReflectionResolver(o, customPlaceholderRegistry))
                   .collect(Collectors.toList());
           return Optional.of(new IterablePlaceholderData(list, list.size()));
         } else if (property instanceof Temporal temporal) {
@@ -72,7 +84,7 @@ public class ReflectionResolver implements PlaceholderResolver {
           return Optional.of(new ImagePlaceholderData(path));
         } else {
           var value = pub.getProperty(bean, placeholderName);
-          return Optional.of(new IterablePlaceholderData(List.of(new ReflectionResolver(value)), 1));
+          return Optional.of(new IterablePlaceholderData(List.of(new ReflectionResolver(value, customPlaceholderRegistry)), 1));
         }
     } catch (NoSuchMethodException | IllegalArgumentException e) {
       logger.debug("Did not find placeholder {}", placeholderName);
@@ -80,6 +92,9 @@ public class ReflectionResolver implements PlaceholderResolver {
     } catch (IllegalAccessException | InvocationTargetException e) {
       logger.error("Could not resolve placeholder %s".formatted(placeholderName), e);
       throw new IllegalStateException("Could not resolve placeholderName against type.", e);
+    } catch (InstantiationException e) {
+      logger.warn("InstantiationException when trying to resolve placeholder %s".formatted(placeholderName), e);
+      return Optional.empty();
     }
   }
 
