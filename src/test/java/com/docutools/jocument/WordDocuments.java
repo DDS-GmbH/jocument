@@ -2,8 +2,12 @@ package com.docutools.jocument;
 
 import com.docutools.jocument.impl.JsonResolver;
 import com.docutools.jocument.impl.ReflectionResolver;
+import com.docutools.jocument.postprocessing.PostProcessor;
+import com.docutools.jocument.postprocessing.impl.PostProcessorImpl;
+import com.docutools.jocument.postprocessing.toc.WordCountPlaceholderFactory;
 import com.docutools.jocument.sample.model.SampleModelData;
 import org.apache.poi.util.LocaleUtil;
+import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -177,4 +181,25 @@ public class WordDocuments {
 
     Desktop.getDesktop().open(document.getPath().toFile());
   }
+
+  @Test
+  @DisplayName("Generate a document from a simple template.")
+  void shouldGenerateSimpleDocumentWithPostProcessingWordCount() throws InterruptedException, IOException {
+    // Arrange
+    Template template = Template.fromClassPath("/templates/word/WordCountTemplate.docx")
+            .orElseThrow();
+    PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.PICARD_PERSON);
+    PostProcessor<XWPFDocument> postProcessor = new PostProcessorImpl<>();
+    postProcessor.addPostProcessingResolver(WordCountPlaceholderFactory.createTableOfContentsPlaceholder(XWPFDocument.class));
+
+    // Act
+    Document document = template.startGeneration(resolver, postProcessor);
+    document.blockUntilCompletion(60000L); // 1 minute
+
+    // Assert
+    assertThat(document.completed(), is(true));
+
+    Desktop.getDesktop().open(document.getPath().toFile());
+  }
+
 }

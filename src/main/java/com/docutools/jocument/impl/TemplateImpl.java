@@ -2,6 +2,7 @@ package com.docutools.jocument.impl;
 
 import com.docutools.jocument.*;
 import com.docutools.jocument.impl.word.WordDocumentImpl;
+import com.docutools.jocument.postprocessing.PostProcessor;
 
 import java.io.IOException;
 import java.io.InputStream;

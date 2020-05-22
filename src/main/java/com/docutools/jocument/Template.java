@@ -1,6 +1,7 @@
 package com.docutools.jocument;
 
 import com.docutools.jocument.impl.TemplateImpl;
+import com.docutools.jocument.postprocessing.PostProcessor;
 import org.apache.poi.util.LocaleUtil;
 
 import java.io.IOException;
@@ -73,7 +74,7 @@ public interface Template {
    * Starts the generation of a document for the given {@link com.docutools.jocument.PlaceholderResolver} asynchronously.
    *
    * @param resolver the {@link com.docutools.jocument.PlaceholderResolver}
-   * @param postProcessor the {@link com.docutools.jocument.PostProcessor} to use
+   * @param postProcessor the {@link PostProcessor} to use
    * @return the {@link Document}
    */
   Document startGeneration(PlaceholderResolver resolver, PostProcessor postProcessor);

@@ -1,8 +1,8 @@
-package com.docutools.jocument.impl;
+package com.docutools.jocument.postprocessing.impl;
 
 import com.docutools.jocument.PlaceholderResolver;
-import com.docutools.jocument.PostProcessingResolver;
-import com.docutools.jocument.PostProcessor;
+import com.docutools.jocument.postprocessing.PostProcessingResolver;
+import com.docutools.jocument.postprocessing.PostProcessor;
 
 import java.util.LinkedList;
 import java.util.List;

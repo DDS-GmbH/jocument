@@ -1,9 +1,10 @@
 package com.docutools.jocument.impl.word;
 
 import com.docutools.jocument.PlaceholderResolver;
-import com.docutools.jocument.PostProcessor;
 import com.docutools.jocument.Template;
 import com.docutools.jocument.impl.DocumentImpl;
+import com.docutools.jocument.postprocessing.PostProcessor;
+import com.docutools.jocument.postprocessing.impl.PostProcessorImpl;
 import org.apache.poi.util.LocaleUtil;
 import org.apache.poi.xwpf.usermodel.IBodyElement;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
@@ -18,10 +19,11 @@ import java.util.Locale;
 
 public class WordDocumentImpl extends DocumentImpl {
 
-  private PostProcessor<XWPFDocument> postProcessor;
+  private final PostProcessor<XWPFDocument> postProcessor;
 
   public WordDocumentImpl(Template template, PlaceholderResolver resolver) {
     super(template, resolver);
+    this.postProcessor = new PostProcessorImpl<>(); //NoOp postprocessor
   }
 
   public WordDocumentImpl(Template template, PlaceholderResolver resolver, PostProcessor<XWPFDocument> postProcessor) {
@@ -39,9 +41,7 @@ public class WordDocumentImpl extends DocumentImpl {
 
       WordGenerator.apply(resolver, bodyElements);
 
-      if (postProcessor != null) {
-        postProcessor.process(document, resolver);
-      }
+      postProcessor.process(document, resolver);
 
       try (OutputStream os = Files.newOutputStream(file)) {
         document.write(os);
