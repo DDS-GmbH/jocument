@@ -2,7 +2,7 @@ package com.docutools.jocument.postprocessing.toc;
 
 import com.docutools.jocument.PlaceholderResolver;
 import com.docutools.jocument.impl.word.WordUtilities;
-import com.docutools.jocument.postprocessing.PostProcessingResolver;
+import com.docutools.jocument.postprocessing.PostProcessor;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
 
 import java.util.Arrays;
@@ -10,7 +10,7 @@ import java.util.Comparator;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class WordCountPlaceholderResolver implements PostProcessingResolver<XWPFDocument> {
+public class WordCountPlaceholderResolver implements PostProcessor<XWPFDocument> {
     @Override
     public void documentGenerationFinished(XWPFDocument document, PlaceholderResolver resolver) {
         var countedWords = WordUtilities.getAllParagraphs(document)

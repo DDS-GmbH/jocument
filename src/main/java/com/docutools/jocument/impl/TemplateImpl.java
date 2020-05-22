@@ -2,7 +2,7 @@ package com.docutools.jocument.impl;
 
 import com.docutools.jocument.*;
 import com.docutools.jocument.impl.word.WordDocumentImpl;
-import com.docutools.jocument.postprocessing.PostProcessor;
+import com.docutools.jocument.postprocessing.PostProcessingAdministrator;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -37,8 +37,8 @@ public class TemplateImpl implements Template {
   }
 
   @Override
-  public Document startGeneration(PlaceholderResolver resolver, PostProcessor postProcessor) {
-    return startGeneration(new WordDocumentImpl(this, resolver, postProcessor));
+  public Document startGeneration(PlaceholderResolver resolver, PostProcessingAdministrator postProcessingAdministrator) {
+    return startGeneration(new WordDocumentImpl(this, resolver, postProcessingAdministrator));
   }
 
   private Document startGeneration(DocumentImpl document) {

@@ -2,8 +2,8 @@ package com.docutools.jocument;
 
 import com.docutools.jocument.impl.JsonResolver;
 import com.docutools.jocument.impl.ReflectionResolver;
-import com.docutools.jocument.postprocessing.PostProcessor;
-import com.docutools.jocument.postprocessing.impl.PostProcessorImpl;
+import com.docutools.jocument.postprocessing.PostProcessingAdministrator;
+import com.docutools.jocument.postprocessing.impl.PostProcessingAdministratorImpl;
 import com.docutools.jocument.postprocessing.toc.WordCountPlaceholderFactory;
 import com.docutools.jocument.sample.model.SampleModelData;
 import org.apache.poi.util.LocaleUtil;
@@ -189,11 +189,11 @@ public class WordDocuments {
     Template template = Template.fromClassPath("/templates/word/WordCountTemplate.docx")
             .orElseThrow();
     PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.PICARD_PERSON);
-    PostProcessor<XWPFDocument> postProcessor = new PostProcessorImpl<>();
-    postProcessor.addPostProcessingResolver(WordCountPlaceholderFactory.createTableOfContentsPlaceholder(XWPFDocument.class));
+    PostProcessingAdministrator<XWPFDocument> postProcessingAdministrator = new PostProcessingAdministratorImpl<>();
+    postProcessingAdministrator.addPostProcessingResolver(WordCountPlaceholderFactory.createTableOfContentsPlaceholder(XWPFDocument.class));
 
     // Act
-    Document document = template.startGeneration(resolver, postProcessor);
+    Document document = template.startGeneration(resolver, postProcessingAdministrator);
     document.blockUntilCompletion(60000L); // 1 minute
 
     // Assert
