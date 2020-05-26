@@ -7,6 +7,8 @@ import com.docutools.jocument.impl.ParsingUtils;
 import com.docutools.jocument.impl.excel.interfaces.ExcelWriter;
 import com.docutools.jocument.impl.excel.util.ExcelUtils;
 import com.google.common.collect.Lists;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
@@ -27,6 +29,8 @@ import java.util.Optional;
  * @version 1.1.0
  */
 public class ExcelGenerator {
+    private static final Logger logger = LogManager.getLogger();
+
     private final ExcelWriter excelWriter;
     private final PlaceholderResolver resolver;
     private final Iterator<Row> rowIterator;
@@ -56,6 +60,7 @@ public class ExcelGenerator {
     }
 
     private void generate() {
+        logger.debug("Starting generation by applying resolver {}", resolver);
         for (Iterator<Row> iterator = rowIterator; iterator.hasNext(); ) {
             Row row = iterator.next();
 
@@ -74,13 +79,17 @@ public class ExcelGenerator {
             }
         }
         if (nestedLoopDepth != 0) { //here for clarity, could be removed since generation finishes if nestedLoopDepth == 0
+            logger.debug("Adding offset of {}", alreadyProcessedLoopsSize);
             excelWriter.addRowOffset(alreadyProcessedLoopsSize); //we are in nested loop, readd the offset to prevent subtracting it multiple times
         }
+        logger.debug("Finished generation of elements by resolver {}", resolver);
     }
 
     private void handleLoop(Row row, Iterator<Row> iterator) {
+        logger.debug("Handling loop at row {}", row.getRowNum());
         var loopBody = getLoopBody(row, iterator);
         var loopBodySize = getLoopBodySize(loopBody);
+        logger.debug("Loop body size: {}", loopBodySize);
         var finalLoopBody = loopBody.subList(1, loopBody.size() - 1);
         var placeholderData = getPlaceholderData(row);
         placeholderData.stream()
@@ -92,11 +101,13 @@ public class ExcelGenerator {
                 });
         var loopPlaceholderSize = getLoopSize(loopBody);
         excelWriter.addRowOffset(-1 * loopPlaceholderSize);
+        logger.debug("Subtracting row offset of {}", loopPlaceholderSize);
         alreadyProcessedLoopsSize += loopPlaceholderSize;
     }
 
     private List<Row> getLoopBody(Row row, Iterator<Row> iterator) {
         var placeholder = ExcelUtils.getPlaceholder(row);
+        logger.debug("Unrolling loop of {}", placeholder);
         LinkedList<Row> rowBuffer = new LinkedList<>();
         rowBuffer.add(row);
         var rowInFocus = iterator.next();
@@ -105,6 +116,7 @@ public class ExcelGenerator {
             rowInFocus = iterator.next();
         }
         rowBuffer.addLast(rowInFocus);
+        logger.debug("Unrolled loop of {}", placeholder);
         return rowBuffer;
     }
 
@@ -131,6 +143,7 @@ public class ExcelGenerator {
 
     private PlaceholderData getPlaceholderData(Row row) {
         var placeholder = ExcelUtils.getPlaceholder(row.getCell(row.getFirstCellNum()));
+        logger.debug("Resolving placeholder of {}", placeholder);
         return resolver
                 .resolve(placeholder)
                 .filter(p -> p.getType() == PlaceholderType.SET)
