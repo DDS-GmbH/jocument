@@ -2,6 +2,8 @@ package com.docutools.jocument.impl.excel.util;
 
 import com.docutools.jocument.impl.DocumentImpl;
 import com.docutools.jocument.impl.ParsingUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
@@ -12,6 +14,8 @@ import java.util.Locale;
 import java.util.Optional;
 
 public class ExcelUtils {
+    private static final Logger logger = LogManager.getLogger();
+
     public static String getPlaceholder(Cell cell) {
         return ParsingUtils.stripBrackets(cell.getStringCellValue());
     }
@@ -22,6 +26,7 @@ public class ExcelUtils {
     }
 
     public static Cell replaceCellContent(Cell cell, String replacement) {
+        logger.debug("Replacing content of cell {} with string {}", cell.getStringCellValue(), replacement);
         cell.setCellValue(replacement);
         return cell;
     }
