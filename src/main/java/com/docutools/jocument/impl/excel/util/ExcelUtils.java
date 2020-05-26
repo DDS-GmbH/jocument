@@ -5,8 +5,11 @@ import com.docutools.jocument.impl.ParsingUtils;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.util.Iterator;
+import java.util.Locale;
+import java.util.Optional;
 
 public class ExcelUtils {
     public static String getPlaceholder(Cell cell) {
@@ -69,5 +72,10 @@ public class ExcelUtils {
             isSimpleRow &= isSimpleCell(cell);
         }
         return isSimpleRow;
+    }
+
+    public static Optional<Locale> getWorkbookLanguage(XSSFWorkbook workbook) {
+        var workbookLanguage = workbook.getProperties().getCoreProperties().getUnderlyingProperties().getLanguageProperty();
+        return workbookLanguage.map(Locale::forLanguageTag);
     }
 }
