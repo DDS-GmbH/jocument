@@ -31,7 +31,7 @@ test:
 publish:
   stage: publish
   script:
-    - gradle :publish -x :test
+    - gradle :publish -x :test -x :check
   artifacts:
     paths:
       - ./build/libs/*
