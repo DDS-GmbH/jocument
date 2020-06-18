@@ -1,4 +1,4 @@
-image: openjdk:14
+image: gradle:6.5-jdk14
 
 cache:
   key: jocument
@@ -13,7 +13,7 @@ stages:
 build:
   stage: build
   script:
-    - ./gradlew :clean :build -x :test -x :check
+    - gradle :clean :build -x :test -x :check
   artifacts:
     paths:
       - ./build/libs/*
@@ -21,7 +21,7 @@ build:
 test:
   stage: test
   script:
-    - ./gradlew :automatedTests -x :check
+    - gradle :automatedTests -x :check
   artifacts:
     paths:
       - ./build/libs/*
@@ -31,7 +31,7 @@ test:
 publish:
   stage: publish
   script:
-    - ./gradlew :publish -x :test
+    - gradle :publish -x :test
   artifacts:
     paths:
       - ./build/libs/*
