@@ -1,0 +1,40 @@
+image: openjdk:15
+
+cache:
+  key: jocument
+  paths:
+    - .gradle/wrapper
+    - .gradle/caches
+
+stages:
+  - build
+  - test
+  - publish
+
+build:
+  stage: build
+  script:
+    - ./gradlew :clean :build -x :test -x :check
+  artifacts:
+    paths:
+      - jocument/build/libs/*
+
+test:
+  stage: test
+  script:
+    - ./gradlew :automatedTests -x :check
+  artifacts:
+    paths:
+      - jocument/build/libs/*
+    reports:
+      junit: jocument/build/test-results/automatedTests/TEST-*.xml
+
+publish:
+  stage: publish
+  script:
+    - ./gradlew :publish -x :test
+  artifacts:
+    paths:
+      - jocument/build/libs/*
+  only:
+    - main

@@ -3,10 +3,11 @@ plugins {
     id 'checkstyle'
     id "org.sonarqube" version "2.8"
     id "org.owasp.dependencycheck" version "5.2.4"
+    id 'maven-publish'
 }
 
 group 'com.docutools'
-version '1.1'
+version '1.0.0'
 
 sourceCompatibility = 14
 targetCompatibility = 14
@@ -62,4 +63,40 @@ compileTestJava {
 test {
     jvmArgs '--enable-preview'
     useJUnitPlatform()
+}
+
+task automatedTests(type: Test) {
+    jvmArgs '--enable-preview'
+    useJUnitPlatform()
+    include '**/*Test.class'
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            artifactId = 'jocument'
+            from components.java
+            versionMapping {
+                usage('java-api') {
+                    fromResolutionOf('runtimeClasspath')
+                }
+                usage('java-runtime') {
+                    fromResolutionResult()
+                }
+            }
+        }
+    }
+    repositories {
+        maven {
+            url "https://gitlab.com/api/v4/groups/docu-tools/-/packages/maven"
+            name "GitLab"
+            credentials(HttpHeaderCredentials) {
+                name = 'Job-Token'
+                value = '${CI_JOB_TOKEN}'
+            }
+            authentication {
+                header(HttpHeaderAuthentication)
+            }
+        }
+    }
 }
