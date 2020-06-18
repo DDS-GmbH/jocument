@@ -3,8 +3,7 @@ image: openjdk:14
 cache:
   key: jocument
   paths:
-    - .gradle/wrapper
-    - .gradle/caches
+    - .gradle/*
 
 stages:
   - build
@@ -17,7 +16,7 @@ build:
     - ./gradlew :clean :build -x :test -x :check
   artifacts:
     paths:
-      - jocument/build/libs/*
+      - ./build/libs/*
 
 test:
   stage: test
@@ -25,9 +24,9 @@ test:
     - ./gradlew :automatedTests -x :check
   artifacts:
     paths:
-      - jocument/build/libs/*
+      - ./build/libs/*
     reports:
-      junit: jocument/build/test-results/automatedTests/TEST-*.xml
+      junit: ./build/test-results/automatedTests/TEST-*.xml
 
 publish:
   stage: publish
@@ -35,6 +34,6 @@ publish:
     - ./gradlew :publish -x :test
   artifacts:
     paths:
-      - jocument/build/libs/*
+      - ./build/libs/*
   only:
     - main
