@@ -88,14 +88,10 @@ publishing {
     }
     repositories {
         maven {
-            url "https://gitlab.com/api/v4/groups/docu-tools/-/packages/maven"
-            name "GitLab"
-            credentials(HttpHeaderCredentials) {
-                name = 'Job-Token'
-                value = '${CI_JOB_TOKEN}'
-            }
-            authentication {
-                header(HttpHeaderAuthentication)
+            url "s3://docu-tools-maven/${project.version.endsWith('-SNAPSHOT') ? 'snapshot' : 'release'}"
+            credentials(AwsCredentials) {
+                accessKey project.hasProperty('AWS_ACCESS_KEY') ? AWS_ACCESS_KEY : "${System.env.AWS_ACCESS_KEY}"
+                secretKey project.hasProperty('AWS_SECRET_KEY') ? AWS_SECRET_KEY : "${System.env.AWS_SECRET_KEY}"
             }
         }
     }
