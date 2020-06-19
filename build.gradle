@@ -37,12 +37,15 @@ dependencies {
     testImplementation('org.junit.jupiter:junit-jupiter:5.6.0')
     testImplementation("org.hamcrest:hamcrest:2.2")
 
-    checkstyle 'com.puppycrawl.tools:checkstyle:8.29'
+    checkstyle 'com.puppycrawl.tools:checkstyle:8.33'
 }
 
 tasks.withType(Checkstyle) {
     ignoreFailures = false
-    maxWarnings = 0
+    maxWarnings = 0 // Maximum number of warnings allowed
+    reports {
+        html.destination rootProject.file("build/reports/checkstyle.html")
+    }
 }
 
 dependencyCheck {

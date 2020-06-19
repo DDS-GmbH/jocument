@@ -1,19 +1,18 @@
 package com.docutools.jocument;
 
-import com.docutools.jocument.impl.ReflectionResolver;
-import com.docutools.jocument.sample.model.SampleModelData;
-import com.docutools.jocument.sample.model.Uniform;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-
-import java.util.List;
-import java.util.stream.Collectors;
-
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
+
+import com.docutools.jocument.impl.ReflectionResolver;
+import com.docutools.jocument.sample.model.SampleModelData;
+import com.docutools.jocument.sample.model.Uniform;
+import java.util.List;
+import java.util.stream.Collectors;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 
 @DisplayName("Resolve placeholders from an object graph via reflection.")
 public class ReflectionResolving {
@@ -30,16 +29,16 @@ public class ReflectionResolving {
   void shouldResolveAttributes() {
     // Act
     String name = resolver.resolve("name")
-            .map(PlaceholderData::toString)
-            .orElseThrow();
+        .map(PlaceholderData::toString)
+        .orElseThrow();
     int rank = resolver.resolve("rank")
-            .map(PlaceholderData::toString)
-            .map(Integer::parseInt)
-            .orElseThrow();
+        .map(PlaceholderData::toString)
+        .map(Integer::parseInt)
+        .orElseThrow();
     Uniform uniform = resolver.resolve("uniform")
-            .map(PlaceholderData::toString)
-            .map(Uniform::valueOf)
-            .orElseThrow();
+        .map(PlaceholderData::toString)
+        .map(Uniform::valueOf)
+        .orElseThrow();
     // Assert
     assertThat(name, equalTo(SampleModelData.PICARD.getName()));
     assertThat(rank, is(4));
@@ -51,11 +50,11 @@ public class ReflectionResolving {
   void shouldResolveObject() {
     // Act
     PlaceholderResolver embeddedResolver = resolver.resolve("officer")
-            .flatMap(r -> r.stream().findFirst())
-            .orElseThrow();
+        .flatMap(r -> r.stream().findFirst())
+        .orElseThrow();
     String name = embeddedResolver.resolve("name")
-            .map(PlaceholderData::toString)
-            .orElseThrow();
+        .map(PlaceholderData::toString)
+        .orElseThrow();
     // Act
     assertThat(name, equalTo("Riker"));
   }
@@ -74,12 +73,12 @@ public class ReflectionResolving {
   void shouldResolveCollection() {
     // Act
     List<String> shipNames = resolver.resolve("services")
-            .map(data -> data.stream()
-                    .map(r -> r.resolve("shipName")
-                            .map(PlaceholderData::toString)
-                            .orElseThrow())
-                    .collect(Collectors.toList()))
-            .orElseThrow();
+        .map(data -> data.stream()
+            .map(r -> r.resolve("shipName")
+                .map(PlaceholderData::toString)
+                .orElseThrow())
+            .collect(Collectors.toList()))
+        .orElseThrow();
     // Act
     assertThat(shipNames, contains("USS Enterprise", "US Defiant"));
   }

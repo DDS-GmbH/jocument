@@ -1,18 +1,17 @@
 package com.docutools.jocument;
 
-import com.docutools.jocument.impl.JsonResolver;
-import com.docutools.jocument.impl.ReflectionResolver;
-import com.docutools.jocument.sample.model.SampleModelData;
-import org.apache.poi.util.LocaleUtil;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-
-import java.awt.*;
-import java.io.IOException;
-
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
+
+import com.docutools.jocument.impl.JsonResolver;
+import com.docutools.jocument.impl.ReflectionResolver;
+import com.docutools.jocument.sample.model.SampleModelData;
+import java.awt.Desktop;
+import java.io.IOException;
+import org.apache.poi.util.LocaleUtil;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 
 @DisplayName("Generating Word Documents")
 public class WordDocuments {
@@ -22,7 +21,7 @@ public class WordDocuments {
   void shouldLoadWordTemplateFromCP() {
     // Act
     Template template = Template.fromClassPath("/templates/word/UserProfileTemplate.docx")
-            .orElseThrow();
+        .orElseThrow();
 
     // Assert
     assertThat(template.getMimeType(), is(MimeType.DOCX));
@@ -43,7 +42,7 @@ public class WordDocuments {
   void shouldAssumeDefaultLocale() {
     // Act
     var result = Template.fromClassPath("/templates/word/UserProfileTemplate.docx")
-            .orElseThrow();
+        .orElseThrow();
 
     // Assert
     assertThat(result.getLocale(), equalTo(LocaleUtil.getUserLocale()));
@@ -54,7 +53,7 @@ public class WordDocuments {
   void shouldGenerateSimpleDocument() throws InterruptedException, IOException {
     // Arrange
     Template template = Template.fromClassPath("/templates/word/UserProfileTemplate.docx")
-            .orElseThrow();
+        .orElseThrow();
     PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.PICARD_PERSON);
 
     // Act
@@ -72,7 +71,7 @@ public class WordDocuments {
   void shouldGenerateMultiLocaleDocument() throws InterruptedException, IOException {
     // Arrange
     Template template = Template.fromClassPath("/templates/word/UserProfileTemplateWithDifferentLocales.docx")
-            .orElseThrow();
+        .orElseThrow();
     PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.PICARD_PERSON);
 
     // Act
@@ -91,7 +90,7 @@ public class WordDocuments {
   void shouldReplacePlaceholdersInTables() throws InterruptedException, IOException {
     // Arrange
     Template template = Template.fromClassPath("/templates/word/UserProfileWithTableTemplate.docx")
-            .orElseThrow();
+        .orElseThrow();
     PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.PICARD_PERSON);
 
     // Act
@@ -109,7 +108,7 @@ public class WordDocuments {
   void shouldResolveCollectionPlaceholders() throws InterruptedException, IOException {
     // Arrange
     Template template = Template.fromClassPath("/templates/word/CollectionsTemplate.docx")
-            .orElseThrow();
+        .orElseThrow();
     PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.PICARD);
 
     // Act
@@ -127,7 +126,7 @@ public class WordDocuments {
   void shouldApplyCustomWordPlaceholder() throws InterruptedException, IOException {
     // Arrange
     Template template = Template.fromClassPath("/templates/word/CustomPlaceholderTemplate.docx")
-            .orElseThrow();
+        .orElseThrow();
     PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.PICARD);
 
     // Act
@@ -145,7 +144,7 @@ public class WordDocuments {
   void shouldApplyCustomWordPlaceholderFromJson() throws InterruptedException, IOException {
     // Arrange
     Template template = Template.fromClassPath("/templates/word/CustomPlaceholderTemplate.docx")
-            .orElseThrow();
+        .orElseThrow();
 
     String json = TestUtils.getText("json/picard.json");
     PlaceholderResolver resolver = new JsonResolver(json);
@@ -165,7 +164,7 @@ public class WordDocuments {
   void shouldGenerateSimpleDocumentWithTOC() throws InterruptedException, IOException {
     // Arrange
     Template template = Template.fromClassPath("/templates/word/TOCTemplate.docx")
-            .orElseThrow();
+        .orElseThrow();
     PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.PICARD_PERSON);
 
     // Act

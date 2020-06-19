@@ -9,8 +9,8 @@ import java.util.stream.Stream;
  * of {@link this#toString()}.</p>
  *
  * @author codecitzen
- * @since 1.0-SNAPSHOT
  * @see com.docutools.jocument.PlaceholderResolver
+ * @since 1.0-SNAPSHOT
  */
 public interface PlaceholderData {
 

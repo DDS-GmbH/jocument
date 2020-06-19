@@ -1,20 +1,23 @@
 package com.docutools.jocument.impl.word;
 
+import static com.docutools.jocument.impl.DocumentImpl.TAG_PATTERN;
+
 import com.docutools.jocument.PlaceholderData;
 import com.docutools.jocument.PlaceholderResolver;
 import com.docutools.jocument.PlaceholderType;
 import com.docutools.jocument.impl.ParsingUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.apache.poi.util.LocaleUtil;
-import org.apache.poi.xwpf.usermodel.*;
-
 import java.util.List;
 import java.util.Locale;
 import java.util.regex.MatchResult;
 import java.util.stream.Collectors;
-
-import static com.docutools.jocument.impl.DocumentImpl.TAG_PATTERN;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.apache.poi.util.LocaleUtil;
+import org.apache.poi.xwpf.usermodel.IBodyElement;
+import org.apache.poi.xwpf.usermodel.XWPFParagraph;
+import org.apache.poi.xwpf.usermodel.XWPFTable;
+import org.apache.poi.xwpf.usermodel.XWPFTableCell;
+import org.apache.poi.xwpf.usermodel.XWPFTableRow;
 
 class WordGenerator {
   private static final Logger logger = LogManager.getLogger();
@@ -52,7 +55,7 @@ class WordGenerator {
       unrollLoop((XWPFParagraph) element, remaining);
     } else if (isCustomPlaceholder(element)) {
       resolver.resolve(WordUtilities.extractPlaceholderName((XWPFParagraph) element))
-              .ifPresent(placeholderData -> placeholderData.transform(element));
+          .ifPresent(placeholderData -> placeholderData.transform(element));
     } else if (element instanceof XWPFParagraph xwpfParagraph) {
       transform(xwpfParagraph);
     } else if (element instanceof XWPFTable xwpfTable) {
@@ -63,23 +66,23 @@ class WordGenerator {
 
   private void transform(XWPFTable table) {
     table.getRows()
-            .stream()
-            .map(XWPFTableRow::getTableCells)
-            .flatMap(List::stream)
-            .map(XWPFTableCell::getParagraphs)
-            .flatMap(List::stream)
-            .forEach(this::transform);
+        .stream()
+        .map(XWPFTableRow::getTableCells)
+        .flatMap(List::stream)
+        .map(XWPFTableCell::getParagraphs)
+        .flatMap(List::stream)
+        .forEach(this::transform);
     logger.debug("Transformed table {}", table);
   }
 
   private void transform(XWPFParagraph paragraph) {
     Locale locale = WordUtilities.detectMostCommonLocale(paragraph)
-            .orElse(LocaleUtil.getUserLocale());
+        .orElse(LocaleUtil.getUserLocale());
     WordUtilities.replaceText(
-            paragraph,
-            TAG_PATTERN
-                    .matcher(WordUtilities.toString(paragraph))
-                    .replaceAll(matchResult -> fillPlaceholder(matchResult, locale))
+        paragraph,
+        TAG_PATTERN
+            .matcher(WordUtilities.toString(paragraph))
+            .replaceAll(matchResult -> fillPlaceholder(matchResult, locale))
     );
     logger.debug("Transformed paragraph {}", paragraph);
   }
@@ -88,12 +91,12 @@ class WordGenerator {
     var placeholderName = WordUtilities.extractPlaceholderName(start);
     logger.debug("Unrolling loop of {}", placeholderName);
     var placeholderData = resolver.resolve(placeholderName)
-            .filter(p -> p.getType() == PlaceholderType.SET)
-            .orElseThrow();
+        .filter(p -> p.getType() == PlaceholderType.SET)
+        .orElseThrow();
     var content = getLoopBody(placeholderName, remaining);
 
     placeholderData.stream().forEach(itemResolver ->
-            apply(itemResolver, WordUtilities.copyBefore(content, start)));
+        apply(itemResolver, WordUtilities.copyBefore(content, start)));
 
     removeLoop(start, content, remaining);
     logger.debug("Unrolled loop of {}", placeholderName);
@@ -109,30 +112,30 @@ class WordGenerator {
     var endLoopMarker = String.format("{{/%s}}", placeholderName);
     logger.debug("Getting loop body from {} to {}", placeholderName, endLoopMarker);
     return remaining.stream()
-            //Could be written nice with `takeUntil(element -> (element instanceof XP xp && eLM.equals(WU.toString(xp)))
-            .takeWhile(element -> !(element instanceof XWPFParagraph xwpfParagraph &&
-                                  endLoopMarker.equals(WordUtilities.toString(xwpfParagraph))))
-            .collect(Collectors.toList());
+        //Could be written nice with `takeUntil(element -> (element instanceof XP xp && eLM.equals(WU.toString(xp)))
+        .takeWhile(element -> !(element instanceof XWPFParagraph xwpfParagraph &&
+            endLoopMarker.equals(WordUtilities.toString(xwpfParagraph))))
+        .collect(Collectors.toList());
   }
 
   private boolean isLoopStart(IBodyElement element) {
     return element instanceof XWPFParagraph xwpfParagraph
-            && resolver.resolve(
-            ParsingUtils.stripBrackets(
-                    WordUtilities.toString(xwpfParagraph)
-            )).map(PlaceholderData::getType)
-            .map(type -> type == PlaceholderType.SET)
-            .orElse(false);
+        && resolver.resolve(
+        ParsingUtils.stripBrackets(
+            WordUtilities.toString(xwpfParagraph)
+        )).map(PlaceholderData::getType)
+        .map(type -> type == PlaceholderType.SET)
+        .orElse(false);
   }
 
   private boolean isCustomPlaceholder(IBodyElement element) {
     return element instanceof XWPFParagraph xwpfParagraph
-            && resolver.resolve(
-            ParsingUtils.stripBrackets(
-                    WordUtilities.toString(xwpfParagraph).trim()
-            )).map(PlaceholderData::getType)
-            .map(type -> type == PlaceholderType.CUSTOM)
-            .orElse(false);
+        && resolver.resolve(
+        ParsingUtils.stripBrackets(
+            WordUtilities.toString(xwpfParagraph).trim()
+        )).map(PlaceholderData::getType)
+        .map(type -> type == PlaceholderType.CUSTOM)
+        .orElse(false);
   }
 
   private String fillPlaceholder(MatchResult result, Locale locale) {
@@ -140,7 +143,7 @@ class WordGenerator {
     String placeholderName = ParsingUtils.stripBrackets(placeholder);
     logger.debug("Resolving placeholder {}", placeholderName);
     return resolver.resolve(placeholderName, locale)
-            .map(PlaceholderData::toString)
-            .orElse(placeholder); // leave placeholder for post processing
+        .map(PlaceholderData::toString)
+        .orElse(placeholder); // leave placeholder for post processing
   }
 }

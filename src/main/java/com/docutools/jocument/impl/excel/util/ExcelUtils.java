@@ -2,6 +2,9 @@ package com.docutools.jocument.impl.excel.util;
 
 import com.docutools.jocument.impl.DocumentImpl;
 import com.docutools.jocument.impl.ParsingUtils;
+import java.util.Iterator;
+import java.util.Locale;
+import java.util.Optional;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.poi.ss.usermodel.Cell;
@@ -9,78 +12,107 @@ import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
-import java.util.Iterator;
-import java.util.Locale;
-import java.util.Optional;
-
 public class ExcelUtils {
-    private static final Logger logger = LogManager.getLogger();
+  private static final Logger logger = LogManager.getLogger();
 
-    public static String getPlaceholder(Cell cell) {
-        return ParsingUtils.stripBrackets(cell.getStringCellValue());
-    }
+  public static String getPlaceholder(Cell cell) {
+    return ParsingUtils.stripBrackets(cell.getStringCellValue());
+  }
 
-    public static boolean isSimpleCell(Cell cell) {
-        return cell.getCellType() != CellType.STRING
-                || cell.getCellType() == CellType.STRING && !DocumentImpl.TAG_PATTERN.asPredicate().test(cell.getStringCellValue());
-    }
+  public static String getPlaceholder(Row row) {
+    return ParsingUtils.stripBrackets(row.getCell(row.getFirstCellNum()).getStringCellValue());
+  }
 
-    public static Cell replaceCellContent(Cell cell, String replacement) {
-        logger.debug("Replacing content of cell {} with string {}", cell.getStringCellValue(), replacement);
-        cell.setCellValue(replacement);
-        return cell;
-    }
+  public static boolean isSimpleCell(Cell cell) {
+    return cell.getCellType() != CellType.STRING
+        || cell.getCellType() == CellType.STRING && !DocumentImpl.TAG_PATTERN.asPredicate().test(cell.getStringCellValue());
+  }
 
-    public static boolean isLoopEnd(Row row) {
-        if (row.getPhysicalNumberOfCells() == 1) {
-            var cell = row.getCell(row.getFirstCellNum());
-            if (cell.getCellType() == CellType.STRING) {
-                return DocumentImpl.LOOP_END_PATTERN.asPredicate().test(cell.getStringCellValue());
-            }
-        }
-        return false;
-    }
+  /**
+   * This method replaces the string content of a cell with the replacement string.
+   *
+   * @param cell        The cell where the new value should be inserted
+   * @param replacement The string which should be inserted into the cell
+   * @return The cell with the new value inserted
+   */
+  public static Cell replaceCellContent(Cell cell, String replacement) {
+    logger.debug("Replacing content of cell {} with string {}", cell.getStringCellValue(), replacement);
+    cell.setCellValue(replacement);
+    return cell;
+  }
 
-    public static String getPlaceholder(Row row) {
-        return ParsingUtils.stripBrackets(row.getCell(row.getFirstCellNum()).getStringCellValue());
+  /**
+   * This method checks whether the handed row contains a loop-end cell.
+   *
+   * @param row The row to check for a loop end string
+   * @return Whether the row contains a loop end string
+   */
+  public static boolean isLoopEnd(Row row) {
+    if (row.getPhysicalNumberOfCells() == 1) {
+      var cell = row.getCell(row.getFirstCellNum());
+      if (cell.getCellType() == CellType.STRING) {
+        return DocumentImpl.LOOP_END_PATTERN.asPredicate().test(cell.getStringCellValue());
+      }
     }
+    return false;
+  }
 
-    public static String getPlaceholderFromLoopEnd(Row row) {
-        return ParsingUtils.stripBrackets(row.getCell(row.getFirstCellNum()).getStringCellValue()).substring(1);
-    }
+  public static String getPlaceholderFromLoopEnd(Row row) {
+    return ParsingUtils.stripBrackets(row.getCell(row.getFirstCellNum()).getStringCellValue()).substring(1);
+  }
 
-    public static boolean isMatchingLoopEnd(Row row, String placeholder) {
-        var endPlaceholder = ParsingUtils.getMatchingLoopEnd(placeholder);
-        if (row.getPhysicalNumberOfCells() == 1) {
-            var cell = row.getCell(row.getFirstCellNum());
-            if (cell.getCellType() == CellType.STRING) {
-                return cell.getStringCellValue().equals(endPlaceholder);
-            }
-        }
-        return false;
+  /**
+   * This method checks whether the passed row contains the loop-end tag for the passed placeholder.
+   *
+   * @param row         The row to check for the correct loop-end string
+   * @param placeholder The loop-start placeholder for which we want to know whether it is terminated in this row
+   * @return Whether the matching loop-end string for the placeholder was found in this row
+   */
+  public static boolean isMatchingLoopEnd(Row row, String placeholder) {
+    var endPlaceholder = ParsingUtils.getMatchingLoopEnd(placeholder);
+    if (row.getPhysicalNumberOfCells() == 1) {
+      var cell = row.getCell(row.getFirstCellNum());
+      if (cell.getCellType() == CellType.STRING) {
+        return cell.getStringCellValue().equals(endPlaceholder);
+      }
     }
+    return false;
+  }
 
-    public static boolean isMatchingLoopStart(Row row, String placeholder) {
-        if (row.getPhysicalNumberOfCells() == 1) {
-            var cell = row.getCell(row.getFirstCellNum());
-            if (cell.getCellType() == CellType.STRING) {
-                return ParsingUtils.stripBrackets(cell.getStringCellValue()).equals(placeholder);
-            }
-        }
-        return false;
+  /**
+   * This method checks whether the passed row contains the loop-start tag for the passed placeholder.
+   *
+   * @param row         The row to check for the correct loop-start string
+   * @param placeholder The loop-start placeholder for which we want to know whether it is started in this row
+   * @return Whether the matching loop-start string for the placeholder was found in this row
+   */
+  public static boolean isMatchingLoopStart(Row row, String placeholder) {
+    if (row.getPhysicalNumberOfCells() == 1) {
+      var cell = row.getCell(row.getFirstCellNum());
+      if (cell.getCellType() == CellType.STRING) {
+        return ParsingUtils.stripBrackets(cell.getStringCellValue()).equals(placeholder);
+      }
     }
+    return false;
+  }
 
-    public static boolean isSimpleRow(Row row) {
-        var isSimpleRow = true;
-        for (Iterator<Cell> it = row.cellIterator(); it.hasNext(); ) {
-            Cell cell = it.next();
-            isSimpleRow &= isSimpleCell(cell);
-        }
-        return isSimpleRow;
+  /**
+   * This method checks whether the passed row contains a placeholder.
+   *
+   * @param row The row to check for a placeholder
+   * @return Whether the row contains a placeholder
+   */
+  public static boolean isSimpleRow(Row row) {
+    var isSimpleRow = true;
+    for (Iterator<Cell> it = row.cellIterator(); it.hasNext(); ) {
+      Cell cell = it.next();
+      isSimpleRow &= isSimpleCell(cell);
     }
+    return isSimpleRow;
+  }
 
-    public static Optional<Locale> getWorkbookLanguage(XSSFWorkbook workbook) {
-        var workbookLanguage = workbook.getProperties().getCoreProperties().getUnderlyingProperties().getLanguageProperty();
-        return workbookLanguage.map(Locale::forLanguageTag);
-    }
+  public static Optional<Locale> getWorkbookLanguage(XSSFWorkbook workbook) {
+    var workbookLanguage = workbook.getProperties().getCoreProperties().getUnderlyingProperties().getLanguageProperty();
+    return workbookLanguage.map(Locale::forLanguageTag);
+  }
 }

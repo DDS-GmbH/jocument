@@ -48,7 +48,8 @@ public @interface Numeric {
   int minIntDigits() default -1;
 
   /**
-   * Sets the currency code of the currency to use when formatting this Numeric
+   * Sets the currency code of the currency to use when formatting this Numeric.
+   *
    * @return The currency code
    * @see java.text.NumberFormat#setCurrency(Currency)
    * @see java.util.Currency#getInstance(String)
@@ -60,6 +61,7 @@ public @interface Numeric {
    * For example, in the English locale, with grouping on, the number 1234567 might be formatted as "1,234,567".
    * The grouping separator as well as the size of each group is locale dependent and is determined by
    * sub-classes of NumberFormat.
+   *
    * @return true if grouping is used; false otherwise
    * @see java.text.NumberFormat
    */
@@ -68,6 +70,7 @@ public @interface Numeric {
   /**
    * Sets whether only the integer part should be parsed.
    * E.g: if true, "345.67" -> 345
+   *
    * @return true if only the integer part is parsed, false otherwise
    * @see java.text.NumberFormat#isParseIntegerOnly()
    */
@@ -75,6 +78,7 @@ public @interface Numeric {
 
   /**
    * Sets the rounding mode to use when rounding is necessary.
+   *
    * @return The used rounding mode
    * @see java.text.NumberFormat#setRoundingMode(RoundingMode)
    * @see java.math.RoundingMode

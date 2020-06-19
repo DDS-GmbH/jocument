@@ -1,11 +1,11 @@
 package com.docutools.jocument;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.equalTo;
+
 import com.docutools.jocument.impl.ParsingUtils;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-
-import static org.hamcrest.MatcherAssert.*;
-import static org.hamcrest.Matchers.*;
 
 @DisplayName("Parsing Utils")
 public class ParsingUtilsTest {

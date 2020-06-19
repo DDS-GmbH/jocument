@@ -1,12 +1,11 @@
 package com.docutools.jocument;
 
 import com.docutools.jocument.impl.TemplateImpl;
-import org.apache.poi.util.LocaleUtil;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Locale;
 import java.util.Optional;
+import org.apache.poi.util.LocaleUtil;
 
 /**
  * A template for a given {@link com.docutools.jocument.MimeType}. You can generate
@@ -14,10 +13,10 @@ import java.util.Optional;
  * which runs asynchronously.
  *
  * @author codecitizen
- * @since 1.0-SNAPSHOT
  * @see com.docutools.jocument.MimeType
  * @see com.docutools.jocument.PlaceholderResolver
  * @see Document
+ * @since 1.0-SNAPSHOT
  */
 public interface Template {
 
@@ -35,16 +34,16 @@ public interface Template {
   /**
    * Creates a {@link com.docutools.jocument.Template} instance from a template file on the classpath.
    *
-   * @param path the resource path
+   * @param path   the resource path
    * @param locale the templates {@link java.util.Locale}
    * @return the {@link com.docutools.jocument.Template} when the resource was found.
    * @throws java.lang.IllegalArgumentException when the files MIME type is not supported.
    */
   static Optional<Template> fromClassPath(String path, Locale locale) {
     var mimeType = MimeType.fromFileExtension(path)
-            .orElseThrow(() -> new IllegalArgumentException("Unsupported MIME-Type: " + path));
+        .orElseThrow(() -> new IllegalArgumentException("Unsupported MIME-Type: " + path));
     return Optional.ofNullable(Template.class.getResource(path))
-            .map(url -> new TemplateImpl(url, mimeType, locale));
+        .map(url -> new TemplateImpl(url, mimeType, locale));
   }
 
   /**
