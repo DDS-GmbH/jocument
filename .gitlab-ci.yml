@@ -7,6 +7,7 @@ cache:
 
 stages:
   - build
+  - check
   - test
   - publish
 
@@ -17,6 +18,19 @@ build:
   artifacts:
     paths:
       - ./build/libs/*
+
+sonarqube:
+  stage: check
+  image:  sonarsource/sonar-scanner-cli:4.3
+  variables:
+    SONAR_HOST: https://sonarqube.docu-tools.com
+    SONAR_BASE_DIR: ./src/main/java
+    SONAR_LANG: java
+  script:
+    - 'sonar-scanner -Dsonar.host.url=$SONAR_HOST -Dsonar.login=$SQ_TOKEN -Dsonar.projectKey=$CI_PROJECT_NAME -Dsonar.projectBaseDir=$SONAR_BASE_DIR -Dsonar.language=$SONAR_LANG -Dsonar.java.binaries=.'
+  except:
+    refs:
+      - production
 
 test:
   stage: test
