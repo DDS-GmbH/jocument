@@ -1,0 +1,39 @@
+image: gradle:6.5-jdk14
+
+cache:
+  key: jocument
+  paths:
+    - .gradle/*
+
+stages:
+  - build
+  - test
+  - publish
+
+build:
+  stage: build
+  script:
+    - gradle :clean :build -x :test -x :check
+  artifacts:
+    paths:
+      - ./build/libs/*
+
+test:
+  stage: test
+  script:
+    - gradle :automatedTests -x :check
+  artifacts:
+    paths:
+      - ./build/libs/*
+    reports:
+      junit: ./build/test-results/automatedTests/TEST-*.xml
+
+publish:
+  stage: publish
+  script:
+    - gradle :publish -x :test -x :check
+  artifacts:
+    paths:
+      - ./build/libs/*
+  only:
+    - main

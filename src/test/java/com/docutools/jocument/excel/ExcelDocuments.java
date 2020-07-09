@@ -71,24 +71,6 @@ public class ExcelDocuments {
   }
 
   @Test
-  @DisplayName("Resolve picture placeholder.")
-  void shouldResolvePicturePlaceholder() throws InterruptedException, IOException {
-    // Arrange
-    Template template = Template.fromClassPath("/templates/excel/PictureTemplate.xlsx")
-        .orElseThrow();
-    PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.PICARD);
-
-    // Act
-    Document document = template.startGeneration(resolver);
-    document.blockUntilCompletion(60000L); // 1 minute
-
-    // Assert
-    assertThat(document.completed(), is(true));
-
-    Desktop.getDesktop().open(document.getPath().toFile());
-  }
-
-  @Test
   @DisplayName("Resolve user profile placeholders.")
   void shouldResolveUserProfilePlaceholders() throws InterruptedException, IOException {
     // Arrange
