@@ -25,8 +25,8 @@ import java.util.Optional;
  * Because of this, the generator is agnostic of enclosing structures like sheets and workbooks.
  *
  * @author Anton Oellerer
- * @since 2020-04
  * @version 1.1.0
+ * @since 2020-04
  */
 public class ExcelGenerator {
     private static final Logger logger = LogManager.getLogger();
