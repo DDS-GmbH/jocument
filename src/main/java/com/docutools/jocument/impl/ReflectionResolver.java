@@ -172,7 +172,7 @@ public class ReflectionResolver implements PlaceholderResolver {
         logger.warn("Failed to format placeholder {} as temporal {}", placeholderName, time);
         formatter = Optional.empty();
       }
-      formatter.map(dateTimeFormatter -> dateTimeFormatter.withLocale(locale));
+      formatter = formatter.map(dateTimeFormatter -> dateTimeFormatter.withLocale(locale));
     }
     return formatter.map(dateTimeFormatter -> new ScalarPlaceholderData(dateTimeFormatter.format(time)));
   }

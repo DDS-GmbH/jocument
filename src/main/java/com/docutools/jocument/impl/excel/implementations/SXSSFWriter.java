@@ -1,6 +1,8 @@
 package com.docutools.jocument.impl.excel.implementations;
 
 import com.docutools.jocument.impl.excel.interfaces.ExcelWriter;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.Row;
@@ -27,6 +29,8 @@ import java.util.Arrays;
  * @version 1.1.0
  */
 public class SXSSFWriter implements ExcelWriter {
+    private static final Logger logger = LogManager.getLogger();
+
     private final Path path;
     private final SXSSFWorkbook workbook;
     private Sheet currentSheet;
@@ -45,6 +49,7 @@ public class SXSSFWriter implements ExcelWriter {
 
     @Override
     public void newSheet(Sheet sheet) {
+        logger.info("Creating new sheet of {}", sheet.getSheetName());
         currentSheet = workbook.createSheet(sheet.getSheetName());
         currentSheet.setActiveCell(sheet.getActiveCell());
         currentSheet.setAutobreaks(sheet.getAutobreaks());
@@ -72,6 +77,7 @@ public class SXSSFWriter implements ExcelWriter {
 
     @Override
     public void newRow(Row row) {
+        logger.debug("Creating new row {}", row.getRowNum());
         currentRow = currentSheet.createRow(row.getRowNum() + rowOffset);
         currentRow.setHeight(row.getHeight());
         currentRow.setRowStyle(row.getRowStyle());
@@ -80,6 +86,7 @@ public class SXSSFWriter implements ExcelWriter {
 
     @Override
     public void addCell(Cell cell) {
+        logger.debug("Creating new cell {} {}", cell.getColumnIndex(), cell.getRow().getRowNum());
         var newCell = currentRow.createCell(cell.getColumnIndex(), cell.getCellType());
         if (workbook.getCellStyleAt(cell.getCellStyle().getIndex()) == null) {
             copyCellStyle(cell.getCellStyle());
@@ -120,6 +127,8 @@ public class SXSSFWriter implements ExcelWriter {
 
     @Override
     public void addCell(Cell templateCell, String newCellText) {
+        logger.debug("Creating new cell {} {} with text {}",
+                templateCell.getColumnIndex(), templateCell.getRow().getRowNum(), newCellText);
         var newCell = currentRow.createCell(templateCell.getColumnIndex(), templateCell.getCellType());
         if (workbook.getCellStyleAt(templateCell.getCellStyle().getIndex()) == null) {
             copyCellStyle(templateCell.getCellStyle());
