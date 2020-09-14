@@ -83,4 +83,16 @@ public class ReflectionResolving {
     // Act
     assertThat(shipNames, contains("USS Enterprise", "US Defiant"));
   }
+
+  @Test
+  @DisplayName("Resolve transitively")
+  void shouldResolveTransitively() {
+    // Act
+    var officerName = resolver.resolve("officer.name")
+            .map(Object::toString)
+            .orElse("");
+
+    // Assert
+    assertThat(officerName, equalTo("Riker"));
+  }
 }

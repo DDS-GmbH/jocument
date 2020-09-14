@@ -13,8 +13,8 @@ import java.util.regex.Pattern;
 public abstract class DocumentImpl extends Thread implements Document {
   private static final Logger logger = LogManager.getLogger();
 
-  public static final Pattern TAG_PATTERN = Pattern.compile("\\{\\{([A-Za-z0-9[\u00c4\u00e4\u00d6\u00f6\u00dc\u00fc\u00df]-/#]+?)}}");
-  public static final Pattern LOOP_END_PATTERN = Pattern.compile("\\{\\{/([A-Za-z0-9[\u00c4\u00e4\u00d6\u00f6\u00dc\u00fc\u00df]-/#]+?)}}");
+  public static final Pattern TAG_PATTERN = Pattern.compile("\\{\\{([A-Za-z0-9[\u00c4\u00e4\u00d6\u00f6\u00dc\u00fc\u00df]-/#\\.]+?)}}");
+  public static final Pattern LOOP_END_PATTERN = Pattern.compile("\\{\\{/([A-Za-z0-9[\u00c4\u00e4\u00d6\u00f6\u00dc\u00fc\u00df]-/#\\.]+?)}}");
 
   protected final Template template;
   protected final PlaceholderResolver resolver;
