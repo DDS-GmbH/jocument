@@ -59,7 +59,7 @@ public interface Template {
    * Creates a {@link Template} instance from a file.
    *
    * @param path the file path
-   * @return the {@link Template} when the file was found
+   * @return the {@link Template} where the file was found
    */
   static Optional<Template> from(Path path) {
     return from(path, LocaleUtil.getUserLocale());
@@ -69,7 +69,7 @@ public interface Template {
    * Creates a {@link Template} instance from a file.
    *
    * @param path the file path
-   * @param locale the templates {@link Locale}
+   * @param locale of templates {@link Locale}
    * @return the {@link Template} when the file was found
    */
   static Optional<Template> from(Path path, Locale locale) {
