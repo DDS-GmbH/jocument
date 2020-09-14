@@ -9,6 +9,10 @@ import org.junit.jupiter.api.Test;
 
 import java.awt.*;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.nio.file.StandardOpenOption;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
@@ -17,37 +21,6 @@ import static org.hamcrest.Matchers.is;
 @DisplayName("Generating Word Documents")
 public class WordDocuments {
 
-  @Test
-  @DisplayName("Load word templates from classpath.")
-  void shouldLoadWordTemplateFromCP() {
-    // Act
-    Template template = Template.fromClassPath("/templates/word/UserProfileTemplate.docx")
-            .orElseThrow();
-
-    // Assert
-    assertThat(template.getMimeType(), is(MimeType.DOCX));
-  }
-
-  @Test
-  @DisplayName("Return empty value when given classpath resource does not exist.")
-  void shouldReturnEmptyWhenCpNotExists() {
-    // Act
-    var result = Template.fromClassPath("/does/not/exist.docx");
-
-    // Assert
-    assertThat(result.isEmpty(), is(true));
-  }
-
-  @Test
-  @DisplayName("Template should assume systems default Locale, if none is passed with resource.")
-  void shouldAssumeDefaultLocale() {
-    // Act
-    var result = Template.fromClassPath("/templates/word/UserProfileTemplate.docx")
-            .orElseThrow();
-
-    // Assert
-    assertThat(result.getLocale(), equalTo(LocaleUtil.getUserLocale()));
-  }
 
   @Test
   @DisplayName("Generate a document from a simple template.")

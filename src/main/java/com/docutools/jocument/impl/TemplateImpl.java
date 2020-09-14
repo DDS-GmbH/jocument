@@ -1,9 +1,6 @@
 package com.docutools.jocument.impl;
 
-import com.docutools.jocument.Document;
-import com.docutools.jocument.MimeType;
-import com.docutools.jocument.PlaceholderResolver;
-import com.docutools.jocument.Template;
+import com.docutools.jocument.*;
 import com.docutools.jocument.impl.excel.implementations.ExcelDocumentImpl;
 import com.docutools.jocument.impl.word.WordDocumentImpl;
 import org.apache.logging.log4j.LogManager;
@@ -17,12 +14,12 @@ import java.util.Locale;
 public class TemplateImpl implements Template {
     private static final Logger logger = LogManager.getLogger();
 
-  private final URL url;
+    private final TemplateSource source;
   private final MimeType mimeType;
   private final Locale locale;
 
-  public TemplateImpl(URL url, MimeType mimeType, Locale locale) {
-    this.url = url;
+  public TemplateImpl(TemplateSource source, MimeType mimeType, Locale locale) {
+    this.source = source;
     this.mimeType = mimeType;
     this.locale = locale;
   }
@@ -51,6 +48,6 @@ public class TemplateImpl implements Template {
 
   @Override
   public InputStream openStream() throws IOException {
-    return url.openStream();
+    return source.open();
   }
 }
