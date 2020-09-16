@@ -53,6 +53,17 @@ public class ReflectionResolver implements PlaceholderResolver {
   @Override
   public Optional<PlaceholderData> resolve(String placeholderName, Locale locale) {
     logger.debug("Trying to resolve placeholder {}", placeholderName);
+    Optional<PlaceholderData> result = null;
+    for(String property : placeholderName.split("\\.")) {
+      result = result == null? doResolve(property, locale) :
+              result
+                      .flatMap(r -> r.stream().findAny())
+                      .flatMap(r -> r.resolve(property, locale));
+    }
+    return result;
+  }
+
+  private Optional<PlaceholderData> doResolve(String placeholderName, Locale locale) {
     try {
       var property = pub.getProperty(bean, placeholderName);
         if (property instanceof Number number) {

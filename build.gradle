@@ -7,7 +7,7 @@ plugins {
 }
 
 group 'com.docutools'
-version '1.0.3'
+version '1.0.4'
 
 sourceCompatibility = 14
 targetCompatibility = 14
