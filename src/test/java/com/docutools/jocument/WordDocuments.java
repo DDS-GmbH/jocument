@@ -168,4 +168,22 @@ public class WordDocuments {
 
     Desktop.getDesktop().open(document.getPath().toFile());
   }
+
+  @Test
+  @DisplayName("Resolve self reference Placeholder")
+  void shouldResolveSelfReferencePlaceholder() throws InterruptedException, IOException {
+    // Arrange
+    Template template = Template.fromClassPath("/templates/word/SelfReference.docx")
+            .orElseThrow();
+    PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.PICARD_PERSON);
+
+    // Act
+    Document document = template.startGeneration(resolver);
+    document.blockUntilCompletion(60000L); // 1 minute
+
+    // Assert
+    assertThat(document.completed(), is(true));
+
+    Desktop.getDesktop().open(document.getPath().toFile());
+  }
 }

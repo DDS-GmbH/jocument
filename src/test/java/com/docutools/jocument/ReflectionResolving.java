@@ -8,6 +8,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -94,5 +95,19 @@ public class ReflectionResolving {
 
     // Assert
     assertThat(officerName, equalTo("Riker"));
+  }
+
+  @Test
+  @DisplayName("Resolve self")
+  void shouldResolveSelf() {
+    // Act
+    var captainsName = resolver.resolve("this")
+            .flatMap(self -> self.stream().findFirst())
+            .flatMap(self -> self.resolve("name"))
+            .map(Objects::toString)
+            .orElse("");
+
+    // Assert
+    assertThat(captainsName, equalTo(SampleModelData.PICARD.getName()));
   }
 }
