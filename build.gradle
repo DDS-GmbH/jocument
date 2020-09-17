@@ -7,7 +7,7 @@ plugins {
 }
 
 group 'com.docutools'
-version '1.0.5'
+version '1.0.6'
 
 sourceCompatibility = 14
 targetCompatibility = 14
@@ -57,6 +57,11 @@ dependencyCheck {
     junitFailOnCVSS = 7.0
     failBuildOnCVSS = 9.0
     suppressionFile = 'config/dependency-check/suppression.xml'
+}
+
+java {
+    withSourcesJar()
+    withJavadocJar()
 }
 
 // Enable support for records, patterns and text blocks
