@@ -13,10 +13,8 @@ import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
 
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.StreamSupport;
 
 
 /**
@@ -152,7 +150,7 @@ public class ExcelGenerator {
 
 
     private boolean isLoopStart(Row row) {
-        if (row.getPhysicalNumberOfCells() == 1) {
+        if (getNumberOfNonEmptyCells(row) == 1) {
             var cell = row.getCell(row.getFirstCellNum());
             if (cell.getCellType() == CellType.STRING) {
                 return resolver.resolve(
@@ -164,6 +162,13 @@ public class ExcelGenerator {
             }
         }
         return false;
+    }
+
+    private long getNumberOfNonEmptyCells(Row row) {
+        return StreamSupport.stream(Spliterators.spliteratorUnknownSize(row.cellIterator(), Spliterator.ORDERED), false)
+                .map(Cell::getStringCellValue)
+                .filter(cellValue -> !cellValue.isBlank())
+                .count();
     }
 
 }

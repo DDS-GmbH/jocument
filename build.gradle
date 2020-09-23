@@ -7,7 +7,7 @@ plugins {
 }
 
 group 'com.docutools'
-version '1.0.6'
+version '1.0.9'
 
 sourceCompatibility = 14
 targetCompatibility = 14
@@ -59,18 +59,14 @@ dependencyCheck {
     suppressionFile = 'config/dependency-check/suppression.xml'
 }
 
-java {
-    withSourcesJar()
-    withJavadocJar()
+tasks.withType(JavaCompile) {
+    options.compilerArgs += "--enable-preview"
 }
 
-// Enable support for records, patterns and text blocks
-compileJava {
-    options.compilerArgs += ["--enable-preview"]
+java {
+    withSourcesJar()
 }
-compileTestJava {
-    options.compilerArgs += ["--enable-preview"]
-}
+
 test {
     jvmArgs '--enable-preview'
     useJUnitPlatform()
