@@ -1,0 +1,21 @@
+name: Check a new push for conforming to style requirements
+on:
+  push
+
+jobs:
+  checkstyle:
+    name: Check whether code confirms to checkstyle requirements
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Setup Java
+      - uses: actions/setup-java@v1
+        with:
+          java-version: 14
+      - name: Run checkstyle
+        uses: eskatos/gradle-command-action@v1
+        with:
+          arguments: checkMain checkTest
