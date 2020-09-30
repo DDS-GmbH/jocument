@@ -1,6 +1,6 @@
-name: Check a new push for conforming to style requirements
-on:
-  push
+name: Checking
+
+on: push
 
 jobs:
   checkstyle:
