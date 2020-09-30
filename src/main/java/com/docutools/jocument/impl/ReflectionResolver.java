@@ -38,6 +38,9 @@ import org.apache.logging.log4j.Logger;
  * @since 1.0-SNAPSHOT
  */
 public class ReflectionResolver implements PlaceholderResolver {
+
+  private static final String SELF_REFERENCE = "this";
+
   private static final Logger logger = LogManager.getLogger();
 
   private final Object bean;
@@ -113,8 +116,19 @@ public class ReflectionResolver implements PlaceholderResolver {
   @Override
   public Optional<PlaceholderData> resolve(String placeholderName, Locale locale) {
     logger.debug("Trying to resolve placeholder {}", placeholderName);
+    Optional<PlaceholderData> result = null;
+    for(String property : placeholderName.split("\\.")) {
+      result = result == null? doResolve(property, locale) :
+              result
+                      .flatMap(r -> r.stream().findAny())
+                      .flatMap(r -> r.resolve(property, locale));
+    }
+    return result;
+  }
+
+  private Optional<PlaceholderData> doResolve(String placeholderName, Locale locale) {
     try {
-      var property = pub.getProperty(bean, placeholderName);
+      var property = SELF_REFERENCE.equals(placeholderName)? bean : pub.getProperty(bean, placeholderName);
       if (property instanceof Number number) {
         var numberFormat = findNumberFormat(placeholderName, locale);
         return Optional.of(new ScalarPlaceholderData(numberFormat.format(number)));
@@ -129,6 +143,8 @@ public class ReflectionResolver implements PlaceholderResolver {
         return formatTemporal(placeholderName, temporal, locale);
       } else if (property instanceof Path path && isFieldAnnotatedWith(bean.getClass(), placeholderName, Image.class)) {
         return Optional.of(new ImagePlaceholderData(path));
+      } if(bean.equals(property)) {
+        return Optional.of(new IterablePlaceholderData(List.of(new ReflectionResolver(bean)), 1));
       } else {
         var value = pub.getProperty(bean, placeholderName);
         return Optional.of(new IterablePlaceholderData(List.of(new ReflectionResolver(value)), 1));

@@ -14,6 +14,15 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
+
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.is;
+
 @DisplayName("Resolve placeholders from an object graph via reflection.")
 public class ReflectionResolving {
 
@@ -81,5 +90,31 @@ public class ReflectionResolving {
         .orElseThrow();
     // Act
     assertThat(shipNames, contains("USS Enterprise", "US Defiant"));
+  }
+
+  @Test
+  @DisplayName("Resolve transitively")
+  void shouldResolveTransitively() {
+    // Act
+    var officerName = resolver.resolve("officer.name")
+            .map(Object::toString)
+            .orElse("");
+
+    // Assert
+    assertThat(officerName, equalTo("Riker"));
+  }
+
+  @Test
+  @DisplayName("Resolve self")
+  void shouldResolveSelf() {
+    // Act
+    var captainsName = resolver.resolve("this")
+            .flatMap(self -> self.stream().findFirst())
+            .flatMap(self -> self.resolve("name"))
+            .map(Objects::toString)
+            .orElse("");
+
+    // Assert
+    assertThat(captainsName, equalTo(SampleModelData.PICARD.getName()));
   }
 }
