@@ -27,21 +27,6 @@
     <module name="BeforeExecutionExclusionFileFilter">
         <property name="fileNamePattern" value="module\-info\.java$"/>
     </module>
-    <module name="BeforeExecutionExclusionFileFilter">
-        <property name="fileNamePattern" value="ReflectionResolver.java"/>
-    </module>
-    <module name="BeforeExecutionExclusionFileFilter">
-        <property name="fileNamePattern" value="TemplateImpl.java"/>
-    </module>
-    <module name="BeforeExecutionExclusionFileFilter">
-        <property name="fileNamePattern" value="SXSSFWriter.java"/>
-    </module>
-    <module name="BeforeExecutionExclusionFileFilter">
-        <property name="fileNamePattern" value="WordGenerator.java"/>
-    </module>
-    <module name="BeforeExecutionExclusionFileFilter">
-        <property name="fileNamePattern" value="WordUtilities.java"/>
-    </module>
     <!-- https://checkstyle.org/config_filters.html#SuppressionFilter -->
     <module name="SuppressionFilter">
         <property name="file" value="${config_loc}/suppressions.xml" />
