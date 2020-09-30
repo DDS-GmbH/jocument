@@ -113,8 +113,8 @@ class WordGenerator {
     logger.debug("Getting loop body from {} to {}", placeholderName, endLoopMarker);
     return remaining.stream()
         //Could be written nice with `takeUntil(element -> (element instanceof XP xp && eLM.equals(WU.toString(xp)))
-        .takeWhile(element -> !(element instanceof XWPFParagraph xwpfParagraph &&
-            endLoopMarker.equals(WordUtilities.toString(xwpfParagraph))))
+        .takeWhile(element -> !(element instanceof XWPFParagraph xwpfParagraph
+            && endLoopMarker.equals(WordUtilities.toString(xwpfParagraph))))
         .collect(Collectors.toList());
   }
 

@@ -11,14 +11,14 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Spliterator;
+import java.util.Spliterators;
+import java.util.stream.StreamSupport;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
-
-import java.util.*;
-import java.util.stream.StreamSupport;
 
 
 /**
@@ -168,11 +168,11 @@ public class ExcelGenerator {
     return false;
   }
 
-    private long getNumberOfNonEmptyCells(Row row) {
-        return StreamSupport.stream(Spliterators.spliteratorUnknownSize(row.cellIterator(), Spliterator.ORDERED), false)
-                .map(Cell::getStringCellValue)
-                .filter(cellValue -> !cellValue.isBlank())
-                .count();
-    }
+  private long getNumberOfNonEmptyCells(Row row) {
+    return StreamSupport.stream(Spliterators.spliteratorUnknownSize(row.cellIterator(), Spliterator.ORDERED), false)
+        .map(Cell::getStringCellValue)
+        .filter(cellValue -> !cellValue.isBlank())
+        .count();
+  }
 
 }

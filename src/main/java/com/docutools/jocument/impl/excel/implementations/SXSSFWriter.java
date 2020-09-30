@@ -15,7 +15,7 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 
 /**
- * This is a streamed implementation of the @link com.docutools.jocument.impl.excel.ExcelWriter interface.
+ * This is a streamed implementation of the {@link com.docutools.jocument.impl.excel.interfaces.ExcelWriter} interface.
  * The streaming is done so memory can be saved.
  * For now, the amount of rows kept in memory is set to the default, 100.
  * SXSSFWriter works by keeping a reference to the current sheet and row being edited, and copying/cloning required
@@ -38,7 +38,7 @@ public class SXSSFWriter implements ExcelWriter {
   private int rowOffset = 0;
 
   /**
-   * Creates a new SXSSFWriter
+   * Creates a new SXSSFWriter.
    *
    * @param path The path to save the finished report to.
    */
@@ -105,25 +105,9 @@ public class SXSSFWriter implements ExcelWriter {
       case BLANK -> newCell.setBlank();
       case BOOLEAN -> newCell.setCellValue(cell.getBooleanCellValue());
       case ERROR -> newCell.setCellErrorValue(cell.getErrorCellValue());
+      default -> {
+      }
     }
-  }
-
-  private void copyCellStyle(CellStyle cellStyle) {
-    var newStyle = workbook.createCellStyle();
-    newStyle.cloneStyleFrom(cellStyle);
-  }
-
-  @Override
-  public void complete() throws IOException {
-    var outputStream = new BufferedOutputStream(Files.newOutputStream(path));
-    workbook.write(outputStream);
-    outputStream.close();
-    workbook.dispose();
-  }
-
-  @Override
-  public void addRowOffset(int size) {
-    rowOffset += size;
   }
 
   @Override
@@ -139,5 +123,23 @@ public class SXSSFWriter implements ExcelWriter {
     newCell.setHyperlink(templateCell.getHyperlink());
     currentSheet.setColumnWidth(templateCell.getColumnIndex(), templateCell.getSheet().getColumnWidth(templateCell.getColumnIndex()));
     newCell.setCellValue(newCellText);
+  }
+
+  @Override
+  public void complete() throws IOException {
+    var outputStream = new BufferedOutputStream(Files.newOutputStream(path));
+    workbook.write(outputStream);
+    outputStream.close();
+    workbook.dispose();
+  }
+
+  @Override
+  public void addRowOffset(int size) {
+    rowOffset += size;
+  }
+
+  private void copyCellStyle(CellStyle cellStyle) {
+    var newStyle = workbook.createCellStyle();
+    newStyle.cloneStyleFrom(cellStyle);
   }
 }

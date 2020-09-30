@@ -7,4 +7,6 @@
 <suppressions>
     <suppress files="/generated/" checks="\w+"/>
     <suppress files="/test/" checks="\w+"/>
+    <!-- There seems to be some problem with the indentation check in the switch-case statement in this file -->
+    <suppress files="TemplateImpl.java" checks="Indentation"/>
 </suppressions>
