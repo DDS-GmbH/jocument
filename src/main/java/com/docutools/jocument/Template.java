@@ -4,8 +4,6 @@ import com.docutools.jocument.impl.TemplateImpl;
 import com.docutools.jocument.impl.template.InMemoryTemplateSource;
 import com.docutools.jocument.impl.template.PathTemplateSource;
 import com.docutools.jocument.impl.template.URLTemplateSource;
-import org.apache.poi.util.LocaleUtil;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -15,6 +13,7 @@ import java.net.URL;
 import java.nio.file.Path;
 import java.util.Locale;
 import java.util.Optional;
+import org.apache.poi.util.LocaleUtil;
 
 /**
  * A template for a given {@link com.docutools.jocument.MimeType}. You can generate
@@ -22,10 +21,10 @@ import java.util.Optional;
  * which runs asynchronously.
  *
  * @author codecitizen
- * @since 1.0-SNAPSHOT
  * @see com.docutools.jocument.MimeType
  * @see com.docutools.jocument.PlaceholderResolver
  * @see Document
+ * @since 1.0-SNAPSHOT
  */
 public interface Template {
 
@@ -43,16 +42,16 @@ public interface Template {
   /**
    * Creates a {@link com.docutools.jocument.Template} instance from a template file on the classpath.
    *
-   * @param path the resource path
+   * @param path   the resource path
    * @param locale the templates {@link java.util.Locale}
    * @return the {@link com.docutools.jocument.Template} when the resource was found.
    * @throws java.lang.IllegalArgumentException when the files MIME type is not supported.
    */
   static Optional<Template> fromClassPath(String path, Locale locale) {
     var mimeType = MimeType.fromFileExtension(path)
-            .orElseThrow(() -> new IllegalArgumentException("Unsupported MIME-Type: " + path));
+        .orElseThrow(() -> new IllegalArgumentException("Unsupported MIME-Type: " + path));
     return Optional.ofNullable(Template.class.getResource(path))
-            .map(url -> new TemplateImpl(new URLTemplateSource(url), mimeType, locale));
+        .map(url -> new TemplateImpl(new URLTemplateSource(url), mimeType, locale));
   }
 
   /**
@@ -68,13 +67,13 @@ public interface Template {
   /**
    * Creates a {@link Template} instance from a file.
    *
-   * @param path the file path
+   * @param path   the file path
    * @param locale of templates {@link Locale}
    * @return the {@link Template} when the file was found
    */
   static Optional<Template> from(Path path, Locale locale) {
     var mimeType = MimeType.fromFileExtension(path.toString())
-            .orElseThrow(() -> new IllegalArgumentException("Unsupported MIME-Type: " + path));
+        .orElseThrow(() -> new IllegalArgumentException("Unsupported MIME-Type: " + path));
     return Optional.of(new TemplateImpl(new PathTemplateSource(path), mimeType, locale));
   }
 
@@ -91,7 +90,7 @@ public interface Template {
   /**
    * Creates a {@link Template} instance from a file.
    *
-   * @param file the file path
+   * @param file   the file path
    * @param locale the templates {@link Locale}
    * @return the {@link Template} when the file was found
    */
@@ -112,13 +111,13 @@ public interface Template {
   /**
    * Creates a {@link Template} instance from a URL.
    *
-   * @param url the URL
+   * @param url    the URL
    * @param locale the templates {@link Locale}
    * @return the {@link Template} when the file was found
    */
   static Optional<Template> from(URL url, Locale locale) {
     var mimeType = MimeType.fromFileExtension(url.getPath())
-            .orElseThrow(() -> new IllegalArgumentException("Unsupported MIME-Type: " + url));
+        .orElseThrow(() -> new IllegalArgumentException("Unsupported MIME-Type: " + url));
     return Optional.of(new TemplateImpl(new URLTemplateSource(url), mimeType, locale));
   }
 
@@ -136,7 +135,7 @@ public interface Template {
   /**
    * Creates an in-memory representation of a {@link Template}.
    *
-   * @param data the template file data
+   * @param data     the template file data
    * @param mimeType it's MIME Type
    * @return the in-memory {@link Template}
    */
@@ -147,8 +146,8 @@ public interface Template {
   /**
    * Creates an in-memory representation of a {@link Template}.
    *
-   * @param data the template file data
-   * @param locale the {@link Locale}
+   * @param data     the template file data
+   * @param locale   the {@link Locale}
    * @param mimeType it's MIME Type
    * @return the in-memory {@link Template}
    */
@@ -159,7 +158,7 @@ public interface Template {
   /**
    * Creates an in-memory representation of a {@link Template}.
    *
-   * @param in the template file data
+   * @param in       the template file data
    * @param mimeType it's MIME Type
    * @return the in-memory {@link Template}
    */
@@ -170,9 +169,9 @@ public interface Template {
   /**
    * Creates an in-memory representation of a {@link Template}.
    *
-   * @param in the template file data
+   * @param in       the template file data
    * @param mimeType it's MIME Type
-   * @param locale it's {@link Locale}
+   * @param locale   it's {@link Locale}
    * @return the in-memory {@link Template}
    */
   static Optional<Template> from(InputStream in, MimeType mimeType, Locale locale) throws IOException {

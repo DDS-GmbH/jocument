@@ -5,6 +5,6 @@ import java.io.InputStream;
 
 public interface TemplateSource {
 
-    InputStream open() throws IOException;
+  InputStream open() throws IOException;
 
 }

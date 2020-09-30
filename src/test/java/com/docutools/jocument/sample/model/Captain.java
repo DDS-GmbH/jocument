@@ -1,7 +1,6 @@
 package com.docutools.jocument.sample.model;
 
 import com.docutools.jocument.annotations.Image;
-
 import java.nio.file.Path;
 import java.util.List;
 

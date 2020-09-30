@@ -1,18 +1,17 @@
 package com.docutools.jocument.localisation;
 
-import com.docutools.jocument.impl.word.WordUtilities;
-import org.apache.poi.xwpf.usermodel.XWPFDocument;
-import org.hamcrest.Matchers;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.hasItems;
 
+import com.docutools.jocument.impl.word.WordUtilities;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Locale;
-
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.hasItems;
+import org.apache.poi.xwpf.usermodel.XWPFDocument;
+import org.hamcrest.Matchers;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 
 @DisplayName("Detect Document Languages")
 public class DetectDocumentLanguage {
@@ -22,7 +21,7 @@ public class DetectDocumentLanguage {
   void shouldDetectGermanAndEnglishFromDocx() throws IOException {
     // Arrange
     try (var in = new BufferedInputStream(
-            getClass().getResourceAsStream("/templates/word/GermanEnglishTemplate.docx"))) {
+        getClass().getResourceAsStream("/templates/word/GermanEnglishTemplate.docx"))) {
       var document = new XWPFDocument(in);
 
       // Act
@@ -30,7 +29,7 @@ public class DetectDocumentLanguage {
 
       // Assert
       assertThat(actualLanguages, hasItems(Locale.forLanguageTag("en-GB"),
-              Locale.forLanguageTag("de-AT")));
+          Locale.forLanguageTag("de-AT")));
     }
   }
 
@@ -39,7 +38,7 @@ public class DetectDocumentLanguage {
   void shouldDetectGermanAndEnglishFromTableInDocx() throws IOException {
     // Arrange
     try (var in = new BufferedInputStream(
-            getClass().getResourceAsStream("/templates/word/GermanEnglishTableTemplate.docx"))) {
+        getClass().getResourceAsStream("/templates/word/GermanEnglishTableTemplate.docx"))) {
       var document = new XWPFDocument(in);
 
       // Act
@@ -47,7 +46,7 @@ public class DetectDocumentLanguage {
 
       // Assert
       assertThat(actualLanguages, hasItems(Locale.forLanguageTag("en-GB"),
-              Locale.forLanguageTag("de-AT")));
+          Locale.forLanguageTag("de-AT")));
     }
   }
 
@@ -56,7 +55,7 @@ public class DetectDocumentLanguage {
   void shouldDetectEnglishAsMostCommonLocale() throws IOException {
     // Arrange
     try (var in = new BufferedInputStream(
-            getClass().getResourceAsStream("/templates/word/GermanEnglishTableTemplate.docx"))) {
+        getClass().getResourceAsStream("/templates/word/GermanEnglishTableTemplate.docx"))) {
       var document = new XWPFDocument(in);
 
       // Act

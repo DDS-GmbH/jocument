@@ -1,17 +1,37 @@
 package com.docutools.jocument.impl.word;
 
 import com.docutools.jocument.impl.ParsingUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.apache.poi.xwpf.usermodel.*;
-import org.apache.xmlbeans.XmlCursor;
-import org.openxmlformats.schemas.wordprocessingml.x2006.main.*;
-
-import java.util.*;
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.MissingResourceException;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.OptionalInt;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.apache.poi.xwpf.usermodel.IBodyElement;
+import org.apache.poi.xwpf.usermodel.XWPFDocument;
+import org.apache.poi.xwpf.usermodel.XWPFParagraph;
+import org.apache.poi.xwpf.usermodel.XWPFRun;
+import org.apache.poi.xwpf.usermodel.XWPFTable;
+import org.apache.poi.xwpf.usermodel.XWPFTableCell;
+import org.apache.poi.xwpf.usermodel.XWPFTableRow;
+import org.apache.xmlbeans.XmlCursor;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTPPr;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTRPr;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTRow;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTTbl;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTTblPr;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTTc;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTTcPr;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTTrPr;
 
 public class WordUtilities {
   private static final Logger logger = LogManager.getLogger();
@@ -28,14 +48,14 @@ public class WordUtilities {
    */
   public static String toString(XWPFParagraph paragraph) {
     return getText(paragraph)
-            .orElseGet(() -> joinRuns(paragraph));
+        .orElseGet(() -> joinRuns(paragraph));
   }
 
   /**
    * Replaces the text in the {@link org.apache.poi.xwpf.usermodel.XWPFParagraph} without loosing formatting.
    *
    * @param paragraph the {@link org.apache.poi.xwpf.usermodel.XWPFParagraph}
-   * @param newText the new test
+   * @param newText   the new test
    */
   public static void replaceText(XWPFParagraph paragraph, String newText) {
     List<XWPFRun> runs = paragraph.getRuns();
@@ -81,20 +101,20 @@ public class WordUtilities {
   /**
    * Copies the given elements before the destination element.
    *
-   * @param elements the elements to copy
+   * @param elements    the elements to copy
    * @param destination the destination
    * @return the copies elements
    */
   public static List<IBodyElement> copyBefore(List<IBodyElement> elements, IBodyElement destination) {
     return elements.stream()
-            .map(element -> copyBefore(element, destination))
-            .collect(Collectors.toList());
+        .map(element -> copyBefore(element, destination))
+        .collect(Collectors.toList());
   }
 
   /**
    * Copies the given element before the destination.
    *
-   * @param element the element
+   * @param element     the element
    * @param destination the destination
    * @return the copies element
    */
@@ -119,7 +139,7 @@ public class WordUtilities {
   public static void removeIfExists(IBodyElement element) {
     logger.debug("Removing element {}", element);
     findPos(element)
-            .ifPresent(element.getBody().getXWPFDocument()::removeBodyElement);
+        .ifPresent(element.getBody().getXWPFDocument()::removeBodyElement);
   }
 
   /**
@@ -142,7 +162,7 @@ public class WordUtilities {
   }
 
   /**
-   * Returns all languages used in {@link org.apache.poi.xwpf.usermodel.XWPFRun}s for out the given
+   * Returns the most common locale used in {@link org.apache.poi.xwpf.usermodel.XWPFRun}s for out the given
    * {@link org.apache.poi.xwpf.usermodel.XWPFDocument}.
    *
    * @param document the document to parse
@@ -150,22 +170,44 @@ public class WordUtilities {
    */
   public static Optional<Locale> detectMostCommonLocale(XWPFDocument document) {
     var tableParagraphs = document.getTables()
-            .stream()
-            .flatMap(table -> getTableEmbeddedParagraphs(table).stream());
+        .stream()
+        .flatMap(table -> getTableEmbeddedParagraphs(table).stream());
 
     var documentParagraphs = document.getParagraphs().stream();
 
     return Stream.concat(tableParagraphs, documentParagraphs)
-            .flatMap(paragraph -> paragraph.getRuns().stream())
-            .map(XWPFRun::getLang)
-            .filter(Objects::nonNull)
-            .map(Locale::forLanguageTag)
-            .filter(WordUtilities::isValid)
-            .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()))
-            .entrySet()
-            .stream()
-            .max(Map.Entry.comparingByValue())
-            .map(Map.Entry::getKey);
+        .flatMap(paragraph -> paragraph.getRuns().stream())
+        .map(XWPFRun::getLang)
+        .filter(Objects::nonNull)
+        .map(Locale::forLanguageTag)
+        .filter(WordUtilities::isValid)
+        .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()))
+        .entrySet()
+        .stream()
+        .max(Map.Entry.comparingByValue())
+        .map(Map.Entry::getKey);
+  }
+
+  /**
+   * Detect the most common locale of a paragraph by going through every run, retrieving its language
+   * tag, merging them, and retrieving the most common one.
+   *
+   * @param paragraph The paragraph for which the most common locale should be found
+   * @return If at least one locale has been found, the most common one is returned
+   */
+  public static Optional<Locale> detectMostCommonLocale(XWPFParagraph paragraph) {
+    return paragraph
+        .getRuns()
+        .stream()
+        .map(XWPFRun::getLang)
+        .filter(Objects::nonNull)
+        .map(Locale::forLanguageTag)
+        .filter(WordUtilities::isValid)
+        .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()))
+        .entrySet()
+        .stream()
+        .max(Map.Entry.comparingByValue())
+        .map(Map.Entry::getKey);
   }
 
   /**
@@ -177,32 +219,39 @@ public class WordUtilities {
    */
   public static Collection<Locale> detectLanguages(XWPFDocument document) {
     var tableParagraphs = document.getTables()
-            .stream()
-            .flatMap(table -> getTableEmbeddedParagraphs(table).stream());
+        .stream()
+        .flatMap(table -> getTableEmbeddedParagraphs(table).stream());
 
     var documentParagraphs = document.getParagraphs().stream();
 
     return Stream.concat(tableParagraphs, documentParagraphs)
-            .flatMap(paragraph -> paragraph.getRuns().stream())
-            .map(XWPFRun::getLang)
-            .filter(Objects::nonNull)
-            .distinct()
-            .map(Locale::forLanguageTag)
-            .filter(WordUtilities::isValid)
-            .collect(Collectors.toList());
+        .flatMap(paragraph -> paragraph.getRuns().stream())
+        .map(XWPFRun::getLang)
+        .filter(Objects::nonNull)
+        .distinct()
+        .map(Locale::forLanguageTag)
+        .filter(WordUtilities::isValid)
+        .collect(Collectors.toList());
   }
 
+  /**
+   * Get all of the paragraphs which are embedded in a table.
+   * This is done recursively, so paragraphs in tables in a table cell will also be found.
+   *
+   * @param table The table to check for embedded paragraphs
+   * @return A list of all the paragraphs in the table
+   */
   public static Collection<XWPFParagraph> getTableEmbeddedParagraphs(XWPFTable table) {
     var paragraphs = new LinkedList<XWPFParagraph>();
-      for (XWPFTableRow row : table.getRows()) {
-          for (XWPFTableCell cell : row.getTableCells()) {
-            paragraphs.addAll(cell.getParagraphs());
-            for (XWPFTable subtable : cell.getTables()) {
-              paragraphs.addAll(getTableEmbeddedParagraphs(subtable));
-            }
-          }
+    for (XWPFTableRow row : table.getRows()) {
+      for (XWPFTableCell cell : row.getTableCells()) {
+        paragraphs.addAll(cell.getParagraphs());
+        for (XWPFTable subtable : cell.getTables()) {
+          paragraphs.addAll(getTableEmbeddedParagraphs(subtable));
+        }
       }
-      return paragraphs;
+    }
+    return paragraphs;
   }
 
   private static boolean isValid(Locale locale) {
@@ -242,9 +291,9 @@ public class WordUtilities {
 
   private static String joinRuns(XWPFParagraph paragraph) {
     return paragraph.getRuns().stream()
-            .map(run -> run.getText(0))
-            .filter(Objects::nonNull)       // if run is "", run.getText(0) returns null
-            .collect(Collectors.joining());
+        .map(run -> run.getText(0))
+        .filter(Objects::nonNull)       // if run is "", run.getText(0) returns null
+        .collect(Collectors.joining());
   }
 
   private static void cloneTable(XWPFTable original, XWPFTable clone) {
@@ -258,38 +307,38 @@ public class WordUtilities {
     tblPr.set(original.getCTTbl().getTblPr());
     clone.removeRow(0);
     original.getRows()
-            .forEach(row -> {
-              XWPFTableRow newRow = clone.createRow();
-              CTRow ctRow = newRow.getCtRow();
-              CTTrPr pr = ctRow.getTrPr();
-              if (pr == null) {
-                pr = ctRow.addNewTrPr();
-              }
-              pr.set(row.getCtRow().getTrPr());
-              List<XWPFTableCell> cells = row.getTableCells();
-              for (int i = 0; i < cells.size(); i++) {
-                XWPFTableCell cell = cells.get(i);
-                XWPFTableCell newCell = newRow.getCell(i) != null ? newRow.getCell(i) : newRow.createCell();
-                newCell.removeParagraph(0);
-                CTTc ctTc = newCell.getCTTc();
-                CTTcPr ctTcPr = ctTc.getTcPr();
-                if (ctTcPr == null) {
-                  ctTcPr = ctTc.addNewTcPr();
-                }
-                ctTcPr.set(cell.getCTTc().getTcPr());
-                cell.getParagraphs()
-                        .forEach(paragraph -> {
-                          XWPFParagraph newParagraph = newCell.addParagraph();
-                          cloneParagraph(paragraph, newParagraph);
-                        });
-              }
-            });
+        .forEach(row -> {
+          XWPFTableRow newRow = clone.createRow();
+          CTRow ctRow = newRow.getCtRow();
+          CTTrPr pr = ctRow.getTrPr();
+          if (pr == null) {
+            pr = ctRow.addNewTrPr();
+          }
+          pr.set(row.getCtRow().getTrPr());
+          List<XWPFTableCell> cells = row.getTableCells();
+          for (int i = 0; i < cells.size(); i++) {
+            XWPFTableCell cell = cells.get(i);
+            XWPFTableCell newCell = newRow.getCell(i) != null ? newRow.getCell(i) : newRow.createCell();
+            newCell.removeParagraph(0);
+            CTTc ctTc = newCell.getCTTc();
+            CTTcPr ctTcPr = ctTc.getTcPr();
+            if (ctTcPr == null) {
+              ctTcPr = ctTc.addNewTcPr();
+            }
+            ctTcPr.set(cell.getCTTc().getTcPr());
+            cell.getParagraphs()
+                .forEach(paragraph -> {
+                  XWPFParagraph newParagraph = newCell.addParagraph();
+                  cloneParagraph(paragraph, newParagraph);
+                });
+          }
+        });
   }
 
   private static void cloneParagraph(XWPFParagraph original, XWPFParagraph clone) {
     logger.debug("Cloning table {} to table {}", original, clone);
     CTPPr ppr = clone.getCTP().isSetPPr()
-            ? clone.getCTP().getPPr() : clone.getCTP().addNewPPr();
+        ? clone.getCTP().getPPr() : clone.getCTP().addNewPPr();
     ppr.set(original.getCTP().getPPr());
     for (XWPFRun r : original.getRuns()) {
       XWPFRun nr = clone.createRun();
@@ -303,21 +352,6 @@ public class WordUtilities {
     rpr.set(original.getCTR().getRPr());
     String text = original.getText(0);
     clone.setText(text != null ? text : "");
-  }
-
-  public static Optional<Locale> detectMostCommonLocale(XWPFParagraph paragraph) {
-    return paragraph
-            .getRuns()
-            .stream()
-            .map(XWPFRun::getLang)
-            .filter(Objects::nonNull)
-            .map(Locale::forLanguageTag)
-            .filter(WordUtilities::isValid)
-            .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()))
-            .entrySet()
-            .stream()
-            .max(Map.Entry.comparingByValue())
-            .map(Map.Entry::getKey);
   }
 
   public static Optional<Locale> getDocumentLanguage(XWPFDocument document) {
