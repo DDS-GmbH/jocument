@@ -1,4 +1,4 @@
-name: Check a new push for conforming to style and security requirements
+name: Check push for conforming to style and security requirements
 
 on: push
 
@@ -19,17 +19,17 @@ jobs:
         uses: eskatos/gradle-command-action@v1
         with:
           arguments: checkMain checkTest
-    owasp:
-      name: Check whether code confirms to owasp security requirements
-      runs-on: ubuntu-latest
-      steps:
-        - name: Checkout
-          uses: actions/checkout@v2
-        - name: Setup Java
-          uses: actions/setup-java@v1
-          with:
-            java-version: 15
-        - name: Run owasp dependency check
-          uses: eskatos/gradle-command-action@v1
-          with:
-            arguments: dependencyCheckAnalyze
+  owasp:
+    name: Check whether code confirms to owasp security requirements
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Setup Java
+        uses: actions/setup-java@v1
+        with:
+          java-version: 15
+      - name: Run owasp dependency check
+        uses: eskatos/gradle-command-action@v1
+        with:
+          arguments: dependencyCheckAnalyze
