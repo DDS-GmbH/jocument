@@ -129,6 +129,9 @@ public class ReflectionResolver implements PlaceholderResolver {
   private Optional<PlaceholderData> doResolve(String placeholderName, Locale locale) {
     try {
       var property = SELF_REFERENCE.equals(placeholderName) ? bean : pub.getProperty(bean, placeholderName);
+      if(property == null) {
+        return Optional.empty();
+      }
       if (property instanceof Number number) {
         var numberFormat = findNumberFormat(placeholderName, locale);
         return Optional.of(new ScalarPlaceholderData(numberFormat.format(number)));
