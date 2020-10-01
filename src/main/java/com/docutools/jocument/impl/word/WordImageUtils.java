@@ -17,6 +17,8 @@ import org.apache.poi.xwpf.usermodel.XWPFPicture;
 import org.jlibvips.VipsImage;
 import org.jlibvips.jna.VipsBindingsSingleton;
 
+import javax.imageio.ImageIO;
+
 public class WordImageUtils {
   public static final Map<String, Integer> XWPF_CONTENT_TYPE_MAPPING =
       Map.of(
@@ -71,6 +73,8 @@ public class WordImageUtils {
     try {
       image = VipsImage.fromFile(path);
       return Optional.of(new Dimension(image.getWidth(), image.getHeight()));
+    } catch (UnsatisfiedLinkError e) {
+      return fallbackToBufferedImageForDimensionProbe(path);
     } catch (Exception e) {
       logger.warn("Failed to get dimensions of image from path %s".formatted(path), e);
       return Optional.empty();
@@ -78,6 +82,16 @@ public class WordImageUtils {
       if (image != null) {
         image.unref();
       }
+    }
+  }
+
+  private static Optional<Dimension> fallbackToBufferedImageForDimensionProbe(Path path) {
+    try {
+      var img = ImageIO.read(path.toFile());
+      return Optional.of(new Dimension(img.getWidth(), img.getHeight()));
+    } catch (Exception e) {
+      logger.error("Could not fallback to BufferedImage for Dimension probe", e);
+      return Optional.empty();
     }
   }
 
