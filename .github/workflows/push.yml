@@ -1,10 +1,13 @@
-name: Check push for conforming to style and security requirements
+name: Check code
 
-on: push
+on:
+  push:
+    branches-ignore:
+      - main
 
 jobs:
   checkstyle:
-    name: Check whether code confirms to checkstyle requirements
+    name: checkstyle
     runs-on: ubuntu-latest
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -20,7 +23,7 @@ jobs:
         with:
           arguments: checkMain checkTest
   owasp:
-    name: Check whether code confirms to owasp security requirements
+    name: owasp
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
