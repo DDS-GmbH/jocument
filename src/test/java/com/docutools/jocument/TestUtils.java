@@ -9,14 +9,16 @@ import java.util.stream.Collectors;
 
 public final class TestUtils {
 
-    public static String getText(String resName) throws IOException {
-        try (InputStream inputStream = ClassLoader.getSystemResourceAsStream(resName)) {
-            assert inputStream != null;
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
-                return reader.lines()
-                        .collect(Collectors.joining());
-            }
-        }
+  private TestUtils() {
+  }
+
+  public static String getText(String resName) throws IOException {
+    try (InputStream inputStream = ClassLoader.getSystemResourceAsStream(resName)) {
+      assert inputStream != null;
+      try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
+        return reader.lines()
+            .collect(Collectors.joining());
+      }
     }
 
     public static XSSFWorkbook getXSSFWorkbookFromDocument(Document document) throws IOException {
@@ -26,7 +28,4 @@ public final class TestUtils {
     public static XWPFDocument getXWPFDocumentFromDocument(Document document) throws IOException {
         return new XWPFDocument(new BufferedInputStream(new FileInputStream(document.getPath().toFile())));
     }
-
-    private TestUtils() {
-    }
-}
+  }

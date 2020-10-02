@@ -2,23 +2,23 @@ plugins {
     id 'java'
     id 'checkstyle'
     id "org.sonarqube" version "2.8"
-    id "org.owasp.dependencycheck" version "5.2.4"
+    id "org.owasp.dependencycheck" version "6.0.2"
+    id 'maven-publish'
 }
 
 group 'com.docutools'
-version '1.1'
+version '1.0.13'
 
-sourceCompatibility = 14
-targetCompatibility = 14
+sourceCompatibility = 15
+targetCompatibility = 15
 
 repositories {
     mavenCentral()
-    maven { url 'https://jitpack.io' }
     maven {
-        url uri("https://maven.pkg.github.com/AntonOellerer/poipath")
+        url("https://maven.pkg.github.com/DDS-GmbH/jlibvips")
         credentials {
-            username = project.hasProperty('GH_USERNAME') ? GH_USERNAME : "${System.env.GH_USERNAME}"
-            password = project.hasProperty('WRITE_TOKEN') ? WRITE_TOKEN : "${System.env.WRITE_TOKEN}"
+            username = "github-actions"
+            password = project.findProperty("GITHUB_TOKEN") ?: System.getenv("GITHUB_TOKEN")
         }
     }
 }
@@ -31,26 +31,29 @@ dependencies {
     implementation("org.apache.poi:poi-ooxml-schemas:4.1.2")
 
     implementation("com.google.code.gson:gson:2.8.6")
-    implementation("org.apache.tika:tika-core:1.23")
+    implementation("org.apache.tika:tika-core:1.24.1")
 
-    implementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.13.1'
-    runtimeOnly group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.13.1'
+    implementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.13.3'
+    runtimeOnly group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.13.3'
 
     implementation 'com.codepoetics:protonpack:1.16'
     implementation("com.google.guava:guava:29.0-jre")
 
-    implementation("com.github.codecitizen:jlibvips:f9df6c8")
+    implementation("io.github.codecitizen:jlibvips:1.3.2.RELEASE")
 
     testImplementation('org.junit.jupiter:junit-jupiter:5.6.0')
     testImplementation("org.hamcrest:hamcrest:2.2")
     testImplementation("com.docutools:poipath:1.0.3")
 
-    checkstyle 'com.puppycrawl.tools:checkstyle:8.29'
+    checkstyle 'com.puppycrawl.tools:checkstyle:8.36.2'
 }
 
 tasks.withType(Checkstyle) {
     ignoreFailures = false
-    maxWarnings = 0
+    maxWarnings = 0 // Maximum number of warnings allowed
+    reports {
+        html.destination rootProject.file("build/reports/checkstyle.html")
+    }
 }
 
 dependencyCheck {
@@ -60,14 +63,39 @@ dependencyCheck {
     suppressionFile = 'config/dependency-check/suppression.xml'
 }
 
-// Enable support for records, patterns and text blocks
-compileJava {
-    options.compilerArgs += ["--enable-preview"]
+tasks.withType(JavaCompile) {
+    options.compilerArgs += "--enable-preview"
 }
-compileTestJava {
-    options.compilerArgs += ["--enable-preview"]
+
+java {
+    withSourcesJar()
 }
+
 test {
     jvmArgs '--enable-preview'
     useJUnitPlatform()
+}
+
+task automatedTests(type: Test) {
+    jvmArgs '--enable-preview'
+    useJUnitPlatform()
+    include '**/*Test.class'
+}
+
+publishing {
+    repositories {
+        maven {
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/DDS-GmbH/jocument")
+            credentials {
+                username = "codecitizen"
+                password = project.findProperty("GITHUB_TOKEN") ?: System.getenv("GITHUB_TOKEN")
+            }
+        }
+    }
+    publications {
+        gpr(MavenPublication) {
+            from(components.java)
+        }
+    }
 }

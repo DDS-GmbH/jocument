@@ -1,18 +1,17 @@
 package com.docutools.jocument;
 
-import org.apache.poi.util.LocaleUtil;
-
 import java.util.Locale;
 import java.util.Optional;
+import org.apache.poi.util.LocaleUtil;
 
 /**
  * Resolves string / placeholder names to {@link com.docutools.jocument.PlaceholderData}. Used in
  * {@link Document}s.
  *
  * @author codecitizen
- * @since 1.0-SNAPSHOT
  * @see com.docutools.jocument.PlaceholderData
  * @see Document
+ * @since 1.0-SNAPSHOT
  */
 public interface PlaceholderResolver {
 
@@ -30,7 +29,7 @@ public interface PlaceholderResolver {
    * Resolves the given placeholder name String to a localised {@link com.docutools.jocument.PlaceholderData}.
    *
    * @param placeholderName the name of the placeholder
-   * @param locale the localisation settings
+   * @param locale          the localisation settings
    * @return if the name could've been resolved the localised {@link com.docutools.jocument.PlaceholderData}
    */
   Optional<PlaceholderData> resolve(String placeholderName, Locale locale);

@@ -1,19 +1,18 @@
 package com.docutools.jocument;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.equalTo;
+
 import com.docutools.jocument.annotations.Format;
 import com.docutools.jocument.impl.ReflectionResolver;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
-
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.equalTo;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 
 @DisplayName("Formatting JSR-310 Values")
 class FormattingJsr310Values {
@@ -28,8 +27,8 @@ class FormattingJsr310Values {
 
     // Act
     String actual = resolver.resolve("date")
-            .map(PlaceholderData::toString)
-            .orElse("");
+        .map(PlaceholderData::toString)
+        .orElse("");
 
     // Assert
     assertThat(actual, equalTo("1. Jan, 2020"));
@@ -44,8 +43,8 @@ class FormattingJsr310Values {
     var resolver = new ReflectionResolver(object);
     // Act
     String actual = resolver.resolve("dateTime")
-            .map(PlaceholderData::toString)
-            .orElse("");
+        .map(PlaceholderData::toString)
+        .orElse("");
     // Assert
     assertThat(actual, equalTo("20/1/1 12:30:45"));
   }
@@ -59,8 +58,8 @@ class FormattingJsr310Values {
     var resolver = new ReflectionResolver(object);
     // Act
     String actual = resolver.resolve("instant")
-            .map(PlaceholderData::toString)
-            .orElse("");
+        .map(PlaceholderData::toString)
+        .orElse("");
     // Assert
     assertThat(actual, equalTo("12:30:45.000"));
   }
@@ -70,12 +69,12 @@ class FormattingJsr310Values {
   void shouldFormatZonedDateTimeWithLocale() {
     // Arrange
     var object = new Jsr310Wrappers();
-    object.zonedDateTime = ZonedDateTime.of(2020, 1, 1, 12, 30, 45,  0, ZoneId.of("Europe/Vienna"));
+    object.zonedDateTime = ZonedDateTime.of(2020, 1, 1, 12, 30, 45, 0, ZoneId.of("Europe/Vienna"));
     var resolver = new ReflectionResolver(object);
     // Act
     String actual = resolver.resolve("zonedDateTime")
-            .map(PlaceholderData::toString)
-            .orElse("");
+        .map(PlaceholderData::toString)
+        .orElse("");
     // Assert
     assertThat(actual, equalTo("Jänner 20"));
   }
