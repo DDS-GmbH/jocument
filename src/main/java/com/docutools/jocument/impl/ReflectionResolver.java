@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import javax.swing.text.html.Option;
 import org.apache.commons.beanutils.PropertyUtilsBean;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -116,9 +117,9 @@ public class ReflectionResolver implements PlaceholderResolver {
   @Override
   public Optional<PlaceholderData> resolve(String placeholderName, Locale locale) {
     logger.debug("Trying to resolve placeholder {}", placeholderName);
-    Optional<PlaceholderData> result = null;
+    Optional<PlaceholderData> result = Optional.empty();
     for (String property : placeholderName.split("\\.")) {
-      result = result == null ? doResolve(property, locale) :
+      result = result.isEmpty() ? doResolve(property, locale) :
           result
               .flatMap(r -> r.stream().findAny())
               .flatMap(r -> r.resolve(property, locale));
@@ -129,7 +130,7 @@ public class ReflectionResolver implements PlaceholderResolver {
   private Optional<PlaceholderData> doResolve(String placeholderName, Locale locale) {
     try {
       var property = SELF_REFERENCE.equals(placeholderName) ? bean : pub.getProperty(bean, placeholderName);
-      if(property == null) {
+      if (property == null) {
         return Optional.empty();
       }
       if (property instanceof Number number) {
