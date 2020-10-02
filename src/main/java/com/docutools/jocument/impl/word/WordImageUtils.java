@@ -7,6 +7,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.Map;
 import java.util.Optional;
+import javax.imageio.ImageIO;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
@@ -16,8 +17,6 @@ import org.apache.poi.xwpf.usermodel.XWPFParagraph;
 import org.apache.poi.xwpf.usermodel.XWPFPicture;
 import org.jlibvips.VipsImage;
 import org.jlibvips.jna.VipsBindingsSingleton;
-
-import javax.imageio.ImageIO;
 
 public class WordImageUtils {
   public static final Map<String, Integer> XWPF_CONTENT_TYPE_MAPPING =
