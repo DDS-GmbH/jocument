@@ -15,7 +15,16 @@ targetCompatibility = 15
 repositories {
     mavenCentral()
     maven {
+        name = "DDSG"
         url("https://maven.pkg.github.com/DDS-GmbH/jlibvips")
+        credentials {
+            username = "github-actions"
+            password = project.findProperty("GITHUB_TOKEN") ?: System.getenv("GITHUB_TOKEN")
+        }
+    }
+    maven {
+        name = "AntonOellerer"
+        url = uri("https://maven.pkg.github.com/AntonOellerer/poipath")
         credentials {
             username = "github-actions"
             password = project.findProperty("GITHUB_TOKEN") ?: System.getenv("GITHUB_TOKEN")
@@ -43,7 +52,7 @@ dependencies {
 
     testImplementation('org.junit.jupiter:junit-jupiter:5.6.0')
     testImplementation("org.hamcrest:hamcrest:2.2")
-    testImplementation("com.docutools:poipath:1.0.3")
+    testImplementation("com.docutools:poipath:1.0.5")
 
     checkstyle 'com.puppycrawl.tools:checkstyle:8.36.2'
 }
