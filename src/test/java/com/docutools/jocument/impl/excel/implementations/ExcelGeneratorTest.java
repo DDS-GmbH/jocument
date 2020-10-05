@@ -7,7 +7,10 @@ import com.docutools.jocument.TestUtils;
 import com.docutools.jocument.impl.ReflectionResolver;
 import com.docutools.jocument.sample.model.SampleModelData;
 import com.docutools.poipath.xssf.XSSFWorkbookWrapper;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -21,10 +24,20 @@ import static org.hamcrest.Matchers.*;
 
 
 @DisplayName("Excel Generator Tests")
+@Tag("automated")
+@Tag("xssf")
 class ExcelGeneratorTest {
+    XSSFWorkbook workbook;
+
+    @AfterEach
+    void cleanup() throws IOException {
+        if (workbook != null) {
+            workbook.close();
+        }
+    }
 
     @Test
-    @DisplayName("Clone a simple excel file.")
+    @DisplayName("Should copy constant cell values into new document.")
     void shouldCloneSimpleExcel() throws InterruptedException, IOException {
         // Arrange
         Template template = Template.fromClassPath("/templates/excel/SimpleDocument.xlsx")
@@ -37,7 +50,7 @@ class ExcelGeneratorTest {
 
         // Assert
         assertThat(document.completed(), is(true));
-        var workbook = TestUtils.getXSSFWorkbookFromDocument(document);
+        workbook = TestUtils.getXSSFWorkbookFromDocument(document);
         var firstSheet = XSSFWorkbookWrapper.parse(workbook).sheet(0);
         assertThat(firstSheet.row(0).cell(0).content(), equalTo("This is the rythm of the night"));
         assertThat(firstSheet.row(1).cell(1).content(), equalTo("The night"));
@@ -47,7 +60,7 @@ class ExcelGeneratorTest {
     }
 
     @Test
-    @DisplayName("Clone a simple excel file with a loop.")
+    @DisplayName("Should copy constant cell values in a loop.")
     void shouldCloneSimpleExcelWithLoop() throws InterruptedException, IOException {
         // Arrange
         Template template = Template.fromClassPath("/templates/excel/SimpleDocumentWithLoop.xlsx")
@@ -60,7 +73,7 @@ class ExcelGeneratorTest {
 
         // Assert
         assertThat(document.completed(), is(true));
-        var workbook = TestUtils.getXSSFWorkbookFromDocument(document);
+        workbook = TestUtils.getXSSFWorkbookFromDocument(document);
         var firstSheet = XSSFWorkbookWrapper.parse(workbook).sheet(0);
         assertThat(firstSheet.row(0).cell(0).content(), equalTo("This is the rythm of the night"));
         assertThat(firstSheet.row(1).cell(1).content(), equalTo("The night"));
@@ -72,7 +85,7 @@ class ExcelGeneratorTest {
     }
 
     @Test
-    @DisplayName("Resolve collection placeholders.")
+    @DisplayName("Should resolve placeholder values in Excel in loop.")
     void shouldResolveCollectionPlaceholders() throws InterruptedException, IOException {
         // Arrange
         Template template = Template.fromClassPath("/templates/excel/CollectionsTemplate.xlsx")
@@ -85,21 +98,11 @@ class ExcelGeneratorTest {
 
         // Assert
         assertThat(document.completed(), is(true));
-        var workbook = TestUtils.getXSSFWorkbookFromDocument(document);
+        workbook = TestUtils.getXSSFWorkbookFromDocument(document);
         var firstSheet = XSSFWorkbookWrapper.parse(workbook).sheet(0);
-        assertThat(firstSheet.row(0).cell(0).content(), equalTo("Captain:"));
         assertThat(firstSheet.row(0).cell(1).content(), equalTo("Jean-Luc Picard"));
-        assertThat(firstSheet.row(2).cell(0).content(), equalTo("First Officer"));
-        assertThat(firstSheet.row(4).cell(0).content(), equalTo("Name"));
-        assertThat(firstSheet.row(4).cell(1).content(), equalTo("Rank"));
-        assertThat(firstSheet.row(4).cell(2).content(), equalTo("Uniform"));
         assertThat(firstSheet.row(5).cell(0).content(), equalTo("Riker"));
-        assertThat(firstSheet.row(5).cell(1).content(), equalTo("3"));
-        assertThat(firstSheet.row(5).cell(2).content(), equalTo("Red"));
-        assertThat(firstSheet.row(8).cell(0).content(), equalTo("Services"));
-        assertThat(firstSheet.row(9).cell(0).content(), equalTo("*"));
         assertThat(firstSheet.row(9).cell(1).content(), equalTo("USS Enterprise"));
-        assertThat(firstSheet.row(10).cell(0).content(), equalTo("*"));
         assertThat(firstSheet.row(10).cell(1).content(), equalTo("US Defiant"));
         assertThat(firstSheet.row(12).cell(0).content(), equalTo("And that’s that"));
     }
@@ -118,7 +121,7 @@ class ExcelGeneratorTest {
 
         // Assert
         assertThat(document.completed(), is(true));
-        var workbook = TestUtils.getXSSFWorkbookFromDocument(document);
+        workbook = TestUtils.getXSSFWorkbookFromDocument(document);
         var firstSheet = XSSFWorkbookWrapper.parse(workbook).sheet(0);
         assertThat(firstSheet.row(0).cell(0).content(), equalTo("User Profile"));
         assertThat(firstSheet.row(0).cell(1).content(), equalTo("Jean-Luc Picard"));
@@ -145,7 +148,7 @@ class ExcelGeneratorTest {
 
         // Assert
         assertThat(document.completed(), is(true));
-        var workbook = TestUtils.getXSSFWorkbookFromDocument(document);
+        workbook = TestUtils.getXSSFWorkbookFromDocument(document);
         var firstSheet = XSSFWorkbookWrapper.parse(workbook).sheet(0);
         assertThat(firstSheet.row(0).cell(0).doubleValue(), closeTo(1.0, 0.1));
         assertThat(firstSheet.row(1).cell(0).doubleValue(), closeTo(2.0, 0.1));
@@ -158,7 +161,26 @@ class ExcelGeneratorTest {
 
     @Test
     @DisplayName("Resolve nested loops.")
-    void shouldResolveNestedLoops() {
-        //TODO: Find a way to do comparison of large documents
+    void shouldResolveNestedLoops() throws InterruptedException, IOException {
+        // Arrange
+        Template template = Template.fromClassPath("/templates/excel/NestedLoopDocument.xlsx")
+            .orElseThrow();
+        PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.PICARD);
+
+        // Act
+        Document document = template.startGeneration(resolver);
+        document.blockUntilCompletion(60000L); // 1 minute
+
+        // Assert
+        assertThat(document.completed(), is(true));
+        workbook = TestUtils.getXSSFWorkbookFromDocument(document);
+        var firstSheet = XSSFWorkbookWrapper.parse(workbook).sheet(0);
+        assertThat(firstSheet.row(22).cell(1).content(), equalTo("USS Enterprise"));
+        assertThat(firstSheet.row(23).cell(1).content(), equalTo("Mars"));
+        assertThat(firstSheet.row(24).cell(1).content(), equalTo("Nova Rojava"));
+        assertThat(firstSheet.row(26).cell(1).content(), equalTo("Nova Rojava"));
+        assertThat(firstSheet.row(41).cell(1).content(), equalTo("Exarcheia"));
+        assertThat(firstSheet.row(42).cell(1).content(), equalTo("Nova Metalkova"));
+        assertThat(firstSheet.row(52).cell(0).content(), startsWith("Das Denken"));
     }
 }

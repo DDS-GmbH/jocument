@@ -7,7 +7,12 @@ import com.docutools.jocument.TestUtils;
 import com.docutools.jocument.impl.ReflectionResolver;
 import com.docutools.jocument.sample.model.SampleModelData;
 import com.docutools.poipath.xwpf.XWPFDocumentWrapper;
+import java.awt.Desktop;
+import org.apache.poi.xwpf.usermodel.XWPFDocument;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Tags;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -22,7 +27,17 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 
 @DisplayName("Word Generator Tests")
+@Tag("automated")
+@Tag("xwpf")
 class WordGeneratorTest {
+    XWPFDocument xwpfDocument;
+
+    @AfterEach
+    void cleanup() throws IOException {
+        if (xwpfDocument != null) {
+            xwpfDocument.close();
+        }
+    }
 
     @Test
     @DisplayName("Generate a document from a simple template.")
@@ -38,7 +53,7 @@ class WordGeneratorTest {
 
         // Assert
         assertThat(document.completed(), is(true));
-        var xwpfDocument = TestUtils.getXWPFDocumentFromDocument(document);
+        xwpfDocument = TestUtils.getXWPFDocumentFromDocument(document);
         var documentWrapper = XWPFDocumentWrapper.parse(xwpfDocument);
         assertThat(documentWrapper.paragraph(0).text(), equalTo("User Profile: Jean-Luc Picard"));
         assertThat(documentWrapper.paragraph(2).text(), equalTo("Name: Jean-Luc"));
@@ -64,7 +79,7 @@ class WordGeneratorTest {
 
         // Assert
         assertThat(document.completed(), is(true));
-        var xwpfDocument = TestUtils.getXWPFDocumentFromDocument(document);
+        xwpfDocument = TestUtils.getXWPFDocumentFromDocument(document);
         var documentWrapper = XWPFDocumentWrapper.parse(xwpfDocument);
         assertThat(documentWrapper.paragraph(0).text(), equalTo("User Profile: Jean-Luc Picard"));
         assertThat(documentWrapper.paragraph(2).text(), equalTo("Name: Jean-Luc"));
@@ -95,7 +110,7 @@ class WordGeneratorTest {
 
         // Assert
         assertThat(document.completed(), is(true));
-        var xwpfDocument = TestUtils.getXWPFDocumentFromDocument(document);
+        xwpfDocument = TestUtils.getXWPFDocumentFromDocument(document);
         var documentWrapper = XWPFDocumentWrapper.parse(xwpfDocument);
         var table = documentWrapper.table(0);
         var birthdate = DateTimeFormatter.ofLocalizedDate(FormatStyle.SHORT).format(LocalDate.of(1948, 9, 23));
@@ -121,7 +136,7 @@ class WordGeneratorTest {
 
         // Assert
         assertThat(document.completed(), is(true));
-        var xwpfDocument = TestUtils.getXWPFDocumentFromDocument(document);
+        xwpfDocument = TestUtils.getXWPFDocumentFromDocument(document);
         var documentWrapper = XWPFDocumentWrapper.parse(xwpfDocument);
         assertThat(documentWrapper.paragraph(0).text(), equalTo("Captain: Jean-Luc Picard"));
         assertThat(documentWrapper.paragraph(2).text(), equalTo("First Officer"));
@@ -139,19 +154,20 @@ class WordGeneratorTest {
 
     @Test
     @DisplayName("Apply custom word placeholder.")
-    void shouldApplyCustomWordPlaceholder() {
-        //TODO: How to compare images?
-    }
+    void shouldApplyCustomWordPlaceholder() throws InterruptedException, IOException {
+        // Arrange
+        Template template = Template.fromClassPath("/templates/word/CustomPlaceholderTemplate.docx")
+            .orElseThrow();
+        PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.PICARD);
 
-    @Test
-    @DisplayName("Apply custom word placeholder from json data.")
-    void shouldApplyCustomWordPlaceholderFromJson() {
-        //TODO: How to compare images?
-    }
+        // Act
+        Document document = template.startGeneration(resolver);
+        document.blockUntilCompletion(60000L); // 1 minute
 
-    @Test
-    @DisplayName("Generate a document from a simple template with a table of contents.")
-    void shouldGenerateSimpleDocumentWithTOC() {
-        //TODO Figure out how to check for table of contents
+        // Assert
+        assertThat(document.completed(), is(true));
+        xwpfDocument = TestUtils.getXWPFDocumentFromDocument(document);
+        var documentWrapper = XWPFDocumentWrapper.parse(xwpfDocument);
+        assertThat(documentWrapper.paragraph(2).run(0).pictures().size(), equalTo(1));
     }
 }
