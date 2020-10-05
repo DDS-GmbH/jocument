@@ -154,7 +154,7 @@ public class ExcelGenerator {
 
 
   private boolean isLoopStart(Row row) {
-    if (getNumberOfNonEmptyCells(row) == 1) {
+    if (ExcelUtils.getNumberOfNonEmptyCells(row) == 1) {
       var cell = row.getCell(row.getFirstCellNum());
       if (cell.getCellType() == CellType.STRING) {
         return resolver.resolve(
@@ -167,12 +167,4 @@ public class ExcelGenerator {
     }
     return false;
   }
-
-  private long getNumberOfNonEmptyCells(Row row) {
-    return StreamSupport.stream(Spliterators.spliteratorUnknownSize(row.cellIterator(), Spliterator.ORDERED), false)
-        .map(Cell::getStringCellValue)
-        .filter(cellValue -> !cellValue.isBlank())
-        .count();
-  }
-
 }
