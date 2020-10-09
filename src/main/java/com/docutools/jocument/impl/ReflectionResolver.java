@@ -77,8 +77,8 @@ public class ReflectionResolver implements PlaceholderResolver {
   }
 
   private static NumberFormat toNumberFormat(Money money, Locale locale) {
-    var currency = !money.currencyCode().isBlank() ?
-        Currency.getInstance(money.currencyCode()) :
+    var currency = !money.currencyCode().isBlank()
+        ? Currency.getInstance(money.currencyCode()) :
         Currency.getInstance(locale);
     var format = NumberFormat.getCurrencyInstance(locale);
     format.setCurrency(currency);
@@ -139,10 +139,11 @@ public class ReflectionResolver implements PlaceholderResolver {
       if (customPlaceholderRegistry.governs(placeholderName)) {
         return customPlaceholderRegistry.resolve(placeholderName);
       }
-      var property = SELF_REFERENCE.equals(placeholderName) ? bean :pub.getProperty(bean, placeholderName);
+      var property = SELF_REFERENCE.equals(placeholderName) ? bean : pub.getProperty(bean, placeholderName);
       if (property == null) {
         return Optional.empty();
-      }if (property instanceof Number number) {
+      }
+      if (property instanceof Number number) {
         var numberFormat = findNumberFormat(placeholderName, locale);
         return Optional.of(new ScalarPlaceholderData(numberFormat.format(number)));
       } else if (property instanceof Enum || property instanceof String || ReflectionUtils.isWrapperType(property.getClass())) {
