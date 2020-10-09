@@ -1,25 +1,25 @@
 package com.docutools.jocument.impl.word;
 
+import com.docutools.jocument.CustomPlaceholderRegistry;
 import com.docutools.jocument.Document;
 import com.docutools.jocument.PlaceholderResolver;
 import com.docutools.jocument.Template;
 import com.docutools.jocument.TestUtils;
+import com.docutools.jocument.impl.CustomPlaceholderRegistryImpl;
 import com.docutools.jocument.impl.ReflectionResolver;
 import com.docutools.jocument.sample.model.SampleModelData;
+import com.docutools.jocument.sample.placeholders.QuotePlaceholder;
 import com.docutools.poipath.xwpf.XWPFDocumentWrapper;
-import java.awt.Desktop;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Tags;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.Period;
 import java.time.format.DateTimeFormatter;
-import java.time.format.FormatStyle;
 import java.util.Locale;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -169,5 +169,26 @@ class WordGeneratorTest {
         xwpfDocument = TestUtils.getXWPFDocumentFromDocument(document);
         var documentWrapper = XWPFDocumentWrapper.parse(xwpfDocument);
         assertThat(documentWrapper.paragraph(2).run(0).pictures().size(), equalTo(1));
+    }
+
+    @Test
+    @DisplayName("Apply foreign custom word placeholder.")
+    void shouldApplyForeignCustomWordPlaceholder() throws InterruptedException, IOException {
+        // Arrange
+        Template template = Template.fromClassPath("/templates/word/QuoteTemplate.docx")
+            .orElseThrow();
+        CustomPlaceholderRegistry customPlaceholderRegistry = new CustomPlaceholderRegistryImpl();
+        customPlaceholderRegistry.addHandler("quote", QuotePlaceholder.class);
+        PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.PICARD, customPlaceholderRegistry);
+
+        // Act
+        Document document = template.startGeneration(resolver);
+        document.blockUntilCompletion(60000L); // 1 minute
+
+        // Assert
+        assertThat(document.completed(), is(true));
+        xwpfDocument = TestUtils.getXWPFDocumentFromDocument(document);
+        var documentWrapper = XWPFDocumentWrapper.parse(xwpfDocument);
+        assertThat(documentWrapper.paragraph(0).run(0).text(), equalTo("Live your life not celebrating victories, but overcoming defeats."));
     }
 }
