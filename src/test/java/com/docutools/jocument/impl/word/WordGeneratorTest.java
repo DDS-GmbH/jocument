@@ -61,7 +61,7 @@ class WordGeneratorTest {
         assertThat(documentWrapper.paragraph(4).text(), equalTo("Age: "
                 + Period.between(LocalDate.of(1948, 9, 23), LocalDate.now()).getYears()
                 + " ("
-                + DateTimeFormatter.ofLocalizedDate(FormatStyle.SHORT).format(LocalDate.of(1948, 9, 23))
+                + DateTimeFormatter.ofPattern("dd.MM.yyyy", Locale.US).format(LocalDate.of(1948, 9, 23))
                 + ")"));
     }
 
@@ -87,12 +87,12 @@ class WordGeneratorTest {
         assertThat(documentWrapper.paragraph(4).text(), equalTo("Age German: "
                 + Period.between(LocalDate.of(1948, 9, 23), LocalDate.now()).getYears()
                 + " ("
-                + DateTimeFormatter.ofLocalizedDate(FormatStyle.SHORT).withLocale(Locale.GERMAN).format(LocalDate.of(1948, 9, 23))
+                + DateTimeFormatter.ofPattern("dd.MM.yyyy", Locale.US).format(LocalDate.of(1948, 9, 23))
                 + ")"));
         assertThat(documentWrapper.paragraph(5).text(), equalTo("Age English: "
                 + Period.between(LocalDate.of(1948, 9, 23), LocalDate.now()).getYears()
                 + " ("
-                + DateTimeFormatter.ofLocalizedDate(FormatStyle.SHORT).withLocale(Locale.US).format(LocalDate.of(1948, 9, 23))
+                + DateTimeFormatter.ofPattern("dd.MM.yyyy", Locale.US).format(LocalDate.of(1948, 9, 23))
                 + ")"));
     }
 
@@ -113,7 +113,7 @@ class WordGeneratorTest {
         xwpfDocument = TestUtils.getXWPFDocumentFromDocument(document);
         var documentWrapper = XWPFDocumentWrapper.parse(xwpfDocument);
         var table = documentWrapper.table(0);
-        var birthdate = DateTimeFormatter.ofLocalizedDate(FormatStyle.SHORT).format(LocalDate.of(1948, 9, 23));
+        var birthdate = DateTimeFormatter.ofPattern("dd.MM.yyyy", Locale.US).format(LocalDate.of(1948, 9, 23));
         assertThat(table.row(0).column(0).paragraph(0).text(), equalTo("Name"));
         assertThat(table.row(0).column(1).paragraph(0).text(), equalTo("Value"));
         assertThat(table.row(1).column(0).paragraph(0).text(), equalTo("Full Name"));

@@ -7,6 +7,7 @@ import com.docutools.jocument.TestUtils;
 import com.docutools.jocument.impl.ReflectionResolver;
 import com.docutools.jocument.sample.model.SampleModelData;
 import com.docutools.poipath.xssf.XSSFWorkbookWrapper;
+import java.util.Locale;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
@@ -131,7 +132,7 @@ class ExcelGeneratorTest {
         assertThat(firstSheet.row(3).cell(1).content(), equalTo("Picard"));
         assertThat(firstSheet.row(4).cell(0).content(), equalTo("Age"));
         assertThat(firstSheet.row(4).cell(1).content(), equalTo(String.valueOf(Period.between(LocalDate.of(1948, 9, 23), LocalDate.now()).getYears())));
-        assertThat(firstSheet.row(4).cell(2).content(), equalTo(DateTimeFormatter.ofLocalizedDate(FormatStyle.SHORT).format(LocalDate.of(1948, 9, 23))));
+        assertThat(firstSheet.row(4).cell(2).content(), equalTo(DateTimeFormatter.ofPattern("dd.MM.yyyy", Locale.US).format(LocalDate.of(1948, 9, 23))));
     }
 
     @Test
