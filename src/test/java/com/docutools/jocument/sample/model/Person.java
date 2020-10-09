@@ -1,5 +1,6 @@
 package com.docutools.jocument.sample.model;
 
+import com.docutools.jocument.annotations.Format;
 import java.time.LocalDate;
 import java.time.Period;
 
@@ -7,6 +8,7 @@ public class Person {
 
   private final String firstName;
   private final String lastName;
+  @Format(value = "dd.MM.yyyy")
   private final LocalDate birthDate;
 
   public Person(String firstName, String lastName, LocalDate birthDate) {

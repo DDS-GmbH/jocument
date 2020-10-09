@@ -4,7 +4,6 @@ import com.docutools.jocument.PlaceholderData;
 import com.docutools.jocument.PlaceholderResolver;
 import com.docutools.jocument.impl.IterablePlaceholderData;
 import com.docutools.jocument.impl.ScalarPlaceholderData;
-
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
@@ -12,8 +11,8 @@ import java.util.Optional;
 public class SamplePlaceholderResolver implements PlaceholderResolver {
 
   private static final List<PlaceholderResolver> services =
-          List.of(new ServicePlaceholderResolver("USS Enterprise"),
-                  new ServicePlaceholderResolver("US Defiant"));
+      List.of(new ServicePlaceholderResolver("USS Enterprise"),
+          new ServicePlaceholderResolver("US Defiant"));
 
   @Override
   public Optional<PlaceholderData> resolve(String placeholderName, Locale locale) {

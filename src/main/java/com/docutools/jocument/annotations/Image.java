@@ -8,8 +8,8 @@ import java.lang.annotation.RetentionPolicy;
  * {@link com.docutools.jocument.impl.word.placeholders.ImagePlaceholderData} to resolve this field.
  *
  * @author codecitizen
- * @since 1.0-SNAPSHOT
  * @see com.docutools.jocument.impl.ReflectionResolver
+ * @since 1.0-SNAPSHOT
  */
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Image {

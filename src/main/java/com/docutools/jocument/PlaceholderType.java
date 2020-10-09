@@ -4,8 +4,8 @@ package com.docutools.jocument;
  * Indicates the behavior of a {@link com.docutools.jocument.PlaceholderData} instance.
  *
  * @author codecitizen
- * @since 1.0-SNAPSHOT
  * @see com.docutools.jocument.PlaceholderData
+ * @since 1.0-SNAPSHOT
  */
 public enum PlaceholderType {
   /**

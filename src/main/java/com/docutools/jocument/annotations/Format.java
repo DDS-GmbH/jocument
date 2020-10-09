@@ -13,15 +13,33 @@ import java.lang.annotation.RetentionPolicy;
  * </code>
  *
  * @author codecitizen
- * @since 28.02.2020
  * @see java.time.temporal.Temporal
  * @see java.time.LocalDateTime
  * @see java.time.LocalDate
  * @see java.time.ZonedDateTime
+ * @since 28.02.2020
  */
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Format {
+
+  /**
+   * Returns the time format string.
+   *
+   * @return the time format string the temporal should be formatted in
+   */
   String value();
+
+  /**
+   * Returns the timezone of the temporal.
+   *
+   * @return the timezone the temporal is expressed in
+   */
   String zone() default "UTC";
+
+  /**
+   * Returns the locale which should be used for formatting.
+   *
+   * @return the locale the temporal should be formatted in
+   */
   String locale() default "en/US";
 }
