@@ -144,6 +144,6 @@ class WordGenerator {
     logger.debug("Resolving placeholder {}", placeholderName);
     return resolver.resolve(placeholderName, locale)
         .map(PlaceholderData::toString)
-        .orElse(placeholder); // leave placeholder for post processing
+        .orElse("-");
   }
 }
