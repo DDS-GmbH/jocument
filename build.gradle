@@ -7,10 +7,10 @@ plugins {
 }
 
 group 'com.docutools'
-version '1.0.15'
+version '1.0.16'
 
-sourceCompatibility = 15
-targetCompatibility = 15
+sourceCompatibility = 14
+targetCompatibility = 14
 
 repositories {
     mavenCentral()
