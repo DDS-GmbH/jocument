@@ -1,10 +1,5 @@
 name: Check code
 
-on:
-  push:
-    branches-ignore:
-      - master
-
 jobs:
   checkstyle:
     name: checkstyle
