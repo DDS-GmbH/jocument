@@ -7,6 +7,7 @@ cache:
 
 stages:
   - build
+  - check
   - test
   - publish
 
@@ -17,6 +18,14 @@ build:
   artifacts:
     paths:
       - ./build/libs/*
+
+sonarqube:
+  stage: check
+  script:
+    - gradle :sonarqube -x :test -x :check
+  except:
+    refs:
+      - production
 
 test:
   stage: test
