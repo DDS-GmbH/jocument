@@ -2,7 +2,7 @@ name: Release new JAR to GitHub Packages
 on:
   push:
     branches:
-      - main
+      - master
 jobs:
   gradle-publish:
     runs-on: ubuntu-latest
