@@ -99,11 +99,34 @@ public class ExcelUtils {
     return false;
   }
 
-  private static long getNumberOfNonEmptyCells(Row row) {
+  /**
+   * Get the nuber of cells which are not empty in a row.
+   *
+   * @param row The row to check
+   * @return The number of cells in the row which contain a value
+   */
+  public static long getNumberOfNonEmptyCells(Row row) {
     return StreamSupport.stream(Spliterators.spliteratorUnknownSize(row.cellIterator(), Spliterator.ORDERED), false)
-        .map(Cell::getStringCellValue)
+        .map(ExcelUtils::getCellContentAsString)
         .filter(cellValue -> !cellValue.isBlank())
         .count();
+  }
+
+  /**
+   * Get the content of a cell as string representation.
+   *
+   * @param cell The cell to get the content from
+   * @return The cells content if present, else the blank string ""
+   */
+  public static String getCellContentAsString(Cell cell) {
+    return switch (cell.getCellType()) {
+      case NUMERIC -> String.valueOf(cell.getNumericCellValue());
+      case STRING -> cell.getStringCellValue();
+      case FORMULA -> cell.getCellFormula();
+      case BOOLEAN -> String.valueOf(cell.getBooleanCellValue());
+      case ERROR -> String.valueOf(cell.getErrorCellValue());
+      default -> "";
+    };
   }
 
   /**
