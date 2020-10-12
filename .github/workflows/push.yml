@@ -17,7 +17,7 @@ jobs:
       - name: Setup Java
         uses: actions/setup-java@v1
         with:
-          java-version: 15
+          java-version: 14
       - name: Run checkstyle
         uses: eskatos/gradle-command-action@v1
         with:
@@ -31,7 +31,7 @@ jobs:
       - name: Setup Java
         uses: actions/setup-java@v1
         with:
-          java-version: 15
+          java-version: 14
       - name: Run owasp dependency check
         uses: eskatos/gradle-command-action@v1
         with:
