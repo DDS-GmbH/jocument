@@ -1,11 +1,10 @@
 package com.docutools.jocument;
 
-import com.docutools.jocument.impl.ReflectionUtils;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
 
+import com.docutools.jocument.impl.ReflectionUtils;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.time.Duration;
@@ -13,12 +12,12 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
-import java.util.Date;
 import java.util.Optional;
 import java.util.zip.Adler32;
-
-import static org.hamcrest.MatcherAssert.*;
-import static org.hamcrest.Matchers.*;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 @DisplayName("Reflection Utilities")
 public class ReflectionUtilityTests {
@@ -41,14 +40,6 @@ public class ReflectionUtilityTests {
     assertThat(jsr310, is(false));
   }
 
-  @Retention(RetentionPolicy.RUNTIME)
-  @interface TheAnnotation {}
-
-  static class Clazz {
-    @TheAnnotation
-    private Object field;
-  }
-
   @Test
   void shouldGetAnnotationFromPrivateField() {
     // Arrange
@@ -67,5 +58,14 @@ public class ReflectionUtilityTests {
     // Assert
     assertThat(result, notNullValue());
     assertThat(result.isEmpty(), is(true));
+  }
+
+  @Retention(RetentionPolicy.RUNTIME)
+  @interface TheAnnotation {
+  }
+
+  static class Clazz {
+    @TheAnnotation
+    private Object field;
   }
 }

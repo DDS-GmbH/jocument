@@ -3,7 +3,6 @@ package com.docutools.jocument.sample;
 import com.docutools.jocument.PlaceholderData;
 import com.docutools.jocument.PlaceholderResolver;
 import com.docutools.jocument.impl.ScalarPlaceholderData;
-
 import java.util.Locale;
 import java.util.Optional;
 
