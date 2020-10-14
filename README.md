@@ -3,7 +3,7 @@
 
 ![Check code](https://github.com/DDS-GmbH/jocument/workflows/Check%20code/badge.svg) ![Release new JAR to GitHub Packages](https://github.com/DDS-GmbH/jocument/workflows/Release%20new%20JAR%20to%20GitHub%20Packages/badge.svg)
 
-With jocument you can easily provide custom configurable office templates for your software. The template language uses the familiar curly-brace syntax for placing data into documents (e.g. `Name: {{firstName}} {{lastName}}`), provides mechanics for loops, conditions and custom placeholders as well as supporting a variety of different data source types (JSON, POJOs, ...) - you can even easily build your own.
+With jocument you can easily provide custom configurable office templates for your software. The template language uses the familiar curly-brace syntax for placing data into documents (e.g. `Name: {{firstName}} {{lastName}}`), provides mechanics for loops and custom placeholders as well as supporting a variety of different data source types (JSON, POJOs, ...) - you can even easily build your own.
 
 ![jocument Example](docs/jocument_example.png)
 
@@ -44,14 +44,14 @@ void shouldGenerateSimpleDocument() throws InterruptedException, IOException {
 }
 ```
 
-1. Loads a template from the classpath. The `Tempalte` class provides multiple static methods to load templates from various sources (file system, network, memory).
-2. A `PlaceholderResolver` is the data source a `Tempalte` uses to resolve the values for the placeholders placed in the underlying template. Here we choose the `ReflectionResolver` implementation, which takes a Java POJO as source and resolves the template placeholder against its property names.
-3. A `Template` generates instances of `Document`s, which persist the filled out template to a file on the local FS. `Document`s are generated asynchronous by default (using the [ForkJoinPool#commonPool()](https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/ForkJoinPool.html#commonPool--)).
-4. We block until the `Document` generation completed.
+1. Loads a template from the classpath. The `Template` class provides multiple static methods to load templates from various sources (file system, network, memory).
+2. A `PlaceholderResolver` is the data source a `Template` uses to resolve the values for the placeholders placed in the underlying template. Here we choose the `ReflectionResolver` implementation, which takes a Java POJO as source and resolves the template placeholder against its property names.
+3. A `Template` generates instances of `Document`s, which persist the filled out template to a file on the local FS. `Document`s are generated asynchronously by default (using the [ForkJoinPool#commonPool()](https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/ForkJoinPool.html#commonPool--)).
+4. We block until the `Document` generation completes.
 
 ## Development Setup
 
-The library is developed with JDK 14 with preview features (records and pattern matching) enabled. You can read further on development and contribution guidelines in [CONTRIBUTE.md](CONTRIBUTE.md).
+The library is developed with JDK 14. You can read further on development and contribution guidelines in [CONTRIBUTE.md](CONTRIBUTE.md).
 
 ## META
 
