@@ -25,8 +25,7 @@ import org.apache.poi.xssf.streaming.SXSSFWorkbook;
  * to be created.
  *
  * @author Anton Oellerer
- * @version 1.1.0
- * @since 2020-05
+ * @since 2020-04-02
  */
 public class SXSSFWriter implements ExcelWriter {
   private static final Logger logger = LogManager.getLogger();

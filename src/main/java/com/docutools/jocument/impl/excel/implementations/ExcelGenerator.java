@@ -27,8 +27,7 @@ import org.apache.poi.ss.usermodel.Row;
  * Because of this, the generator is agnostic of enclosing structures like sheets and workbooks.
  *
  * @author Anton Oellerer
- * @version 1.1.0
- * @since 2020-04
+ * @since 2020-04-10
  */
 public class ExcelGenerator {
   private static final Logger logger = LogManager.getLogger();

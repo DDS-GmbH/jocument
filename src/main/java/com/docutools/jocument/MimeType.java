@@ -5,7 +5,7 @@ import java.util.Optional;
 /**
  * The supported MIME-Types for {@link com.docutools.jocument.Template}s.
  *
- * @since 1.0-SNAPSHOT
+ * @since 2020-02-19
  */
 public enum MimeType {
   DOCX("application/vnd.openxmlformats-officedocument.wordprocessingml.document"),

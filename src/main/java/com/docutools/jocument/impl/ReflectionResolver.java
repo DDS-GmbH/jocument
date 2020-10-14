@@ -36,7 +36,7 @@ import org.apache.logging.log4j.Logger;
  *
  * @author codecitizen
  * @see com.docutools.jocument.PlaceholderResolver
- * @since 1.0-SNAPSHOT
+ * @since 2020-02-19
  */
 public class ReflectionResolver implements PlaceholderResolver {
 

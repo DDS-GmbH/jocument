@@ -5,7 +5,7 @@ package com.docutools.jocument;
  *
  * @author codecitizen
  * @see com.docutools.jocument.PlaceholderData
- * @since 1.0-SNAPSHOT
+ * @since 2020-02-19
  */
 public enum PlaceholderType {
   /**
