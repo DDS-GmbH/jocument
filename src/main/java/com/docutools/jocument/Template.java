@@ -24,7 +24,7 @@ import org.apache.poi.util.LocaleUtil;
  * @see com.docutools.jocument.MimeType
  * @see com.docutools.jocument.PlaceholderResolver
  * @see Document
- * @since 1.0-SNAPSHOT
+ * @since 2020-02-19
  */
 public interface Template {
 

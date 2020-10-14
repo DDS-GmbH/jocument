@@ -34,7 +34,7 @@ import org.apache.tika.mime.MediaType;
  *
  * @author betorcs
  * @see com.docutools.jocument.PlaceholderResolver
- * @since 1.0-SNAPSHOT
+ * @since 2020-02-19
  */
 public class JsonResolver implements PlaceholderResolver {
   private static final Logger logger = LogManager.getLogger();

@@ -22,8 +22,7 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
  * and for passing each sheet of a workbook to the excel generator.
  *
  * @author Anton Oellerer
- * @version 1.1.0
- * @since 2020-04
+ * @since 2020-04-07
  */
 public class ExcelDocumentImpl extends DocumentImpl {
   private static final Logger logger = LogManager.getLogger();

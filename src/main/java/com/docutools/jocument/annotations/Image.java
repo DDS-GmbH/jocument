@@ -9,7 +9,7 @@ import java.lang.annotation.RetentionPolicy;
  *
  * @author codecitizen
  * @see com.docutools.jocument.impl.ReflectionResolver
- * @since 1.0-SNAPSHOT
+ * @since 2020-02-19
  */
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Image {

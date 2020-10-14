@@ -11,7 +11,7 @@ import org.apache.poi.util.LocaleUtil;
  * @author codecitizen
  * @see com.docutools.jocument.PlaceholderData
  * @see Document
- * @since 1.0-SNAPSHOT
+ * @since 2020-02-19
  */
 public interface PlaceholderResolver {
 

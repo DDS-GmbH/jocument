@@ -10,7 +10,7 @@ import java.util.stream.Stream;
  *
  * @author codecitzen
  * @see com.docutools.jocument.PlaceholderResolver
- * @since 1.0-SNAPSHOT
+ * @since 2020-02-19
  */
 public interface PlaceholderData {
 

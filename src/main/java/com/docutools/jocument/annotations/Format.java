@@ -17,7 +17,7 @@ import java.lang.annotation.RetentionPolicy;
  * @see java.time.LocalDateTime
  * @see java.time.LocalDate
  * @see java.time.ZonedDateTime
- * @since 28.02.2020
+ * @since 2020-02-28
  */
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Format {
