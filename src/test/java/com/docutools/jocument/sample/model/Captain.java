@@ -11,7 +11,7 @@ public class Captain {
   private final Uniform uniform;
   private final FirstOfficer officer;
   private final List<Service> services;
-  @Image
+  @Image(maxWidth = 100)
   private final Path profilePic;
 
   public Captain(String name, int rank, Uniform uniform, FirstOfficer officer, List<Service> services, Path profilePic) {

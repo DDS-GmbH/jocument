@@ -10,6 +10,7 @@ import com.docutools.jocument.sample.model.SampleModelData;
 import java.awt.Desktop;
 import java.io.IOException;
 import org.apache.poi.util.LocaleUtil;
+import org.jlibvips.jna.VipsBindingsSingleton;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -26,6 +27,10 @@ import static org.hamcrest.Matchers.is;
 
 @DisplayName("Generating Word Documents")
 public class WordDocuments {
+
+  static {
+    VipsBindingsSingleton.configure("/usr/local/lib/libvips.42.dylib");
+  }
 
   @Test
   @DisplayName("Load word templates from classpath.")
@@ -196,6 +201,24 @@ public class WordDocuments {
     Template template = Template.fromClassPath("/templates/word/SelfReference.docx")
             .orElseThrow();
     PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.PICARD_PERSON);
+
+    // Act
+    Document document = template.startGeneration(resolver);
+    document.blockUntilCompletion(60000L); // 1 minute
+
+    // Assert
+    assertThat(document.completed(), is(true));
+
+    Desktop.getDesktop().open(document.getPath().toFile());
+  }
+
+  @Test
+  @DisplayName("Insert and resize picture")
+  void shouldInsertAndResizePicture() throws Exception {
+    // Arrange
+    Template template = Template.fromClassPath("/templates/word/ProfilePicTemplate.docx")
+            .orElseThrow();
+    PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.PICARD);
 
     // Act
     Document document = template.startGeneration(resolver);
