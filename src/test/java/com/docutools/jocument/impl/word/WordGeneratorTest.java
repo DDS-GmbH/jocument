@@ -162,7 +162,7 @@ class WordGeneratorTest {
 
         // Act
         Document document = template.startGeneration(resolver);
-        document.blockUntilCompletion(120000L); // 2 minutes
+        document.blockUntilCompletion(60000L); // 1 minute
 
         // Assert
         assertThat(document.completed(), is(true));
