@@ -66,3 +66,7 @@ jobs:
         uses: eskatos/gradle-command-action@v1
         with:
           arguments: automatedTests
+      - name: Annotate failed tests
+        with:
+          access-token: ${{ secrets.GITHUB_TOKEN }}
+        if: always()
