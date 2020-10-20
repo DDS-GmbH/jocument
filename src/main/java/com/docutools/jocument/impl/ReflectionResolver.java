@@ -156,9 +156,9 @@ public class ReflectionResolver implements PlaceholderResolver {
       } else if (property instanceof Temporal temporal) {
         return formatTemporal(placeholderName, temporal, locale);
       } else if (property instanceof Path path && isFieldAnnotatedWith(bean.getClass(), placeholderName, Image.class)) {
-          return ReflectionUtils.findFieldAnnotation(bean.getClass(), placeholderName, Image.class)
-                  .map(image -> new ImagePlaceholderData(path)
-                          .withMaxWidth(image.maxWidth()));
+        return ReflectionUtils.findFieldAnnotation(bean.getClass(), placeholderName, Image.class)
+            .map(image -> new ImagePlaceholderData(path)
+                .withMaxWidth(image.maxWidth()));
       }
       if (bean.equals(property)) {
         return Optional.of(new IterablePlaceholderData(List.of(new ReflectionResolver(bean)), 1));

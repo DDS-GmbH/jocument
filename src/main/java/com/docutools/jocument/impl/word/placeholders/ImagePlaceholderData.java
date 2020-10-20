@@ -3,7 +3,6 @@ package com.docutools.jocument.impl.word.placeholders;
 import com.docutools.jocument.impl.word.CustomWordPlaceholderData;
 import com.docutools.jocument.impl.word.WordImageUtils;
 import com.docutools.jocument.impl.word.WordUtilities;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -35,7 +34,7 @@ public class ImagePlaceholderData extends CustomWordPlaceholderData {
       WordImageUtils.insertImage(paragraph, path);
       WordUtilities.removeIfExists(placeholder);
     } finally {
-      if(path != null && !path.equals(imagePath)) {
+      if (path != null && !path.equals(imagePath)) {
         try {
           Files.deleteIfExists(path);
         } catch (IOException e) {
@@ -51,12 +50,12 @@ public class ImagePlaceholderData extends CustomWordPlaceholderData {
       if (maxWidth > 0 && image.getWidth() > maxWidth) {
         double scale = (double) maxWidth / image.getWidth();
         VipsImage resized = image.resize(scale)
-                .create();
+            .create();
         image.unref();
         image = resized;
       }
       Path path = image.jpeg()
-              .save();
+          .save();
       image.unref();
       return path;
     } catch (Exception e) {
