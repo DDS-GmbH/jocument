@@ -69,7 +69,7 @@ jobs:
   gradle-publish:
     name: gradle-publish
     needs: [checkstyle, owasp, sonarqube, tests]
-    if: contains( github.ref, 'master')
+    if: contains( github.ref, 'master') || contains( github.ref, 'release')
     runs-on: ubuntu-latest
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
