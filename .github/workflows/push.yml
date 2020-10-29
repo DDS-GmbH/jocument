@@ -68,6 +68,13 @@ jobs:
         uses: eskatos/gradle-command-action@v1
         with:
           arguments: automatedTests
+      - name: Publish test results
+        if: always()
+        uses: EnricoMi/publish-unit-test-result-action@v1.3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          report_individual_runs: true
+          files: build/test-results/automatedTests/*.xml
   gradle-publish:
     name: gradle-publish
     needs: [checkstyle, owasp, sonarqube, tests]
