@@ -53,7 +53,7 @@ class ExcelGeneratorTest {
         assertThat(document.completed(), is(true));
         workbook = TestUtils.getXSSFWorkbookFromDocument(document);
         var firstSheet = XSSFWorkbookWrapper.parse(workbook).sheet(0);
-        assertThat(firstSheet.row(0).cell(0).content(), equalTo("This is not the rythm of the night"));
+        assertThat(firstSheet.row(0).cell(0).content(), equalTo("This is the rythm of the night"));
         assertThat(firstSheet.row(1).cell(1).content(), equalTo("The night"));
         assertThat(firstSheet.row(2).cell(2).content(), equalTo("Ooh"));
         assertThat(firstSheet.row(3).cell(3).content(), equalTo("Oh yeah"));

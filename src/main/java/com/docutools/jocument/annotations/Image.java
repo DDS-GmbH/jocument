@@ -14,11 +14,11 @@ import java.lang.annotation.RetentionPolicy;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Image {
 
-    /**
-     * The maximum pixel width the image should be inserted with. If the image is smaller won't affect it.
-     *
-     * @return the maximum pixel width of the image to be inserted
-     */
-    int maxWidth() default -1;
+  /**
+   * The maximum pixel width the image should be inserted with. If the image is smaller won't affect it.
+   *
+   * @return the maximum pixel width of the image to be inserted
+   */
+  int maxWidth() default -1;
 
 }
