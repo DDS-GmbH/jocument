@@ -1,4 +1,4 @@
-image: gradle:6.5-jdk14
+image: gradle:6.5-jdk15
 
 cache:
   key: jocument
