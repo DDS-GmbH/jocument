@@ -19,7 +19,11 @@ plugins {
 }
 
 group 'com.docutools'
-version = System.getenv("CI") == "true"? System.getenv("GITHUB_SHA") : '1.0.16'
+version = System.getenv("CI") == "true" ?
+        System.getenv("GITHUB_REF").endsWith("release") ?
+                new Date().format("yyyy-MM-dd") :
+                System.getenv("GITHUB_SHA") :
+        'SNAPSHOT'
 
 sourceCompatibility = 14
 targetCompatibility = 14
