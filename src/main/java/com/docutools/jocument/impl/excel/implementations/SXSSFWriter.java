@@ -14,7 +14,11 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.xssf.streaming.SXSSFSheet;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
-import org.apache.poi.xssf.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFClientAnchor;
+import org.apache.poi.xssf.usermodel.XSSFDrawing;
+import org.apache.poi.xssf.usermodel.XSSFPicture;
+import org.apache.poi.xssf.usermodel.XSSFPictureData;
+import org.apache.poi.xssf.usermodel.XSSFShape;
 
 /**
  * This is a streamed implementation of the {@link com.docutools.jocument.impl.excel.interfaces.ExcelWriter} interface.
@@ -77,8 +81,8 @@ public class SXSSFWriter implements ExcelWriter {
     currentSheet.setVerticallyCenter(sheet.getVerticallyCenter());
 
     var drawing = (XSSFDrawing)sheet.createDrawingPatriarch();
-    for(var shape : drawing.getShapes()) {
-      if(shape instanceof XSSFPicture) {
+    for (var shape : drawing.getShapes()) {
+      if (shape instanceof XSSFPicture) {
         transferPicture(shape, (SXSSFSheet) currentSheet);
       }
     }
@@ -102,7 +106,6 @@ public class SXSSFWriter implements ExcelWriter {
 
     var newWb = newSheet.getWorkbook();
     var newHelper = newWb.getCreationHelper();
-    var newDrawing = newSheet.createDrawingPatriarch();
     var newAnchor = newHelper.createClientAnchor();
 
     // Row / Column placement.
@@ -119,6 +122,7 @@ public class SXSSFWriter implements ExcelWriter {
 
     int newPictureIndex = newWb.addPicture(xssfPictureData.getData(), xssfPictureData.getPictureType());
 
+    var newDrawing = newSheet.createDrawingPatriarch();
     newDrawing.createPicture(newAnchor, newPictureIndex);
   }
 
