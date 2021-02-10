@@ -51,7 +51,7 @@ void shouldGenerateSimpleDocument() throws InterruptedException, IOException {
 
 ## Development Setup
 
-The library is developed with JDK 15. You can read further on development and contribution guidelines in [CONTRIBUTE.md](CONTRIBUTE.md).
+The library is developed with JDK 14. You can read further on development and contribution guidelines in [CONTRIBUTE.md](CONTRIBUTE.md).
 
 ## META
 

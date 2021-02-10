@@ -25,8 +25,8 @@ version = System.getenv("CI") == "true" ?
                 System.getenv("GITHUB_SHA") :
         'SNAPSHOT'
 
-sourceCompatibility = 15
-targetCompatibility = 15
+sourceCompatibility = 14
+targetCompatibility = 14
 
 repositories {
     mavenCentral()
@@ -100,7 +100,7 @@ javadoc {
     failOnError = false
     options {
         addBooleanOption('-enable-preview', true)
-        addStringOption('-release', '15')
+        addStringOption('-release', '14')
     }
 }
 
