@@ -4,7 +4,7 @@ on: [push]
 jobs:
   checkstyle:
     name: checkstyle
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
@@ -20,7 +20,7 @@ jobs:
           arguments: checkMain checkTest
   owasp:
     name: owasp
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -34,7 +34,7 @@ jobs:
           arguments: dependencyCheckAnalyze
   sonarqube:
     name: sonarqube
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
@@ -52,7 +52,7 @@ jobs:
           SONARQUBE_TOKEN: ${{ secrets.SONARQUBE_TOKEN }}
   tests:
     name: tests
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
@@ -79,7 +79,7 @@ jobs:
     name: gradle-publish
     needs: [checkstyle, owasp, sonarqube, tests]
     if: contains( github.ref, 'master') || contains( github.ref, 'release')
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
