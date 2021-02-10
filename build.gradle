@@ -88,13 +88,20 @@ dependencyCheck {
     suppressionFile = 'config/dependency-check/suppression.xml'
 }
 
-tasks.withType(JavaCompile) {
-    options.compilerArgs += "--enable-preview"
+tasks.withType(JavaCompile).all {
+    options.compilerArgs += ['--enable-preview']
 }
 
 java {
     withSourcesJar()
     withJavadocJar()
+}
+javadoc {
+    failOnError = false
+    options {
+        addBooleanOption('-enable-preview', true)
+        addStringOption('-release', '14')
+    }
 }
 
 test {

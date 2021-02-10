@@ -19,7 +19,7 @@ jocument, just open a `WIP:` pull request, and a maintainer will answer
 you as soon as they have time for it.
 
 ## Coding standards
-Generally jocument is developed with Java 15, please try to use modern
+Generally jocument is developed with Java 14, please try to use modern
 language features wherever it makes sense.
 One big part of this is avoiding to use `null` to communicate 
 information, if it is necessary to pass back empty objects please use
