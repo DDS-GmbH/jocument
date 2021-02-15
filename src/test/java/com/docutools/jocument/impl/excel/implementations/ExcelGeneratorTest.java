@@ -40,23 +40,6 @@ class ExcelGeneratorTest {
     }
 
     @Test
-    @DisplayName("Formatting")
-    void shouldFormat() throws Exception {
-        // Arrange
-        Template template = Template.fromClassPath("/templates/excel/Formatting.xlsx")
-                .orElseThrow();
-        PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.CAPTAINS);
-
-        // Act
-        Document document = template.startGeneration(resolver);
-        document.blockUntilCompletion(60000L); // 1 minute
-
-        // Assert
-        assertThat(document.completed(), is(true));
-        Desktop.getDesktop().open(document.getPath().toFile());
-    }
-
-    @Test
     @DisplayName("Should copy constant cell values into new document.")
     void shouldCloneSimpleExcel() throws InterruptedException, IOException {
         // Arrange
