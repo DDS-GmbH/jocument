@@ -6,6 +6,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.poi.ss.usermodel.Cell;
@@ -41,6 +44,10 @@ public class SXSSFWriter implements ExcelWriter {
   private Sheet currentSheet;
   private Row currentRow;
   private int rowOffset = 0;
+  /**
+   * Maps the {@link CellStyle} objects of the old workbook to the new ones.
+   */
+  private final Map<CellStyle, CellStyle> styleStyleMapping = new HashMap<>();
 
   /**
    * Creates a new SXSSFWriter.
@@ -165,11 +172,8 @@ public class SXSSFWriter implements ExcelWriter {
     logger.debug("Creating new cell {} {} with text {}",
         templateCell.getColumnIndex(), templateCell.getRow().getRowNum(), newCellText);
     var newCell = currentRow.createCell(templateCell.getColumnIndex(), templateCell.getCellType());
-    if (workbook.getCellStyleAt(templateCell.getCellStyle().getIndex()) == null) {
-      copyCellStyle(templateCell.getCellStyle());
-    }
     newCell.setCellComment(templateCell.getCellComment());
-    newCell.setCellStyle(templateCell.getCellStyle());
+    newCell.setCellStyle(styleStyleMapping.computeIfAbsent(templateCell.getCellStyle(), this::copyCellStyle));
     newCell.setHyperlink(templateCell.getHyperlink());
     currentSheet.setColumnWidth(templateCell.getColumnIndex(), templateCell.getSheet().getColumnWidth(templateCell.getColumnIndex()));
     newCell.setCellValue(newCellText);
@@ -188,8 +192,9 @@ public class SXSSFWriter implements ExcelWriter {
     rowOffset += size;
   }
 
-  private void copyCellStyle(CellStyle cellStyle) {
+  private CellStyle copyCellStyle(CellStyle cellStyle) {
     var newStyle = workbook.createCellStyle();
     newStyle.cloneStyleFrom(cellStyle);
+    return newStyle;
   }
 }

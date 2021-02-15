@@ -7,6 +7,8 @@ import com.docutools.jocument.TestUtils;
 import com.docutools.jocument.impl.ReflectionResolver;
 import com.docutools.jocument.sample.model.SampleModelData;
 import com.docutools.poipath.xssf.XSSFWorkbookWrapper;
+
+import java.awt.*;
 import java.util.Locale;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.AfterEach;
@@ -35,6 +37,23 @@ class ExcelGeneratorTest {
         if (workbook != null) {
             workbook.close();
         }
+    }
+
+    @Test
+    @DisplayName("Formatting")
+    void shouldFormat() throws Exception {
+        // Arrange
+        Template template = Template.fromClassPath("/templates/excel/Formatting.xlsx")
+                .orElseThrow();
+        PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.CAPTAINS);
+
+        // Act
+        Document document = template.startGeneration(resolver);
+        document.blockUntilCompletion(60000L); // 1 minute
+
+        // Assert
+        assertThat(document.completed(), is(true));
+        Desktop.getDesktop().open(document.getPath().toFile());
     }
 
     @Test

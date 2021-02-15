@@ -10,6 +10,7 @@ public class SampleModelData {
 
   public static final Captain PICARD;
   public static final Person PICARD_PERSON = new Person("Jean-Luc", "Picard", LocalDate.of(1948, 9, 23));
+  public static final List<Captain> CAPTAINS;
 
   static {
     try {
@@ -23,6 +24,7 @@ public class SampleModelData {
                   new PlanetServiceInfo("Venus", List.of(new City("Nova Parisia"), new City("Birnin Zana"))),
                   new PlanetServiceInfo("Jupiter", List.of(new City("Exarcheia"), new City("Nova Metalkova")))))),
           Path.of(SampleModelData.class.getResource("/images/picardProfile.jpg").toURI()));
+      CAPTAINS = List.of(PICARD);
     } catch (URISyntaxException e) {
       throw new RuntimeException(e);
     }
