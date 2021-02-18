@@ -6,11 +6,14 @@ import com.docutools.jocument.impl.word.WordUtilities;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.poi.xwpf.usermodel.IBodyElement;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.jlibvips.VipsImage;
 
 public class ImagePlaceholderData extends CustomWordPlaceholderData {
+  private static final Logger logger = LogManager.getLogger();
 
   private final Path imagePath;
 
@@ -38,7 +41,7 @@ public class ImagePlaceholderData extends CustomWordPlaceholderData {
         try {
           Files.deleteIfExists(path);
         } catch (IOException e) {
-          e.printStackTrace();
+          logger.error(e);
         }
       }
     }
@@ -60,7 +63,7 @@ public class ImagePlaceholderData extends CustomWordPlaceholderData {
       image.unref();
       return path;
     } catch (Exception e) {
-      e.printStackTrace();
+      logger.error(e);
       return imagePath;
     } finally {
       if (image != null) {
