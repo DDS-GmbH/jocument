@@ -45,8 +45,9 @@ public class ImagePlaceholderData extends CustomWordPlaceholderData {
   }
 
   private Path applyOptions() {
+    VipsImage image = null;
     try {
-      VipsImage image = VipsImage.fromFile(imagePath);
+      image = VipsImage.fromFile(imagePath);
       if (maxWidth > 0 && image.getWidth() > maxWidth) {
         double scale = (double) maxWidth / image.getWidth();
         VipsImage resized = image.resize(scale)
@@ -61,6 +62,10 @@ public class ImagePlaceholderData extends CustomWordPlaceholderData {
     } catch (Exception e) {
       e.printStackTrace();
       return imagePath;
+    } finally {
+      if (image != null) {
+        image.close();
+      }
     }
   }
 }
