@@ -1,15 +1,11 @@
 package com.docutools.jocument.impl.word;
 
-import com.docutools.jocument.CustomPlaceholderRegistry;
-import com.docutools.jocument.Document;
-import com.docutools.jocument.PlaceholderResolver;
-import com.docutools.jocument.Template;
-import com.docutools.jocument.TestUtils;
+import com.docutools.jocument.*;
 import com.docutools.jocument.impl.CustomPlaceholderRegistryImpl;
 import com.docutools.jocument.impl.ReflectionResolver;
 import com.docutools.jocument.sample.model.SampleModelData;
 import com.docutools.jocument.sample.placeholders.QuotePlaceholder;
-import com.docutools.poipath.xwpf.XWPFDocumentWrapper;
+import com.docutools.poipath.PoiPath;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
@@ -54,7 +50,7 @@ class WordGeneratorTest {
         // Assert
         assertThat(document.completed(), is(true));
         xwpfDocument = TestUtils.getXWPFDocumentFromDocument(document);
-        var documentWrapper = XWPFDocumentWrapper.parse(xwpfDocument);
+        var documentWrapper = PoiPath.xwpf(xwpfDocument);
         assertThat(documentWrapper.paragraph(0).text(), equalTo("User Profile: Jean-Luc Picard"));
         assertThat(documentWrapper.paragraph(2).text(), equalTo("Name: Jean-Luc"));
         assertThat(documentWrapper.paragraph(3).text(), equalTo("Last Name: Picard"));
@@ -80,7 +76,7 @@ class WordGeneratorTest {
         // Assert
         assertThat(document.completed(), is(true));
         xwpfDocument = TestUtils.getXWPFDocumentFromDocument(document);
-        var documentWrapper = XWPFDocumentWrapper.parse(xwpfDocument);
+        var documentWrapper = PoiPath.xwpf(xwpfDocument);
         assertThat(documentWrapper.paragraph(0).text(), equalTo("User Profile: Jean-Luc Picard"));
         assertThat(documentWrapper.paragraph(2).text(), equalTo("Name: Jean-Luc"));
         assertThat(documentWrapper.paragraph(3).text(), equalTo("Last Name: Picard"));
@@ -111,15 +107,15 @@ class WordGeneratorTest {
         // Assert
         assertThat(document.completed(), is(true));
         xwpfDocument = TestUtils.getXWPFDocumentFromDocument(document);
-        var documentWrapper = XWPFDocumentWrapper.parse(xwpfDocument);
+        var documentWrapper = PoiPath.xwpf(xwpfDocument);
         var table = documentWrapper.table(0);
         var birthdate = DateTimeFormatter.ofPattern("dd.MM.yyyy", Locale.US).format(LocalDate.of(1948, 9, 23));
-        assertThat(table.row(0).column(0).paragraph(0).text(), equalTo("Name"));
-        assertThat(table.row(0).column(1).paragraph(0).text(), equalTo("Value"));
-        assertThat(table.row(1).column(0).paragraph(0).text(), equalTo("Full Name"));
-        assertThat(table.row(1).column(1).paragraph(0).text(), equalTo("Jean-Luc Picard"));
-        assertThat(table.row(2).column(0).paragraph(0).text(), equalTo("Birthdate"));
-        assertThat(table.row(2).column(1).paragraph(0).text(), equalTo(birthdate));
+        assertThat(table.row(0).cell(0).bodyElement(0).asParagraph().text(), equalTo("Name"));
+        assertThat(table.row(0).cell(1).bodyElement(0).asParagraph().text(), equalTo("Value"));
+        assertThat(table.row(1).cell(0).bodyElement(0).asParagraph().text(), equalTo("Full Name"));
+        assertThat(table.row(1).cell(1).bodyElement(0).asParagraph().text(), equalTo("Jean-Luc Picard"));
+        assertThat(table.row(2).cell(0).bodyElement(0).asParagraph().text(), equalTo("Birthdate"));
+        assertThat(table.row(2).cell(1).bodyElement(0).asParagraph().text(), equalTo(birthdate));
     }
 
     @Test
@@ -137,15 +133,15 @@ class WordGeneratorTest {
         // Assert
         assertThat(document.completed(), is(true));
         xwpfDocument = TestUtils.getXWPFDocumentFromDocument(document);
-        var documentWrapper = XWPFDocumentWrapper.parse(xwpfDocument);
+        var documentWrapper = PoiPath.xwpf(xwpfDocument);
         assertThat(documentWrapper.paragraph(0).text(), equalTo("Captain: Jean-Luc Picard"));
         assertThat(documentWrapper.paragraph(2).text(), equalTo("First Officer"));
-        assertThat(documentWrapper.table(0).row(0).column(0).paragraph(0).text(), equalTo("Name"));
-        assertThat(documentWrapper.table(0).row(0).column(1).paragraph(0).text(), equalTo("Rank"));
-        assertThat(documentWrapper.table(0).row(0).column(2).paragraph(0).text(), equalTo("Uniform"));
-        assertThat(documentWrapper.table(0).row(1).column(0).paragraph(0).text(), equalTo("Riker"));
-        assertThat(documentWrapper.table(0).row(1).column(1).paragraph(0).text(), equalTo("3"));
-        assertThat(documentWrapper.table(0).row(1).column(2).paragraph(0).text(), equalTo("Red"));
+        assertThat(documentWrapper.table(0).row(0).cell(0).bodyElement(0).asParagraph().text(), equalTo("Name"));
+        assertThat(documentWrapper.table(0).row(0).cell(1).bodyElement(0).asParagraph().text(), equalTo("Rank"));
+        assertThat(documentWrapper.table(0).row(0).cell(2).bodyElement(0).asParagraph().text(), equalTo("Uniform"));
+        assertThat(documentWrapper.table(0).row(1).cell(0).bodyElement(0).asParagraph().text(), equalTo("Riker"));
+        assertThat(documentWrapper.table(0).row(1).cell(1).bodyElement(0).asParagraph().text(), equalTo("3"));
+        assertThat(documentWrapper.table(0).row(1).cell(2).bodyElement(0).asParagraph().text(), equalTo("Red"));
         assertThat(documentWrapper.paragraph(5).text(), equalTo("Services"));
         assertThat(documentWrapper.paragraph(7).text(), equalTo("USS Enterprise"));
         assertThat(documentWrapper.paragraph(8).text(), equalTo("US Defiant"));
@@ -167,7 +163,7 @@ class WordGeneratorTest {
         // Assert
         assertThat(document.completed(), is(true));
         xwpfDocument = TestUtils.getXWPFDocumentFromDocument(document);
-        var documentWrapper = XWPFDocumentWrapper.parse(xwpfDocument);
+        var documentWrapper = PoiPath.xwpf(xwpfDocument);
         assertThat(documentWrapper.paragraph(2).run(0).pictures().size(), equalTo(1));
     }
 
@@ -188,7 +184,7 @@ class WordGeneratorTest {
         // Assert
         assertThat(document.completed(), is(true));
         xwpfDocument = TestUtils.getXWPFDocumentFromDocument(document);
-        var documentWrapper = XWPFDocumentWrapper.parse(xwpfDocument);
+        var documentWrapper = PoiPath.xwpf(xwpfDocument);
         assertThat(documentWrapper.paragraph(0).run(0).text(), equalTo("Live your life not celebrating victories, but overcoming defeats."));
     }
 }

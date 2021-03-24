@@ -18,15 +18,11 @@ plugins {
     id 'maven-publish'
 }
 
-group 'com.docutools'
-version = System.getenv("CI") == "true" ?
-        System.getenv("GITHUB_REF").endsWith("release") ?
-                new Date().format("yyyy-MM-dd") :
-                System.getenv("GITHUB_SHA") :
-        'SNAPSHOT'
+group 'com.docu-tools'
+version = '1.0.0'
 
-sourceCompatibility = 15
-targetCompatibility = 15
+sourceCompatibility = 16
+targetCompatibility = 16
 
 repositories {
     mavenCentral()
@@ -68,7 +64,7 @@ dependencies {
 
     testImplementation('org.junit.jupiter:junit-jupiter:5.6.0')
     testImplementation("org.hamcrest:hamcrest:2.2")
-    testImplementation("com.docutools:poipath:1.1.2")
+    testImplementation("com.docu-tools:poipath:1.0.0")
 
     checkstyle 'com.puppycrawl.tools:checkstyle:8.36.2'
 }
@@ -88,29 +84,19 @@ dependencyCheck {
     suppressionFile = 'config/dependency-check/suppression.xml'
 }
 
-tasks.withType(JavaCompile).all {
-    options.compilerArgs += ['--enable-preview']
-}
-
 java {
     withSourcesJar()
     withJavadocJar()
 }
 javadoc {
     failOnError = false
-    options {
-        addBooleanOption('-enable-preview', true)
-        addStringOption('-release', '14')
-    }
 }
 
 test {
-    jvmArgs '--enable-preview'
     useJUnitPlatform()
 }
 
 task automatedTests(type: Test) {
-    jvmArgs '--enable-preview'
     useJUnitPlatform{
         includeTags "automated"
     }
