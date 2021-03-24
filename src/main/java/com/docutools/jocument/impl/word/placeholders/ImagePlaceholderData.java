@@ -6,11 +6,14 @@ import com.docutools.jocument.impl.word.WordUtilities;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.poi.xwpf.usermodel.IBodyElement;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.jlibvips.VipsImage;
 
 public class ImagePlaceholderData extends CustomWordPlaceholderData {
+  private static final Logger logger = LogManager.getLogger();
 
   private final Path imagePath;
 
@@ -38,28 +41,31 @@ public class ImagePlaceholderData extends CustomWordPlaceholderData {
         try {
           Files.deleteIfExists(path);
         } catch (IOException e) {
-          e.printStackTrace();
+          logger.error(e);
         }
       }
     }
   }
 
   private Path applyOptions() {
-    try {
-      VipsImage image = VipsImage.fromFile(imagePath);
+    try (VipsImage image = VipsImage.fromFile(imagePath)) {
+      Path path;
       if (maxWidth > 0 && image.getWidth() > maxWidth) {
         double scale = (double) maxWidth / image.getWidth();
-        VipsImage resized = image.resize(scale)
-            .create();
+        try (VipsImage resized = image.resize(scale)
+            .create()) {
+          image.unref();
+          path = resized.jpeg().save();
+          resized.unref();
+        }
+      } else {
+        path = image.jpeg()
+            .save();
         image.unref();
-        image = resized;
       }
-      Path path = image.jpeg()
-          .save();
-      image.unref();
       return path;
     } catch (Exception e) {
-      e.printStackTrace();
+      logger.error(e);
       return imagePath;
     }
   }
