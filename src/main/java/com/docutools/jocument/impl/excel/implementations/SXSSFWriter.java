@@ -141,6 +141,7 @@ public class SXSSFWriter implements ExcelWriter {
     currentRow.setZeroHeight(row.getZeroHeight());
   }
 
+  @SuppressWarnings("checkstyle:MissingSwitchDefault")
   @Override
   public void addCell(Cell cell) {
     logger.debug("Creating new cell {} {}", cell.getColumnIndex(), cell.getRow().getRowNum());
@@ -152,17 +153,15 @@ public class SXSSFWriter implements ExcelWriter {
     newCell.setCellStyle(cell.getCellStyle());
     newCell.setHyperlink(cell.getHyperlink());
     currentSheet.setColumnWidth(cell.getColumnIndex(), cell.getSheet().getColumnWidth(cell.getColumnIndex()));
+    //We just want to set the cell value if something is present
+    //noinspection CheckStyle
     switch (cell.getCellType()) {
-      case _NONE -> {
-      }
       case NUMERIC -> newCell.setCellValue(cell.getNumericCellValue());
       case STRING -> newCell.setCellValue(cell.getStringCellValue());
       case FORMULA -> newCell.setCellFormula(cell.getCellFormula());
       case BLANK -> newCell.setBlank();
       case BOOLEAN -> newCell.setCellValue(cell.getBooleanCellValue());
       case ERROR -> newCell.setCellErrorValue(cell.getErrorCellValue());
-      default -> {
-      }
     }
   }
 
