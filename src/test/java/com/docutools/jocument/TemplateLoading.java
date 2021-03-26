@@ -85,8 +85,7 @@ public class TemplateLoading {
         }
 
         // Act
-        Template.from(data, MimeType.DOCX)
-                .orElseThrow();
+        assertThat(Template.from(data, MimeType.DOCX).isPresent(), is(true));
     }
 
     @Test
@@ -94,8 +93,7 @@ public class TemplateLoading {
     void shouldLoadTemplateFromInputStream() throws IOException {
         // Arrange + Act
         try(var in = getClass().getResourceAsStream("/templates/word/UserProfileTemplate.docx")) {
-            Template.from(in, MimeType.DOCX)
-                    .orElseThrow();
+            assertThat(Template.from(in, MimeType.DOCX).isPresent(), is(true));
         }
     }
 }
