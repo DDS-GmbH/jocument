@@ -25,8 +25,8 @@ version = System.getenv("CI") == "true" ?
                 System.getenv("GITHUB_SHA") :
         'SNAPSHOT'
 
-sourceCompatibility = 15
-targetCompatibility = 15
+sourceCompatibility = 16
+targetCompatibility = 16
 
 repositories {
     mavenCentral()
@@ -68,7 +68,7 @@ dependencies {
 
     testImplementation('org.junit.jupiter:junit-jupiter:5.6.0')
     testImplementation("org.hamcrest:hamcrest:2.2")
-    testImplementation("com.docutools:poipath:1.1.2")
+    testImplementation("com.docu-tools:poipath:1.0.0")
 
     checkstyle 'com.puppycrawl.tools:checkstyle:8.36.2'
 }
@@ -88,9 +88,6 @@ dependencyCheck {
     suppressionFile = 'config/dependency-check/suppression.xml'
 }
 
-tasks.withType(JavaCompile).all {
-    options.compilerArgs += ['--enable-preview']
-}
 
 java {
     withSourcesJar()
@@ -99,18 +96,15 @@ java {
 javadoc {
     failOnError = false
     options {
-        addBooleanOption('-enable-preview', true)
-        addStringOption('-release', '14')
+        addStringOption('-release', '16')
     }
 }
 
 test {
-    jvmArgs '--enable-preview'
     useJUnitPlatform()
 }
 
 task automatedTests(type: Test) {
-    jvmArgs '--enable-preview'
     useJUnitPlatform{
         includeTags "automated"
     }
