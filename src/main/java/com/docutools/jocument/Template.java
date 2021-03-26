@@ -28,8 +28,6 @@ import org.apache.poi.util.LocaleUtil;
  */
 public interface Template {
 
-  String UNSUPPORTED_MIME_TYPE = "Unsupported MIME-Type:";
-
   /**
    * Creates a {@link com.docutools.jocument.Template} instance from a template file on the classpath.
    *
@@ -51,7 +49,7 @@ public interface Template {
    */
   static Optional<Template> fromClassPath(String path, Locale locale) {
     var mimeType = MimeType.fromFileExtension(path)
-        .orElseThrow(() -> new IllegalArgumentException("%s %s".formatted(UNSUPPORTED_MIME_TYPE, path)));
+        .orElseThrow(() -> new IllegalArgumentException("Unsupported MIME-Type: %s".formatted(path)));
     return Optional.ofNullable(Template.class.getResource(path))
         .map(url -> new TemplateImpl(new URLTemplateSource(url), mimeType, locale));
   }
@@ -75,7 +73,7 @@ public interface Template {
    */
   static Optional<Template> from(Path path, Locale locale) {
     var mimeType = MimeType.fromFileExtension(path.toString())
-        .orElseThrow(() -> new IllegalArgumentException("%s %s".formatted(UNSUPPORTED_MIME_TYPE, path)));
+        .orElseThrow(() -> new IllegalArgumentException("Unsupported MIME-Type: %s".formatted(path)));
     return Optional.of(new TemplateImpl(new PathTemplateSource(path), mimeType, locale));
   }
 
@@ -119,7 +117,7 @@ public interface Template {
    */
   static Optional<Template> from(URL url, Locale locale) {
     var mimeType = MimeType.fromFileExtension(url.getPath())
-        .orElseThrow(() -> new IllegalArgumentException("%s %s".formatted(UNSUPPORTED_MIME_TYPE, url)));
+        .orElseThrow(() -> new IllegalArgumentException("Unsupported MIME-Type: %s".formatted(url)));
     return Optional.of(new TemplateImpl(new URLTemplateSource(url), mimeType, locale));
   }
 

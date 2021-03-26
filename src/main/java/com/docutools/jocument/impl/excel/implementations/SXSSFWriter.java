@@ -153,8 +153,6 @@ public class SXSSFWriter implements ExcelWriter {
     newCell.setCellStyle(cell.getCellStyle());
     newCell.setHyperlink(cell.getHyperlink());
     currentSheet.setColumnWidth(cell.getColumnIndex(), cell.getSheet().getColumnWidth(cell.getColumnIndex()));
-    //We just want to set the cell value if something is present
-    //noinspection CheckStyle
     switch (cell.getCellType()) {
       case NUMERIC -> newCell.setCellValue(cell.getNumericCellValue());
       case STRING -> newCell.setCellValue(cell.getStringCellValue());
@@ -162,6 +160,7 @@ public class SXSSFWriter implements ExcelWriter {
       case BLANK -> newCell.setBlank();
       case BOOLEAN -> newCell.setCellValue(cell.getBooleanCellValue());
       case ERROR -> newCell.setCellErrorValue(cell.getErrorCellValue());
+      default -> { }
     }
   }
 
