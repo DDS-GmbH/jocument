@@ -1,5 +1,6 @@
 package com.docutools.jocument.impl.word;
 
+import com.docutools.jocument.image.ImageStrategy;
 import java.awt.Dimension;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -7,7 +8,6 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.Map;
 import java.util.Optional;
-import javax.imageio.ImageIO;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
@@ -15,8 +15,6 @@ import org.apache.poi.util.Units;
 import org.apache.poi.xwpf.usermodel.Document;
 import org.apache.poi.xwpf.usermodel.XWPFParagraph;
 import org.apache.poi.xwpf.usermodel.XWPFPicture;
-import org.jlibvips.VipsImage;
-import org.jlibvips.jna.VipsBindingsSingleton;
 
 public class WordImageUtils {
   public static final Map<String, Integer> XWPF_CONTENT_TYPE_MAPPING =
@@ -37,22 +35,19 @@ public class WordImageUtils {
   private static final int MAX_PICTURE_HEIGHT = 860;
   private static final Dimension DEFAULT_DIM = new Dimension(100, 100);
 
-  static {
-    VipsBindingsSingleton.configure("/usr/lib64/libvips.so.42");
-  }
-
   private WordImageUtils() {
   }
 
   /**
    * Inserts the image of the given {@link java.nio.file.Path} into the {@link org.apache.poi.xwpf.usermodel.XWPFParagraph}.
    *
-   * @param paragraph the paragraph
-   * @param path      the image file
+   * @param paragraph     the paragraph
+   * @param path          the image file
+   * @param imageStrategy the {@link ImageStrategy}
    * @return the inserted image
    */
-  public static XWPFPicture insertImage(XWPFParagraph paragraph, Path path) {
-    var dim = probeDimensions(path)
+  public static XWPFPicture insertImage(XWPFParagraph paragraph, Path path, ImageStrategy imageStrategy) {
+    var dim = probeDimensions(path, imageStrategy)
         .map(WordImageUtils::scaleToWordSize)
         .map(WordImageUtils::toEmu)
         .orElse(DEFAULT_DIM);
@@ -67,29 +62,11 @@ public class WordImageUtils {
     }
   }
 
-  private static Optional<Dimension> probeDimensions(Path path) {
-    VipsImage image = null;
-    try {
-      image = VipsImage.fromFile(path);
+  private static Optional<Dimension> probeDimensions(Path path, ImageStrategy imageStrategy) {
+    try (var image = imageStrategy.load(path)) {
       return Optional.of(new Dimension(image.getWidth(), image.getHeight()));
-    } catch (UnsatisfiedLinkError e) {
-      return fallbackToBufferedImageForDimensionProbe(path);
-    } catch (Exception e) {
-      logger.warn("Failed to get dimensions of image from path %s".formatted(path), e);
-      return Optional.empty();
-    } finally {
-      if (image != null) {
-        image.unref();
-      }
-    }
-  }
-
-  private static Optional<Dimension> fallbackToBufferedImageForDimensionProbe(Path path) {
-    try {
-      var img = ImageIO.read(path.toFile());
-      return Optional.of(new Dimension(img.getWidth(), img.getHeight()));
-    } catch (Exception e) {
-      logger.error("Could not fallback to BufferedImage for Dimension probe", e);
+    } catch (Exception any) {
+      logger.error("Could not probe image '%s' for dimensions.".formatted(path), any);
       return Optional.empty();
     }
   }

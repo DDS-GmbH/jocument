@@ -1,5 +1,6 @@
 package com.docutools.jocument.impl.excel.implementations;
 
+import com.docutools.jocument.GenerationOptions;
 import com.docutools.jocument.PlaceholderResolver;
 import com.docutools.jocument.Template;
 import com.docutools.jocument.impl.DocumentImpl;
@@ -33,8 +34,8 @@ public class ExcelDocumentImpl extends DocumentImpl {
    * @param template The template to generate the report from
    * @param resolver The resolver to use for filling placeholders
    */
-  public ExcelDocumentImpl(Template template, PlaceholderResolver resolver) {
-    super(template, resolver);
+  public ExcelDocumentImpl(Template template, PlaceholderResolver resolver, GenerationOptions options) {
+    super(template, resolver, options);
   }
 
   /**

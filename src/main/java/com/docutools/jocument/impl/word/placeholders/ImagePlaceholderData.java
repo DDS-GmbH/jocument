@@ -1,5 +1,6 @@
 package com.docutools.jocument.impl.word.placeholders;
 
+import com.docutools.jocument.GenerationOptions;
 import com.docutools.jocument.impl.word.CustomWordPlaceholderData;
 import com.docutools.jocument.impl.word.WordImageUtils;
 import com.docutools.jocument.impl.word.WordUtilities;
@@ -8,7 +9,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import org.apache.poi.xwpf.usermodel.IBodyElement;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
-import org.jlibvips.VipsImage;
 
 public class ImagePlaceholderData extends CustomWordPlaceholderData {
 
@@ -27,11 +27,11 @@ public class ImagePlaceholderData extends CustomWordPlaceholderData {
   }
 
   @Override
-  protected void transform(IBodyElement placeholder, XWPFDocument document) {
-    Path path = applyOptions();
+  protected void transform(IBodyElement placeholder, XWPFDocument document, GenerationOptions options) {
+    Path path = applyOptions(options);
     try {
       var paragraph = document.insertNewParagraph(WordUtilities.openCursor(placeholder).orElseThrow());
-      WordImageUtils.insertImage(paragraph, path);
+      WordImageUtils.insertImage(paragraph, path, options.imageStrategy());
       WordUtilities.removeIfExists(placeholder);
     } finally {
       if (path != null && !path.equals(imagePath)) {
@@ -44,19 +44,17 @@ public class ImagePlaceholderData extends CustomWordPlaceholderData {
     }
   }
 
-  private Path applyOptions() {
+  private Path applyOptions(GenerationOptions options) {
     try {
-      VipsImage image = VipsImage.fromFile(imagePath);
+      var image = options.imageStrategy().load(imagePath);
       if (maxWidth > 0 && image.getWidth() > maxWidth) {
         double scale = (double) maxWidth / image.getWidth();
-        VipsImage resized = image.resize(scale)
-            .create();
-        image.unref();
+        var resized = options.imageStrategy().scale(image, scale);
+        image.close();
         image = resized;
       }
-      Path path = image.jpeg()
-          .save();
-      image.unref();
+      Path path = image.saveAsJpeg();
+      image.close();
       return path;
     } catch (Exception e) {
       e.printStackTrace();

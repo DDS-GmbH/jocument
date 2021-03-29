@@ -136,16 +136,16 @@ class WordGeneratorTest {
         var documentWrapper = PoiPath.xwpf(xwpfDocument);
         assertThat(documentWrapper.paragraph(0).text(), equalTo("Captain: Jean-Luc Picard"));
         assertThat(documentWrapper.paragraph(2).text(), equalTo("First Officer"));
-        assertThat(documentWrapper.table(0).row(0).cell(0).bodyElement(0).asParagraph().text(), equalTo("Name"));
-        assertThat(documentWrapper.table(0).row(0).cell(1).bodyElement(0).asParagraph().text(), equalTo("Rank"));
-        assertThat(documentWrapper.table(0).row(0).cell(2).bodyElement(0).asParagraph().text(), equalTo("Uniform"));
-        assertThat(documentWrapper.table(0).row(1).cell(0).bodyElement(0).asParagraph().text(), equalTo("Riker"));
-        assertThat(documentWrapper.table(0).row(1).cell(1).bodyElement(0).asParagraph().text(), equalTo("3"));
-        assertThat(documentWrapper.table(0).row(1).cell(2).bodyElement(0).asParagraph().text(), equalTo("Red"));
-        assertThat(documentWrapper.paragraph(5).text(), equalTo("Services"));
-        assertThat(documentWrapper.paragraph(7).text(), equalTo("USS Enterprise"));
-        assertThat(documentWrapper.paragraph(8).text(), equalTo("US Defiant"));
-        assertThat(documentWrapper.paragraph(10).text(), equalTo("And that’s that."));
+        assertThat(documentWrapper.table(3).row(0).cell(0).bodyElement(0).asParagraph().text(), equalTo("Name"));
+        assertThat(documentWrapper.table(3).row(0).cell(1).bodyElement(0).asParagraph().text(), equalTo("Rank"));
+        assertThat(documentWrapper.table(3).row(0).cell(2).bodyElement(0).asParagraph().text(), equalTo("Uniform"));
+        assertThat(documentWrapper.table(3).row(1).cell(0).bodyElement(0).asParagraph().text(), equalTo("Riker"));
+        assertThat(documentWrapper.table(3).row(1).cell(1).bodyElement(0).asParagraph().text(), equalTo("3"));
+        assertThat(documentWrapper.table(3).row(1).cell(2).bodyElement(0).asParagraph().text(), equalTo("Red"));
+        assertThat(documentWrapper.paragraph(6).text(), equalTo("Services"));
+        assertThat(documentWrapper.paragraph(8).text(), equalTo("USS Enterprise"));
+        assertThat(documentWrapper.paragraph(9).text(), equalTo("US Defiant"));
+        assertThat(documentWrapper.paragraph(11).text(), equalTo("And that’s that."));
     }
 
     @Test

@@ -198,7 +198,18 @@ public interface Template {
    * @param resolver the {@link com.docutools.jocument.PlaceholderResolver}
    * @return the {@link Document}
    */
-  Document startGeneration(PlaceholderResolver resolver);
+  default Document startGeneration(PlaceholderResolver resolver) {
+    return startGeneration(resolver, GenerationOptionsBuilder.buildDefaultOptions());
+  }
+
+  /**
+   * Starts the generation of a document for the given {@link com.docutools.jocument.PlaceholderResolver} asynchronously.
+   *
+   * @param resolver the {@link com.docutools.jocument.PlaceholderResolver}
+   * @param options meta options on how the {@link Document} shall be generated
+   * @return the {@link Document}
+   */
+  Document startGeneration(PlaceholderResolver resolver, GenerationOptions options);
 
   /**
    * Opens a {@link java.io.InputStream} to the template file. Intended for internal use.

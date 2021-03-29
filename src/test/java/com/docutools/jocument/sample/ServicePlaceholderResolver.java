@@ -6,7 +6,7 @@ import com.docutools.jocument.impl.ScalarPlaceholderData;
 import java.util.Locale;
 import java.util.Optional;
 
-public class ServicePlaceholderResolver implements PlaceholderResolver {
+public class ServicePlaceholderResolver extends PlaceholderResolver {
 
   private final String name;
 

@@ -38,7 +38,7 @@ import org.apache.logging.log4j.Logger;
  * @see com.docutools.jocument.PlaceholderResolver
  * @since 2020-02-19
  */
-public class ReflectionResolver implements PlaceholderResolver {
+public class ReflectionResolver extends PlaceholderResolver {
 
   private static final String SELF_REFERENCE = "this";
 

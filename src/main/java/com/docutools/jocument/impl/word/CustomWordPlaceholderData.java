@@ -1,5 +1,6 @@
 package com.docutools.jocument.impl.word;
 
+import com.docutools.jocument.GenerationOptions;
 import com.docutools.jocument.PlaceholderData;
 import com.docutools.jocument.PlaceholderType;
 import org.apache.logging.log4j.LogManager;
@@ -16,7 +17,7 @@ public abstract class CustomWordPlaceholderData implements PlaceholderData {
   }
 
   @Override
-  public void transform(Object placeholder) {
+  public void transform(Object placeholder, GenerationOptions options) {
     if (!(placeholder instanceof IBodyElement)) {
       logger.error("{} is not an instance of IBodyElement", placeholder);
       throw new IllegalArgumentException("Only IBodyElements accepted.");
@@ -25,9 +26,9 @@ public abstract class CustomWordPlaceholderData implements PlaceholderData {
     var element = (IBodyElement) placeholder;
     var document = element.getBody().getXWPFDocument();
 
-    transform(element, document);
+    transform(element, document, options);
   }
 
-  protected abstract void transform(IBodyElement placeholder, XWPFDocument document);
+  protected abstract void transform(IBodyElement placeholder, XWPFDocument document, GenerationOptions options);
 
 }

@@ -56,7 +56,7 @@ class ExcelGeneratorTest {
         assertThat(firstSheet.row(1).cell(1).stringValue(), equalTo("The night"));
         assertThat(firstSheet.row(2).cell(2).stringValue(), equalTo("Ooh"));
         assertThat(firstSheet.row(3).cell(3).stringValue(), equalTo("Oh yeah"));
-        assertThat(firstSheet.row(4).cell(4).stringValue(), equalTo("1312.0"));
+        assertThat(firstSheet.row(4).cell(4).text(), equalTo("1312.0"));
     }
 
     @Test
@@ -155,8 +155,8 @@ class ExcelGeneratorTest {
         assertThat(firstSheet.row(2).cell(0).doubleValue(), closeTo(3.0, 0.1));
         assertThat(firstSheet.row(3).cell(0).doubleValue(), closeTo(4.0, 0.1));
         assertThat(firstSheet.row(4).cell(0).doubleValue(), closeTo(5.0, 0.1));
-        assertThat(firstSheet.row(7).cell(0).stringValue(), equalTo("SUM(A1:A5)"));
-        assertThat(firstSheet.row(7).cell(1).stringValue(), equalTo("COUNT(A1:A5)"));
+        assertThat(firstSheet.row(7).cell(0).text(), equalTo("SUM(A1:A5)"));
+        assertThat(firstSheet.row(7).cell(1).text(), equalTo("COUNT(A1:A5)"));
     }
 
     @Test

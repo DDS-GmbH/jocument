@@ -10,27 +10,11 @@ import com.docutools.jocument.sample.model.SampleModelData;
 import java.awt.Desktop;
 import java.io.IOException;
 import org.apache.poi.util.LocaleUtil;
-import org.jlibvips.jna.VipsBindingsSingleton;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import java.awt.*;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
-import java.nio.file.StandardOpenOption;
-
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.is;
-
 @DisplayName("Generating Word Documents")
 public class WordDocuments {
-
-  static {
-    VipsBindingsSingleton.configure("/usr/local/lib/libvips.42.dylib");
-  }
 
   @Test
   @DisplayName("Load word templates from classpath.")

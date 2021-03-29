@@ -2,6 +2,7 @@ package com.docutools.jocument.impl.word;
 
 import static com.docutools.jocument.impl.DocumentImpl.TAG_PATTERN;
 
+import com.docutools.jocument.GenerationOptions;
 import com.docutools.jocument.PlaceholderData;
 import com.docutools.jocument.PlaceholderResolver;
 import com.docutools.jocument.PlaceholderType;
@@ -24,14 +25,16 @@ class WordGenerator {
 
   private final PlaceholderResolver resolver;
   private final List<IBodyElement> elements;
+  private final GenerationOptions options;
 
-  private WordGenerator(PlaceholderResolver resolver, List<IBodyElement> elements) {
+  private WordGenerator(PlaceholderResolver resolver, List<IBodyElement> elements, GenerationOptions options) {
     this.resolver = resolver;
     this.elements = elements;
+    this.options = options;
   }
 
-  static void apply(PlaceholderResolver resolver, List<IBodyElement> elements) {
-    new WordGenerator(resolver, elements).generate();
+  static void apply(PlaceholderResolver resolver, List<IBodyElement> elements, GenerationOptions options) {
+    new WordGenerator(resolver, elements, options).generate();
   }
 
   private void generate() {
@@ -55,7 +58,7 @@ class WordGenerator {
       unrollLoop((XWPFParagraph) element, remaining);
     } else if (isCustomPlaceholder(element)) {
       resolver.resolve(WordUtilities.extractPlaceholderName((XWPFParagraph) element))
-          .ifPresent(placeholderData -> placeholderData.transform(element));
+          .ifPresent(placeholderData -> placeholderData.transform(element, options));
     } else if (element instanceof XWPFParagraph xwpfParagraph) {
       transform(xwpfParagraph);
     } else if (element instanceof XWPFTable xwpfTable) {
@@ -96,7 +99,7 @@ class WordGenerator {
     var content = getLoopBody(placeholderName, remaining);
 
     placeholderData.stream().forEach(itemResolver ->
-        apply(itemResolver, WordUtilities.copyBefore(content, start)));
+        apply(itemResolver, WordUtilities.copyBefore(content, start), options));
 
     removeLoop(start, content, remaining);
     logger.debug("Unrolled loop of {}", placeholderName);

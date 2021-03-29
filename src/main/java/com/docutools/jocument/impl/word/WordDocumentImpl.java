@@ -1,5 +1,6 @@
 package com.docutools.jocument.impl.word;
 
+import com.docutools.jocument.GenerationOptions;
 import com.docutools.jocument.PlaceholderResolver;
 import com.docutools.jocument.Template;
 import com.docutools.jocument.impl.DocumentImpl;
@@ -19,8 +20,8 @@ import org.apache.poi.xwpf.usermodel.XWPFDocument;
 public class WordDocumentImpl extends DocumentImpl {
   private static final Logger logger = LogManager.getLogger();
 
-  public WordDocumentImpl(Template template, PlaceholderResolver resolver) {
-    super(template, resolver);
+  public WordDocumentImpl(Template template, PlaceholderResolver resolver, GenerationOptions options) {
+    super(template, resolver, options);
   }
 
   @Override
@@ -36,7 +37,7 @@ public class WordDocumentImpl extends DocumentImpl {
       bodyElements.addAll(document.getBodyElements());
 
       logger.debug("Retrieved all body elements, starting WordGenerator");
-      WordGenerator.apply(resolver, bodyElements);
+      WordGenerator.apply(resolver, bodyElements, options);
 
       try (OutputStream os = Files.newOutputStream(file)) {
         logger.info("Writing document to {}", os);

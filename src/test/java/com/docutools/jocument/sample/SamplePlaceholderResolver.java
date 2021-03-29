@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 
-public class SamplePlaceholderResolver implements PlaceholderResolver {
+public class SamplePlaceholderResolver extends PlaceholderResolver {
 
   private static final List<PlaceholderResolver> services =
       List.of(new ServicePlaceholderResolver("USS Enterprise"),

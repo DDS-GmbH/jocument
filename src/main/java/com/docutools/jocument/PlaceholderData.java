@@ -49,8 +49,9 @@ public interface PlaceholderData {
    * <p>Only used when {@link this#getType()} returns {@link com.docutools.jocument.PlaceholderType#CUSTOM}.</p>
    *
    * @param placeholder the placeholder
+   * @param options the {@link GenerationOptions}
    */
-  default void transform(Object placeholder) {
+  default void transform(Object placeholder, GenerationOptions options) {
     throw new UnsupportedOperationException();
   }
 

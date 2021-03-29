@@ -1,6 +1,7 @@
 package com.docutools.jocument.impl;
 
 import com.docutools.jocument.Document;
+import com.docutools.jocument.GenerationOptions;
 import com.docutools.jocument.PlaceholderResolver;
 import com.docutools.jocument.Template;
 import java.io.IOException;
@@ -16,13 +17,22 @@ public abstract class DocumentImpl extends Thread implements Document {
   private static final Logger logger = LogManager.getLogger();
   protected final Template template;
   protected final PlaceholderResolver resolver;
+  protected final GenerationOptions options;
 
   private boolean complete = false;
   private Path path;
 
-  public DocumentImpl(Template template, PlaceholderResolver resolver) {
+  /**
+   * Property constructor.
+   *
+   * @param template {@link Template}
+   * @param resolver {@link PlaceholderResolver}
+   * @param options {@link GenerationOptions}
+   */
+  public DocumentImpl(Template template, PlaceholderResolver resolver, GenerationOptions options) {
     this.template = template;
     this.resolver = resolver;
+    this.options = options;
   }
 
   protected abstract Path generate() throws IOException;

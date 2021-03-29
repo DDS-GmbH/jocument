@@ -1,6 +1,7 @@
 package com.docutools.jocument.impl;
 
 import com.docutools.jocument.Document;
+import com.docutools.jocument.GenerationOptions;
 import com.docutools.jocument.MimeType;
 import com.docutools.jocument.PlaceholderResolver;
 import com.docutools.jocument.Template;
@@ -12,7 +13,6 @@ import java.io.InputStream;
 import java.util.Locale;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.poi.ss.formula.eval.NotImplementedException;
 
 public class TemplateImpl implements Template {
   private static final Logger logger = LogManager.getLogger();
@@ -45,12 +45,14 @@ public class TemplateImpl implements Template {
   }
 
   @Override
-  public Document startGeneration(PlaceholderResolver resolver) {
+  public Document startGeneration(PlaceholderResolver resolver, GenerationOptions options) {
+    // Make sure PlaceholderResolver and Template work on the same GenerationOptions.
+    resolver.setOptions(options);
+
     logger.info("Starting generating from template {} with resolver {}", this, resolver);
     var document = switch (mimeType) {
-      case DOCX -> new WordDocumentImpl(this, resolver);
-      case XLSX -> new ExcelDocumentImpl(this, resolver);
-      default -> throw new NotImplementedException("Template generation is not implemented for mime type %s yet".formatted(mimeType));
+      case DOCX -> new WordDocumentImpl(this, resolver, options);
+      case XLSX -> new ExcelDocumentImpl(this, resolver, options);
     };
     document.start();
     logger.info("Finished generating from template {} with resolver {}", this, resolver);
