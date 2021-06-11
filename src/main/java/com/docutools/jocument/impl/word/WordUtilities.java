@@ -319,7 +319,6 @@ public class WordUtilities {
           for (int i = 0; i < cells.size(); i++) {
             XWPFTableCell cell = cells.get(i);
             XWPFTableCell newCell = newRow.getCell(i) != null ? newRow.getCell(i) : newRow.createCell();
-            newCell.removeParagraph(0);
             CTTc ctTc = newCell.getCTTc();
             CTTcPr ctTcPr = ctTc.getTcPr();
             if (ctTcPr == null) {
