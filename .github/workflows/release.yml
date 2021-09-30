@@ -13,7 +13,7 @@ jobs:
       - uses: actions/setup-java@v1
         with:
           java-version: 16
-      - uses: eskatos/gradle-command-action@v1
+      - uses: eskatos/gradle-command-action@v2
         with:
           arguments: build -x test -x check publish
       - uses: "marvinpinto/action-automatic-releases@latest"

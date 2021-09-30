@@ -22,7 +22,7 @@ jobs:
         with:
           java-version: 16
       - name: Run checkstyle
-        uses: eskatos/gradle-command-action@v1
+        uses: eskatos/gradle-command-action@v2
         with:
           arguments: checkMain checkTest
   owasp:
@@ -36,7 +36,7 @@ jobs:
         with:
           java-version: 16
       - name: Run owasp dependency check
-        uses: eskatos/gradle-command-action@v1
+        uses: eskatos/gradle-command-action@v2
         with:
           arguments: dependencyCheckAnalyze
   sonarqube:
@@ -52,7 +52,7 @@ jobs:
         with:
           java-version: 16
       - name: Run sonarqube check
-        uses: eskatos/gradle-command-action@v1
+        uses: eskatos/gradle-command-action@v2
         with:
           arguments: sonarqube -x test -x check
         env:
@@ -72,7 +72,7 @@ jobs:
         with:
           java-version: 16
       - name: Run tests
-        uses: eskatos/gradle-command-action@v1
+        uses: eskatos/gradle-command-action@v2
         with:
           arguments: automatedTests
       - name: Publish test results
