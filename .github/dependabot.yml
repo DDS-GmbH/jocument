@@ -1,0 +1,26 @@
+version: 2
+
+registries:
+  poipath-github:
+    type: maven-repository
+    url: https://maven.pkg.github.com/dds-gmbh/poipath
+    username: AntonOellerer
+    password: ${{ secrets.ANTON_DEPENDABOT_TOKEN }}
+  jlibvips-github:
+    type: maven-repository
+    url: https://maven.pkg.github.com/dds-gmbh/poipath
+    username: AntonOellerer
+    password: ${{ secrets.ANTON_DEPENDABOT_TOKEN }}
+
+updates:
+  - package-ecosystem: "gradle"
+    directory: "/"
+    schedule:
+      interval: "daily"
+    registries:
+      - poipath-github
+      - jlibvips-github
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "daily"
