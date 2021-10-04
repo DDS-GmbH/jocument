@@ -1,26 +1,29 @@
 package com.docutools.jocument.impl.word;
 
-import com.docutools.jocument.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.is;
+
+import com.docutools.jocument.CustomPlaceholderRegistry;
+import com.docutools.jocument.Document;
+import com.docutools.jocument.PlaceholderResolver;
+import com.docutools.jocument.Template;
+import com.docutools.jocument.TestUtils;
 import com.docutools.jocument.impl.CustomPlaceholderRegistryImpl;
 import com.docutools.jocument.impl.ReflectionResolver;
 import com.docutools.jocument.sample.model.SampleModelData;
 import com.docutools.jocument.sample.placeholders.QuotePlaceholder;
-import com.docutools.poipath.PoiPath;
-import org.apache.poi.xwpf.usermodel.XWPFDocument;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Test;
-
+import com.docutools.poipath.xwpf.XWPFDocumentWrapper;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.Period;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
-
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.is;
+import org.apache.poi.xwpf.usermodel.XWPFDocument;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 
 @DisplayName("Word Generator Tests")
 @Tag("automated")
@@ -40,7 +43,7 @@ class WordGeneratorTest {
     void shouldGenerateSimpleDocument() throws InterruptedException, IOException {
         // Arrange
         Template template = Template.fromClassPath("/templates/word/UserProfileTemplate.docx")
-                .orElseThrow();
+            .orElseThrow();
         PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.PICARD_PERSON);
 
         // Act
@@ -50,15 +53,15 @@ class WordGeneratorTest {
         // Assert
         assertThat(document.completed(), is(true));
         xwpfDocument = TestUtils.getXWPFDocumentFromDocument(document);
-        var documentWrapper = PoiPath.xwpf(xwpfDocument);
-        assertThat(documentWrapper.paragraph(0).text(), equalTo("User Profile: Jean-Luc Picard"));
-        assertThat(documentWrapper.paragraph(2).text(), equalTo("Name: Jean-Luc"));
-        assertThat(documentWrapper.paragraph(3).text(), equalTo("Last Name: Picard"));
-        assertThat(documentWrapper.paragraph(4).text(), equalTo("Age: "
-                + Period.between(LocalDate.of(1948, 9, 23), LocalDate.now()).getYears()
-                + " ("
-                + DateTimeFormatter.ofPattern("dd.MM.yyyy", Locale.US).format(LocalDate.of(1948, 9, 23))
-                + ")"));
+        var documentWrapper = new XWPFDocumentWrapper(xwpfDocument);
+        assertThat(documentWrapper.bodyElement(0).asParagraph().text(), equalTo("User Profile: Jean-Luc Picard"));
+        assertThat(documentWrapper.bodyElement(2).asParagraph().text(), equalTo("Name: Jean-Luc"));
+        assertThat(documentWrapper.bodyElement(3).asParagraph().text(), equalTo("Last Name: Picard"));
+        assertThat(documentWrapper.bodyElement(4).asParagraph().text(), equalTo("Age: "
+            + Period.between(LocalDate.of(1948, 9, 23), LocalDate.now()).getYears()
+            + " ("
+            + DateTimeFormatter.ofPattern("dd.MM.yyyy", Locale.US).format(LocalDate.of(1948, 9, 23))
+            + ")"));
     }
 
     @Test
@@ -66,7 +69,7 @@ class WordGeneratorTest {
     void shouldGenerateMultiLocaleDocument() throws InterruptedException, IOException {
         // Arrange
         Template template = Template.fromClassPath("/templates/word/UserProfileTemplateWithDifferentLocales.docx")
-                .orElseThrow();
+            .orElseThrow();
         PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.PICARD_PERSON);
 
         // Act
@@ -76,20 +79,20 @@ class WordGeneratorTest {
         // Assert
         assertThat(document.completed(), is(true));
         xwpfDocument = TestUtils.getXWPFDocumentFromDocument(document);
-        var documentWrapper = PoiPath.xwpf(xwpfDocument);
-        assertThat(documentWrapper.paragraph(0).text(), equalTo("User Profile: Jean-Luc Picard"));
-        assertThat(documentWrapper.paragraph(2).text(), equalTo("Name: Jean-Luc"));
-        assertThat(documentWrapper.paragraph(3).text(), equalTo("Last Name: Picard"));
-        assertThat(documentWrapper.paragraph(4).text(), equalTo("Age German: "
-                + Period.between(LocalDate.of(1948, 9, 23), LocalDate.now()).getYears()
-                + " ("
-                + DateTimeFormatter.ofPattern("dd.MM.yyyy", Locale.US).format(LocalDate.of(1948, 9, 23))
-                + ")"));
-        assertThat(documentWrapper.paragraph(5).text(), equalTo("Age English: "
-                + Period.between(LocalDate.of(1948, 9, 23), LocalDate.now()).getYears()
-                + " ("
-                + DateTimeFormatter.ofPattern("dd.MM.yyyy", Locale.US).format(LocalDate.of(1948, 9, 23))
-                + ")"));
+        var documentWrapper = new XWPFDocumentWrapper(xwpfDocument);
+        assertThat(documentWrapper.bodyElement(0).asParagraph().text(), equalTo("User Profile: Jean-Luc Picard"));
+        assertThat(documentWrapper.bodyElement(2).asParagraph().text(), equalTo("Name: Jean-Luc"));
+        assertThat(documentWrapper.bodyElement(3).asParagraph().text(), equalTo("Last Name: Picard"));
+        assertThat(documentWrapper.bodyElement(4).asParagraph().text(), equalTo("Age German: "
+            + Period.between(LocalDate.of(1948, 9, 23), LocalDate.now()).getYears()
+            + " ("
+            + DateTimeFormatter.ofPattern("dd.MM.yyyy", Locale.US).format(LocalDate.of(1948, 9, 23))
+            + ")"));
+        assertThat(documentWrapper.bodyElement(5).asParagraph().text(), equalTo("Age English: "
+            + Period.between(LocalDate.of(1948, 9, 23), LocalDate.now()).getYears()
+            + " ("
+            + DateTimeFormatter.ofPattern("dd.MM.yyyy", Locale.US).format(LocalDate.of(1948, 9, 23))
+            + ")"));
     }
 
     @Test
@@ -97,7 +100,7 @@ class WordGeneratorTest {
     void shouldReplacePlaceholdersInTables() throws InterruptedException, IOException {
         // Arrange
         Template template = Template.fromClassPath("/templates/word/UserProfileWithTableTemplate.docx")
-                .orElseThrow();
+            .orElseThrow();
         PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.PICARD_PERSON);
 
         // Act
@@ -107,8 +110,8 @@ class WordGeneratorTest {
         // Assert
         assertThat(document.completed(), is(true));
         xwpfDocument = TestUtils.getXWPFDocumentFromDocument(document);
-        var documentWrapper = PoiPath.xwpf(xwpfDocument);
-        var table = documentWrapper.table(0);
+        var documentWrapper = new XWPFDocumentWrapper(xwpfDocument);
+        var table = documentWrapper.bodyElement(0).asTable();
         var birthdate = DateTimeFormatter.ofPattern("dd.MM.yyyy", Locale.US).format(LocalDate.of(1948, 9, 23));
         assertThat(table.row(0).cell(0).bodyElement(0).asParagraph().text(), equalTo("Name"));
         assertThat(table.row(0).cell(1).bodyElement(0).asParagraph().text(), equalTo("Value"));
@@ -123,7 +126,7 @@ class WordGeneratorTest {
     void shouldResolveCollectionPlaceholders() throws InterruptedException, IOException {
         // Arrange
         Template template = Template.fromClassPath("/templates/word/CollectionsTemplate.docx")
-                .orElseThrow();
+            .orElseThrow();
         PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.PICARD);
 
         // Act
@@ -133,19 +136,19 @@ class WordGeneratorTest {
         // Assert
         assertThat(document.completed(), is(true));
         xwpfDocument = TestUtils.getXWPFDocumentFromDocument(document);
-        var documentWrapper = PoiPath.xwpf(xwpfDocument);
-        assertThat(documentWrapper.paragraph(0).text(), equalTo("Captain: Jean-Luc Picard"));
-        assertThat(documentWrapper.paragraph(2).text(), equalTo("First Officer"));
-        assertThat(documentWrapper.table(3).row(0).cell(0).bodyElement(0).asParagraph().text(), equalTo("Name"));
-        assertThat(documentWrapper.table(3).row(0).cell(1).bodyElement(0).asParagraph().text(), equalTo("Rank"));
-        assertThat(documentWrapper.table(3).row(0).cell(2).bodyElement(0).asParagraph().text(), equalTo("Uniform"));
-        assertThat(documentWrapper.table(3).row(1).cell(0).bodyElement(0).asParagraph().text(), equalTo("Riker"));
-        assertThat(documentWrapper.table(3).row(1).cell(1).bodyElement(0).asParagraph().text(), equalTo("3"));
-        assertThat(documentWrapper.table(3).row(1).cell(2).bodyElement(0).asParagraph().text(), equalTo("Red"));
-        assertThat(documentWrapper.paragraph(6).text(), equalTo("Services"));
-        assertThat(documentWrapper.paragraph(8).text(), equalTo("USS Enterprise"));
-        assertThat(documentWrapper.paragraph(9).text(), equalTo("US Defiant"));
-        assertThat(documentWrapper.paragraph(11).text(), equalTo("And that’s that."));
+        var documentWrapper = new XWPFDocumentWrapper(xwpfDocument);
+        assertThat(documentWrapper.bodyElement(0).asParagraph().text(), equalTo("Captain: Jean-Luc Picard"));
+        assertThat(documentWrapper.bodyElement(2).asParagraph().text(), equalTo("First Officer"));
+        assertThat(documentWrapper.bodyElement(3).asTable().row(0).cell(0).bodyElement(0).asParagraph().text(), equalTo("Name"));
+        assertThat(documentWrapper.bodyElement(3).asTable().row(0).cell(1).bodyElement(0).asParagraph().text(), equalTo("Rank"));
+        assertThat(documentWrapper.bodyElement(3).asTable().row(0).cell(2).bodyElement(0).asParagraph().text(), equalTo("Uniform"));
+        assertThat(documentWrapper.bodyElement(3).asTable().row(1).cell(0).bodyElement(0).asParagraph().text(), equalTo("Riker"));
+        assertThat(documentWrapper.bodyElement(3).asTable().row(1).cell(1).bodyElement(0).asParagraph().text(), equalTo("3"));
+        assertThat(documentWrapper.bodyElement(3).asTable().row(1).cell(2).bodyElement(0).asParagraph().text(), equalTo("Red"));
+        assertThat(documentWrapper.bodyElement(6).asParagraph().text(), equalTo("Services"));
+        assertThat(documentWrapper.bodyElement(8).asParagraph().text(), equalTo("USS Enterprise"));
+        assertThat(documentWrapper.bodyElement(9).asParagraph().text(), equalTo("US Defiant"));
+        assertThat(documentWrapper.bodyElement(11).asParagraph().text(), equalTo("And that’s that."));
     }
 
     @Test
@@ -163,8 +166,8 @@ class WordGeneratorTest {
         // Assert
         assertThat(document.completed(), is(true));
         xwpfDocument = TestUtils.getXWPFDocumentFromDocument(document);
-        var documentWrapper = PoiPath.xwpf(xwpfDocument);
-        assertThat(documentWrapper.paragraph(2).run(0).pictures().size(), equalTo(1));
+        var documentWrapper = new XWPFDocumentWrapper(xwpfDocument);
+        assertThat(documentWrapper.bodyElement(2).asParagraph().run(0).pictures().size(), equalTo(1));
     }
 
     @Test
@@ -184,7 +187,8 @@ class WordGeneratorTest {
         // Assert
         assertThat(document.completed(), is(true));
         xwpfDocument = TestUtils.getXWPFDocumentFromDocument(document);
-        var documentWrapper = PoiPath.xwpf(xwpfDocument);
-        assertThat(documentWrapper.paragraph(0).run(0).text(), equalTo("Live your life not celebrating victories, but overcoming defeats."));
+        var documentWrapper = new XWPFDocumentWrapper(xwpfDocument);
+        assertThat(documentWrapper.bodyElement(0).asParagraph().run(0).text(),
+            equalTo("Live your life not celebrating victories, but overcoming defeats."));
     }
 }
