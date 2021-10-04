@@ -6,7 +6,7 @@ plugins {
     id "org.sonarqube" version "3.3"
 }
 
-group 'com.docu-tools'
+group 'com.docutools'
 version = '1.2.6'
 
 sourceCompatibility = 17
@@ -43,7 +43,7 @@ dependencies {
 
     testImplementation('org.junit.jupiter:junit-jupiter:5.8.1')
     testImplementation("org.hamcrest:hamcrest:2.2")
-    testImplementation("com.docu-tools:poipath:1.1.1")
+    testImplementation("com.docutools:poipath:1.1.1")
 }
 
 tasks.withType(Checkstyle) {
