@@ -7,7 +7,7 @@ plugins {
 }
 
 group 'com.docu-tools'
-version = '1.2.3'
+version = '1.2.4'
 
 sourceCompatibility = 17
 targetCompatibility = 17
