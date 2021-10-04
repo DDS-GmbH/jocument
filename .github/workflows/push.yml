@@ -18,11 +18,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
       - name: Setup Java
-        uses: actions/setup-java@v1
+        uses: actions/setup-java@v2.3.1
         with:
-          java-version: 16
+          java-version: 17
+          distribution: 'zulu'
       - name: Run checkstyle
-        uses: eskatos/gradle-command-action@v1
+        uses: gradle/gradle-build-action@v2
         with:
           arguments: checkMain checkTest
   owasp:
@@ -32,11 +33,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
       - name: Setup Java
-        uses: actions/setup-java@v1
+        uses: actions/setup-java@v2.3.1
         with:
-          java-version: 16
+          java-version: 17
+          distribution: 'zulu'
       - name: Run owasp dependency check
-        uses: eskatos/gradle-command-action@v1
+        uses: gradle/gradle-build-action@v2
         with:
           arguments: dependencyCheckAnalyze
   sonarqube:
@@ -48,11 +50,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
       - name: Setup Java
-        uses: actions/setup-java@v1
+        uses: actions/setup-java@v2.3.1
         with:
-          java-version: 16
+          java-version: 17
+          distribution: 'zulu'
       - name: Run sonarqube check
-        uses: eskatos/gradle-command-action@v1
+        uses: gradle/gradle-build-action@v2
         with:
           arguments: sonarqube -x test -x check
         env:
@@ -68,11 +71,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
       - name: Setup Java
-        uses: actions/setup-java@v1
+        uses: actions/setup-java@v2.3.1
         with:
-          java-version: 16
+          java-version: 17
+          distribution: 'zulu'
       - name: Run tests
-        uses: eskatos/gradle-command-action@v1
+        uses: gradle/gradle-build-action@v2
         with:
           arguments: automatedTests
       - name: Publish test results
