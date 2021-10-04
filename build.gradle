@@ -2,7 +2,7 @@ plugins {
     id 'checkstyle'
     id 'java'
     id 'maven-publish'
-    id "org.owasp.dependencycheck" version "6.2.2"
+    id "org.owasp.dependencycheck" version "6.3.2"
     id "org.sonarqube" version "3.3"
 }
 
@@ -56,8 +56,8 @@ tasks.withType(Checkstyle) {
 
 dependencyCheck {
     format = 'ALL'
-    junitFailOnCVSS = 7.0
-    failBuildOnCVSS = 9.0
+    junitFailOnCVSS = 6.0
+    failBuildOnCVSS = 6.0
     suppressionFile = 'config/dependency-check/suppression.xml'
 }
 
