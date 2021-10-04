@@ -26,6 +26,12 @@ jobs:
         uses: gradle/gradle-build-action@v2
         with:
           arguments: checkMain checkTest
+      - name: Archive checkstyle results
+        uses: actions/upload-artifact@v2
+        if: always()
+        with:
+          name: checkstyle-results
+          path: build/reports/checkstyle.html
   owasp:
     name: owasp
     runs-on: ubuntu-20.04
@@ -41,6 +47,12 @@ jobs:
         uses: gradle/gradle-build-action@v2
         with:
           arguments: dependencyCheckAnalyze
+      - name: Archive owasp check results
+        uses: actions/upload-artifact@v2
+        if: always()
+        with:
+          name: owasp-results
+          path: build/reports/dependency-check-report.html
   sonarqube:
     name: sonarqube
     runs-on: ubuntu-20.04
@@ -85,3 +97,9 @@ jobs:
         with:
           report_individual_runs: true
           files: build/test-results/automatedTests/*.xml
+      - name: Archive test results
+        uses: actions/upload-artifact@v2
+        if: always()
+        with:
+          name: test-results
+          path: build/reports/tests/automatedTests
