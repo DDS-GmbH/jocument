@@ -19,10 +19,10 @@ plugins {
 }
 
 group 'com.docu-tools'
-version = '1.1.1'
+version = '1.2.0'
 
-sourceCompatibility = 16
-targetCompatibility = 16
+sourceCompatibility = 17
+targetCompatibility = 17
 
 repositories {
     mavenCentral()
