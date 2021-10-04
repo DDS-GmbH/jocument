@@ -7,7 +7,7 @@ plugins {
 }
 
 group 'com.docu-tools'
-version = '1.2.2'
+version = '1.2.3'
 
 sourceCompatibility = 17
 targetCompatibility = 17
@@ -44,8 +44,6 @@ dependencies {
     testImplementation('org.junit.jupiter:junit-jupiter:5.7.2')
     testImplementation("org.hamcrest:hamcrest:2.2")
     testImplementation("com.docu-tools:poipath:1.0.0")
-
-    checkstyle 'com.puppycrawl.tools:checkstyle:8.43'
 }
 
 tasks.withType(Checkstyle) {
