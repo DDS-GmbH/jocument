@@ -2,12 +2,12 @@ plugins {
     id 'checkstyle'
     id 'java'
     id 'maven-publish'
-    id "org.owasp.dependencycheck" version "6.2.2"
+    id "org.owasp.dependencycheck" version "6.3.2"
     id "org.sonarqube" version "3.3"
 }
 
 group 'com.docu-tools'
-version = '1.2.4'
+version = '1.2.6'
 
 sourceCompatibility = 17
 targetCompatibility = 17
@@ -43,7 +43,7 @@ dependencies {
 
     testImplementation('org.junit.jupiter:junit-jupiter:5.8.1')
     testImplementation("org.hamcrest:hamcrest:2.2")
-    testImplementation("com.docu-tools:poipath:1.0.0")
+    testImplementation("com.docu-tools:poipath:1.1.1")
 }
 
 tasks.withType(Checkstyle) {
@@ -56,8 +56,8 @@ tasks.withType(Checkstyle) {
 
 dependencyCheck {
     format = 'ALL'
-    junitFailOnCVSS = 7.0
-    failBuildOnCVSS = 9.0
+    junitFailOnCVSS = 6.0
+    failBuildOnCVSS = 6.0
     suppressionFile = 'config/dependency-check/suppression.xml'
 }
 
