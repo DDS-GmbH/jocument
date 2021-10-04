@@ -9,3 +9,6 @@ build
 # Visual Studio Code
 .project
 .settings
+
+#gradle
+gradle.properties
