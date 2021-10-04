@@ -81,8 +81,7 @@ jobs:
           arguments: automatedTests
       - name: Publish test results
         if: always()
-        uses: EnricoMi/publish-unit-test-result-action@v1.17
+        uses: EnricoMi/publish-unit-test-result-action@v1.22
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
           report_individual_runs: true
           files: build/test-results/automatedTests/*.xml
