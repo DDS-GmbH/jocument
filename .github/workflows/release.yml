@@ -3,6 +3,10 @@ on:
   push:
     tags:
       - "v*"
+
+env:
+  GITHUB_USERNAME: codecitizen
+
 jobs:
   gradle-publish:
     runs-on: ubuntu-latest
