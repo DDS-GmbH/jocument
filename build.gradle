@@ -17,8 +17,8 @@ repositories {
     maven {
         url = uri("https://maven.pkg.github.com/dds-gmbh/poipath")
         credentials {
-            username = project.findProperty("GITHUB_USERNAME") ?: System.getenv("GITHUB_USERNAME")
-            password = project.findProperty("GITHUB_TOKEN") ?: System.getenv("GITHUB_TOKEN")
+            username = project.findProperty("gpr.user") ?: System.getenv("GITHUB_USERNAME")
+            password = project.findProperty("gpr.token") ?: System.getenv("GITHUB_TOKEN")
         }
     }
 }
@@ -85,8 +85,8 @@ publishing {
             name = "GitHubPackages"
             url = uri("https://maven.pkg.github.com/DDS-GmbH/jocument")
             credentials {
-                username = project.findProperty("GITHUB_USERNAME") ?: System.getenv("GITHUB_USERNAME")
-                password = project.findProperty("GITHUB_TOKEN") ?: System.getenv("GITHUB_TOKEN")
+                username = project.findProperty("gpr.user") ?: System.getenv("GITHUB_USERNAME")
+                password = project.findProperty("gpr.token") ?: System.getenv("GITHUB_TOKEN")
             }
         }
     }
@@ -100,9 +100,10 @@ publishing {
 
 sonarqube {
     properties {
+        property "sonar.projectKey", "jocument"
+        property "sonar.organization", "docu-tools"
+        property "sonar.host.url", "https://sonarcloud.io"
         property "sonar.sourceEncoding", "UTF-8"
-        property "sonar.host.url", "https://sonarqube.docu-tools.com"
-        property "sonar.login", "$System.env.SONARQUBE_TOKEN"
         property "sonar.verbose", "true"
         property "sonar.sources", "src/main/java/"
         property "sonar.language", "java"
