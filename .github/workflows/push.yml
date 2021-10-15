@@ -55,25 +55,6 @@ jobs:
         with:
           name: owasp-results
           path: build/reports/dependency-check-report.html
-  sonarqube:
-    name: sonarqube
-    runs-on: ubuntu-20.04
-    env:
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-      - name: Setup Java
-        uses: actions/setup-java@v2.3.1
-        with:
-          java-version: 17
-          distribution: 'zulu'
-      - name: Run sonarqube check
-        uses: gradle/gradle-build-action@v2
-        with:
-          arguments: sonarqube -x test -x check
-        env:
-          SONARQUBE_TOKEN: ${{ secrets.SONARQUBE_TOKEN }}
   tests:
     name: tests
     runs-on: ubuntu-20.04
@@ -105,3 +86,31 @@ jobs:
         with:
           name: test-results
           path: build/reports/tests/automatedTests
+  sonarcloud:
+    name: sonarcloud
+    runs-on: ubuntu-20.04
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+      - name: Setup Java
+        uses: actions/setup-java@v2.3.1
+        with:
+          java-version: 17
+          distribution: 'zulu'
+      - name: Cache SonarCloud packages
+        uses: actions/cache@v1
+        with:
+          path: ~/.sonar/cache
+          key: ${{ runner.os }}-sonar
+          restore-keys: ${{ runner.os }}-sonar
+      - name: Run sonarqube check
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: build -x test automatedTests sonarqube --info
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
