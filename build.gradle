@@ -72,7 +72,6 @@ javadoc {
 
 test {
     useJUnitPlatform()
-    finalizedBy jacocoTestReport
 }
 
 task automatedTests(type: Test) {
