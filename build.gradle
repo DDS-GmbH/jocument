@@ -1,5 +1,6 @@
 plugins {
     id 'checkstyle'
+    id 'jacoco'
     id 'java'
     id 'maven-publish'
     id "org.owasp.dependencycheck" version "6.4.1.1"
@@ -71,6 +72,7 @@ javadoc {
 
 test {
     useJUnitPlatform()
+    finalizedBy jacocoTestReport
 }
 
 task automatedTests(type: Test) {
@@ -108,5 +110,13 @@ sonarqube {
         property "sonar.sources", "src/main/java/"
         property "sonar.language", "java"
         property "sonar.java.binaries", "."
+        property "sonar.coverage.jacoco.xmlReportPaths", "build/reports/jacoco/test/jacocoTestReport.xml"
     }
+}
+
+jacocoTestReport {
+    reports {
+        xml.enabled true
+    }
+    dependsOn test
 }
