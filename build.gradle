@@ -113,9 +113,10 @@ sonarqube {
     }
 }
 
-jacocoTestReport {
+task jacocoAutomatedTestReport(type: JacocoReport) {
+    sourceSets sourceSets.main
+    executionData automatedTests
     reports {
         xml.enabled true
     }
-    dependsOn test
 }

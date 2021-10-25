@@ -110,7 +110,7 @@ jobs:
       - name: Run sonarqube check
         uses: gradle/gradle-build-action@v2
         with:
-          arguments: build -x test automatedTests jacocoTestReport sonarqube --info
+          arguments: build -x test automatedTests jacocoAutomatedTestReport sonarqube --info
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
