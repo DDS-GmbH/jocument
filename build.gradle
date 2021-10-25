@@ -79,6 +79,7 @@ task automatedTests(type: Test) {
     useJUnitPlatform{
         includeTags "automated"
     }
+    finalizedBy jacocoTestReport
 }
 
 publishing {
