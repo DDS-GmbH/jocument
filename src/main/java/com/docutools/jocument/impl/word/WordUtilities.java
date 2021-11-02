@@ -325,6 +325,10 @@ public class WordUtilities {
               ctTcPr = ctTc.addNewTcPr();
             }
             ctTcPr.set(cell.getCTTc().getTcPr());
+            if (newCell.getParagraphs().size() > 0) {
+              // The new cell might be created with empty paragraphs which we do not need, so we remove them here
+              IntStream.range(0, newCell.getParagraphs().size()).forEach(value -> newCell.removeParagraph(0));
+            }
             cell.getParagraphs()
                 .forEach(paragraph -> {
                   XWPFParagraph newParagraph = newCell.addParagraph();
