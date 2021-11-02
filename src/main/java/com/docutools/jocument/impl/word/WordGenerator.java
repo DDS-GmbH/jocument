@@ -17,8 +17,6 @@ import org.apache.poi.util.LocaleUtil;
 import org.apache.poi.xwpf.usermodel.IBodyElement;
 import org.apache.poi.xwpf.usermodel.XWPFParagraph;
 import org.apache.poi.xwpf.usermodel.XWPFTable;
-import org.apache.poi.xwpf.usermodel.XWPFTableCell;
-import org.apache.poi.xwpf.usermodel.XWPFTableRow;
 
 class WordGenerator {
   private static final Logger logger = LogManager.getLogger();
@@ -70,10 +68,9 @@ class WordGenerator {
   private void transform(XWPFTable table) {
     table.getRows()
         .stream()
-        .map(XWPFTableRow::getTableCells)
-        .flatMap(List::stream)
-        .map(XWPFTableCell::getParagraphs)
-        .flatMap(List::stream)
+        .flatMap(xwpfTableRow -> xwpfTableRow.getTableCells().stream())
+        .flatMap(xwpfTableCell -> xwpfTableCell.getParagraphs().stream())
+        .filter(xwpfParagraph -> !xwpfParagraph.isEmpty())
         .forEach(this::transform);
     logger.debug("Transformed table {}", table);
   }
