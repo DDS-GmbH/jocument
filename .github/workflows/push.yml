@@ -14,6 +14,7 @@ jobs:
   checkstyle:
     name: checkstyle
     runs-on: ubuntu-20.04
+    if: ${{ github.actor != 'dependabot[bot]' }}
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
