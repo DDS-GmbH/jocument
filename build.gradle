@@ -42,7 +42,7 @@ dependencies {
     implementation 'com.codepoetics:protonpack:1.16'
     implementation("com.google.guava:guava:31.0.1-jre")
 
-    testImplementation('org.junit.jupiter:junit-jupiter:5.8.1')
+    testImplementation('org.junit.jupiter:junit-jupiter:5.8.2')
     testImplementation("org.hamcrest:hamcrest:2.2")
     testImplementation("com.docutools:poipath:1.1.5")
 }
