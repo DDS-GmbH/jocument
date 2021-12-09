@@ -8,7 +8,7 @@ on:
     branches:
       - master
 env:
-  GITHUB_USERNAME: codecitizen
+  GITHUB_USERNAME: AntonOellerer
 
 jobs:
   checkstyle:
@@ -34,6 +34,7 @@ jobs:
         with:
           name: checkstyle-results
           path: build/reports/checkstyle.html
+          retention-days: 5
   owasp:
     name: owasp
     runs-on: ubuntu-20.04
@@ -55,6 +56,7 @@ jobs:
         with:
           name: owasp-results
           path: build/reports/dependency-check-report.html
+          retention-days: 5
   tests:
     name: tests
     runs-on: ubuntu-20.04
@@ -80,6 +82,7 @@ jobs:
         with:
           name: test-results
           path: build/reports/tests/automatedTests
+          retention-days: 5
   sonarcloud:
     name: sonarcloud
     runs-on: ubuntu-20.04
