@@ -9,21 +9,15 @@ import com.docutools.jocument.impl.ReflectionResolver;
 import com.docutools.jocument.sample.model.SampleModelData;
 import com.docutools.jocument.sample.model.Uniform;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
-import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
-
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.contains;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.is;
-
 @DisplayName("Resolve placeholders from an object graph via reflection.")
+@Tag("automated")
 public class ReflectionResolving {
 
   private PlaceholderResolver resolver;
@@ -116,5 +110,40 @@ public class ReflectionResolving {
 
     // Assert
     assertThat(captainsName, equalTo(SampleModelData.PICARD.getName()));
+  }
+
+  @Test
+  @DisplayName("Resolve record")
+  void shouldResolveRecord() {
+    // Assemble
+    resolver = new ReflectionResolver(SampleModelData.ENTERPRISE);
+
+    // Act
+    var shipName = resolver.resolve("name")
+        .map(Object::toString)
+        .orElseThrow();
+    var captain = resolver.resolve("captain.name")
+        .map(Object::toString)
+        .orElseThrow();
+    var shipCrew = resolver.resolve("crew")
+        .map(Object::toString)
+        .map(Integer::parseInt)
+        .orElseThrow();
+    var visitedPlanets = resolver.resolve("services")
+        .orElseThrow()
+        .stream()
+        .flatMap(placeholderResolver -> placeholderResolver.resolve("visitedPlanets")
+            .orElseThrow()
+            .stream())
+        .map(placeholderResolver -> placeholderResolver.resolve("planetName")
+            .orElseThrow())
+        .map(Object::toString)
+        .collect(Collectors.toList());
+
+    // Assert
+    assertThat(shipName, equalTo(SampleModelData.ENTERPRISE.name()));
+    assertThat(captain, equalTo(SampleModelData.PICARD.getName()));
+    assertThat(shipCrew, equalTo(5));
+    assertThat(visitedPlanets, contains("Mars", "Venus", "Jupiter"));
   }
 }

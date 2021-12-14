@@ -11,6 +11,7 @@ import com.docutools.jocument.annotations.Percentage;
 import com.docutools.jocument.impl.word.placeholders.ImagePlaceholderData;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.RecordComponent;
 import java.math.RoundingMode;
 import java.nio.file.Path;
 import java.text.NumberFormat;
@@ -21,6 +22,7 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
 import java.time.temporal.Temporal;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Currency;
 import java.util.List;
@@ -49,8 +51,7 @@ public class ReflectionResolver extends PlaceholderResolver {
   private final CustomPlaceholderRegistry customPlaceholderRegistry;
 
   public ReflectionResolver(Object value) {
-    this.bean = value;
-    this.customPlaceholderRegistry = new CustomPlaceholderRegistryImpl(); //NoOp CustomPlaceholderRegistry
+    this(value, new CustomPlaceholderRegistryImpl()); //NoOp CustomPlaceholderRegistry
   }
 
   public ReflectionResolver(Object value, CustomPlaceholderRegistry customPlaceholderRegistry) {
@@ -126,8 +127,9 @@ public class ReflectionResolver extends PlaceholderResolver {
     logger.debug("Trying to resolve placeholder {}", placeholderName);
     Optional<PlaceholderData> result = Optional.empty();
     for (String property : placeholderName.split("\\.")) {
-      result = result.isEmpty() ? doResolve(property, locale) :
-          result
+      result = result.isEmpty()
+          ? doResolve(property, locale)
+          : result
               .flatMap(r -> r.stream().findAny())
               .flatMap(r -> r.resolve(property, locale));
     }
@@ -139,7 +141,7 @@ public class ReflectionResolver extends PlaceholderResolver {
       if (customPlaceholderRegistry.governs(placeholderName)) {
         return customPlaceholderRegistry.resolve(placeholderName);
       }
-      var property = SELF_REFERENCE.equals(placeholderName) ? bean : pub.getProperty(bean, placeholderName);
+      var property = getBeanProperty(placeholderName);
       if (property == null) {
         return Optional.empty();
       }
@@ -161,9 +163,9 @@ public class ReflectionResolver extends PlaceholderResolver {
                 .withMaxWidth(image.maxWidth()));
       }
       if (bean.equals(property)) {
-        return Optional.of(new IterablePlaceholderData(List.of(new ReflectionResolver(bean)), 1));
+        return Optional.of(new IterablePlaceholderData(List.of(new ReflectionResolver(bean, customPlaceholderRegistry)), 1));
       } else {
-        var value = pub.getProperty(bean, placeholderName);
+        var value = getBeanProperty(placeholderName);
         return Optional.of(new IterablePlaceholderData(List.of(new ReflectionResolver(value, customPlaceholderRegistry)), 1));
       }
     } catch (NoSuchMethodException | IllegalArgumentException e) {
@@ -175,6 +177,21 @@ public class ReflectionResolver extends PlaceholderResolver {
     } catch (InstantiationException e) {
       logger.warn("InstantiationException when trying to resolve placeholder %s".formatted(placeholderName), e);
       return Optional.empty();
+    }
+  }
+
+  private Object getBeanProperty(String placeholderName) throws InvocationTargetException, IllegalAccessException, NoSuchMethodException {
+    if (SELF_REFERENCE.equals(placeholderName)) {
+      return bean;
+    } else if (bean.getClass().isRecord()) {
+      var accessor = Arrays.stream(bean.getClass().getRecordComponents())
+          .filter(recordComponent -> recordComponent.getName().equals(placeholderName))
+          .map(RecordComponent::getAccessor)
+          .findFirst()
+          .orElseThrow(() -> new NoSuchMethodException("Record %s does not have field %s".formatted(bean.getClass().toString(), placeholderName)));
+      return accessor.invoke(bean);
+    } else {
+      return pub.getProperty(bean, placeholderName);
     }
   }
 
