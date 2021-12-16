@@ -5,11 +5,12 @@ import java.nio.file.Path;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
-import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 public class SampleModelData {
 
   public static final Captain PICARD;
+  public static final FutureCaptain FUTURE_PICARD;
   public static final Person PICARD_PERSON = new Person("Jean-Luc", "Picard", LocalDate.of(1948, 9, 23));
   public static final List<Captain> CAPTAINS;
   public static final Ship ENTERPRISE;
@@ -29,6 +30,12 @@ public class SampleModelData {
           Path.of(SampleModelData.class.getResource("/images/picardProfile.jpg").toURI()));
       CAPTAINS = List.of(PICARD);
       ENTERPRISE = new Ship("USS Enterprise", PICARD, 5, services, LocalDate.now());
+      FUTURE_PICARD = new FutureCaptain(CompletableFuture.completedFuture("Jean-Luc Picard"),
+          CompletableFuture.completedFuture(4),
+          CompletableFuture.completedFuture(Uniform.Red),
+          CompletableFuture.completedFuture(new FirstOfficer("Riker", 3, Uniform.Red)),
+          CompletableFuture.completedFuture(services),
+          CompletableFuture.completedFuture(Path.of(SampleModelData.class.getResource("/images/picardProfile.jpg").toURI())));
     } catch (URISyntaxException e) {
       throw new RuntimeException(e);
     }

@@ -22,12 +22,14 @@ public class PlaceholderMapperImpl implements PlaceholderMapper {
       var file = path.toFile();
       if (file.exists() && file.canRead()) {
         try {
+          logger.info("Parsing mappings");
           var reader = new BufferedReader(new FileReader(file));
           placeholderMappings = reader.lines()
               .filter(line -> !line.isEmpty())
               .filter(line -> !line.startsWith("//"))
               .map(line -> line.split(":"))
               .collect(Collectors.toMap(strings -> strings[0], strings -> strings[1]));
+          logger.info("Parsed mappings");
         } catch (IOException e) {
           logger.error(e);
         }
