@@ -42,15 +42,13 @@ import org.apache.logging.log4j.Logger;
  * @since 2020-02-19
  */
 public class ReflectionResolver extends PlaceholderResolver {
-  private final PlaceholderMapper placeholderMapper = new PlaceholderMapperImpl();
-
   private static final String SELF_REFERENCE = "this";
 
   private static final Logger logger = LogManager.getLogger();
 
-  private final Object bean;
+  protected final Object bean;
   private final PropertyUtilsBean pub = new PropertyUtilsBean();
-  private final CustomPlaceholderRegistry customPlaceholderRegistry;
+  protected final CustomPlaceholderRegistry customPlaceholderRegistry;
 
   public ReflectionResolver(Object value) {
     this(value, new CustomPlaceholderRegistryImpl()); //NoOp CustomPlaceholderRegistry
@@ -61,7 +59,7 @@ public class ReflectionResolver extends PlaceholderResolver {
     this.customPlaceholderRegistry = customPlaceholderRegistry;
   }
 
-  private static boolean isFieldAnnotatedWith(Class<?> clazz, String fieldName, Class<? extends Annotation> annotation) {
+  protected static boolean isFieldAnnotatedWith(Class<?> clazz, String fieldName, Class<? extends Annotation> annotation) {
     try {
       return clazz.getDeclaredField(fieldName)
           .getDeclaredAnnotation(annotation) != null;
@@ -127,7 +125,6 @@ public class ReflectionResolver extends PlaceholderResolver {
   @Override
   public Optional<PlaceholderData> resolve(String placeholderName, Locale locale) {
     logger.debug("Trying to resolve placeholder {}", placeholderName);
-    placeholderName = placeholderMapper.map(placeholderName);
     Optional<PlaceholderData> result = Optional.empty();
     for (String property : placeholderName.split("\\.")) {
       result = result.isEmpty()
@@ -183,7 +180,7 @@ public class ReflectionResolver extends PlaceholderResolver {
     }
   }
 
-  private Object getBeanProperty(String placeholderName) throws InvocationTargetException, IllegalAccessException, NoSuchMethodException {
+  protected Object getBeanProperty(String placeholderName) throws InvocationTargetException, IllegalAccessException, NoSuchMethodException {
     if (SELF_REFERENCE.equals(placeholderName)) {
       return bean;
     } else if (bean.getClass().isRecord()) {
@@ -198,7 +195,7 @@ public class ReflectionResolver extends PlaceholderResolver {
     }
   }
 
-  private Optional<PlaceholderData> formatTemporal(String placeholderName, Temporal time, Locale locale) {
+  protected Optional<PlaceholderData> formatTemporal(String placeholderName, Temporal time, Locale locale) {
     Optional<DateTimeFormatter> formatter;
     if (isFieldAnnotatedWith(bean.getClass(), placeholderName, Format.class)) {
       formatter = ReflectionUtils.findFieldAnnotation(bean.getClass(), placeholderName, Format.class)
@@ -219,7 +216,7 @@ public class ReflectionResolver extends PlaceholderResolver {
     return formatter.map(dateTimeFormatter -> new ScalarPlaceholderData(dateTimeFormatter.format(time)));
   }
 
-  private NumberFormat findNumberFormat(String fieldName, Locale locale) {
+  protected NumberFormat findNumberFormat(String fieldName, Locale locale) {
     return ReflectionUtils.findFieldAnnotation(bean.getClass(), fieldName, Percentage.class)
         .map(percentage -> toNumberFormat(percentage, locale))
         .or(() -> ReflectionUtils.findFieldAnnotation(bean.getClass(), fieldName, Money.class)
