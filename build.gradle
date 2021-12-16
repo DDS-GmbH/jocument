@@ -8,7 +8,7 @@ plugins {
 }
 
 group 'com.docutools'
-version = '1.3.2'
+version = '1.4.0-alpha.2'
 
 sourceCompatibility = 17
 targetCompatibility = 17
@@ -71,6 +71,7 @@ javadoc {
 }
 
 test {
+    environment 'DT_JT_RR_PLACEHOLDER_MAPPINGS', 'src/test/resources/mappings.txt'
     useJUnitPlatform()
 }
 
