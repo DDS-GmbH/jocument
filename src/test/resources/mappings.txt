@@ -1,0 +1,5 @@
+captain-name:name
+officer-name:name
+officer-rank:rank
+officer-uniform:uniform
+service-ship-name:shipName
