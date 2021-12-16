@@ -2,6 +2,7 @@ package com.docutools.jocument.impl;
 
 import com.docutools.jocument.CustomPlaceholderRegistry;
 import com.docutools.jocument.PlaceholderData;
+import com.docutools.jocument.PlaceholderMapper;
 import com.docutools.jocument.PlaceholderResolver;
 import com.docutools.jocument.annotations.Format;
 import com.docutools.jocument.annotations.Image;
@@ -41,6 +42,7 @@ import org.apache.logging.log4j.Logger;
  * @since 2020-02-19
  */
 public class ReflectionResolver extends PlaceholderResolver {
+  private final PlaceholderMapper placeholderMapper = new PlaceholderMapperImpl();
 
   private static final String SELF_REFERENCE = "this";
 
@@ -125,6 +127,7 @@ public class ReflectionResolver extends PlaceholderResolver {
   @Override
   public Optional<PlaceholderData> resolve(String placeholderName, Locale locale) {
     logger.debug("Trying to resolve placeholder {}", placeholderName);
+    placeholderName = placeholderMapper.map(placeholderName);
     Optional<PlaceholderData> result = Optional.empty();
     for (String property : placeholderName.split("\\.")) {
       result = result.isEmpty()
