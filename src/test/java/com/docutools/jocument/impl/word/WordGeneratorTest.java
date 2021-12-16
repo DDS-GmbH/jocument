@@ -12,6 +12,7 @@ import com.docutools.jocument.TestUtils;
 import com.docutools.jocument.impl.CustomPlaceholderRegistryImpl;
 import com.docutools.jocument.impl.FutureReflectionResolver;
 import com.docutools.jocument.impl.PlaceholderMapperImpl;
+import com.docutools.jocument.impl.FutureReflectionResolver;
 import com.docutools.jocument.impl.ReflectionResolver;
 import com.docutools.jocument.sample.model.SampleModelData;
 import com.docutools.jocument.sample.placeholders.QuotePlaceholder;
