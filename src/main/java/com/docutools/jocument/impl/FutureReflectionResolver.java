@@ -4,11 +4,7 @@ import com.docutools.jocument.CustomPlaceholderRegistry;
 import com.docutools.jocument.PlaceholderData;
 import com.docutools.jocument.PlaceholderMapper;
 import com.docutools.jocument.PlaceholderResolver;
-import com.docutools.jocument.annotations.Image;
-import com.docutools.jocument.impl.word.placeholders.ImagePlaceholderData;
 import java.lang.reflect.InvocationTargetException;
-import java.nio.file.Path;
-import java.time.temporal.Temporal;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
@@ -66,31 +62,25 @@ public class FutureReflectionResolver extends ReflectionResolver {
       if (property instanceof Future<?>) {
         property = ((Future<?>) property).get();
       }
-      if (property instanceof Number number) {
-        var numberFormat = findNumberFormat(placeholderName, locale);
-        return Optional.of(new ScalarPlaceholderData(numberFormat.format(number)));
-      } else if (property instanceof Enum || property instanceof String || ReflectionUtils.isWrapperType(property.getClass())) {
-        return Optional.of(new ScalarPlaceholderData(property.toString()));
-      } else if (property instanceof Collection<?> collection) {
-        List<PlaceholderResolver> list = collection.stream()
-            .map(object -> new FutureReflectionResolver(object, customPlaceholderRegistry))
-            .collect(Collectors.toList());
-        return Optional.of(new IterablePlaceholderData(list, list.size()));
-      } else if (property instanceof Temporal temporal) {
-        return formatTemporal(placeholderName, temporal, locale);
-      } else if (property instanceof Path path && isFieldAnnotatedWith(bean.getClass(), placeholderName, Image.class)) {
-        return ReflectionUtils.findFieldAnnotation(bean.getClass(), placeholderName, Image.class)
-            .map(image -> new ImagePlaceholderData(path)
-                .withMaxWidth(image.maxWidth()));
-      }
-      if (bean.equals(property)) {
-        return Optional.of(new IterablePlaceholderData(List.of(new FutureReflectionResolver(bean, customPlaceholderRegistry)), 1));
+      var simplePlaceholder = resolveSimplePlaceholder(property, placeholderName, locale);
+      if (simplePlaceholder.isPresent()) {
+        return simplePlaceholder;
       } else {
-        var value = getBeanProperty(placeholderName);
-        if (value instanceof Future<?>) {
-          value = ((Future<?>) value).get();
+        if (property instanceof Collection<?> collection) {
+          List<PlaceholderResolver> list = collection.stream()
+              .map(object -> new FutureReflectionResolver(object, customPlaceholderRegistry))
+              .collect(Collectors.toList());
+          return Optional.of(new IterablePlaceholderData(list, list.size()));
         }
-        return Optional.of(new IterablePlaceholderData(List.of(new FutureReflectionResolver(value, customPlaceholderRegistry)), 1));
+        if (bean.equals(property)) {
+          return Optional.of(new IterablePlaceholderData(List.of(new FutureReflectionResolver(bean, customPlaceholderRegistry)), 1));
+        } else {
+          var value = getBeanProperty(placeholderName);
+          if (value instanceof Future<?>) {
+            value = ((Future<?>) value).get();
+          }
+          return Optional.of(new IterablePlaceholderData(List.of(new FutureReflectionResolver(value, customPlaceholderRegistry)), 1));
+        }
       }
     } catch (NoSuchMethodException | IllegalArgumentException e) {
       logger.debug("Did not find placeholder {}", placeholderName);

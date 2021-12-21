@@ -2,7 +2,6 @@ package com.docutools.jocument.impl;
 
 import com.docutools.jocument.CustomPlaceholderRegistry;
 import com.docutools.jocument.PlaceholderData;
-import com.docutools.jocument.PlaceholderMapper;
 import com.docutools.jocument.PlaceholderResolver;
 import com.docutools.jocument.annotations.Format;
 import com.docutools.jocument.annotations.Image;
@@ -145,28 +144,22 @@ public class ReflectionResolver extends PlaceholderResolver {
       if (property == null) {
         return Optional.empty();
       }
-      if (property instanceof Number number) {
-        var numberFormat = findNumberFormat(placeholderName, locale);
-        return Optional.of(new ScalarPlaceholderData(numberFormat.format(number)));
-      } else if (property instanceof Enum || property instanceof String || ReflectionUtils.isWrapperType(property.getClass())) {
-        return Optional.of(new ScalarPlaceholderData(property.toString()));
-      } else if (property instanceof Collection<?> collection) {
-        List<PlaceholderResolver> list = collection.stream()
-            .map(object -> new ReflectionResolver(object, customPlaceholderRegistry))
-            .collect(Collectors.toList());
-        return Optional.of(new IterablePlaceholderData(list, list.size()));
-      } else if (property instanceof Temporal temporal) {
-        return formatTemporal(placeholderName, temporal, locale);
-      } else if (property instanceof Path path && isFieldAnnotatedWith(bean.getClass(), placeholderName, Image.class)) {
-        return ReflectionUtils.findFieldAnnotation(bean.getClass(), placeholderName, Image.class)
-            .map(image -> new ImagePlaceholderData(path)
-                .withMaxWidth(image.maxWidth()));
-      }
-      if (bean.equals(property)) {
-        return Optional.of(new IterablePlaceholderData(List.of(new ReflectionResolver(bean, customPlaceholderRegistry)), 1));
+      var simplePlaceholder = resolveSimplePlaceholder(property, placeholderName, locale);
+      if (simplePlaceholder.isPresent()) {
+        return simplePlaceholder;
       } else {
-        var value = getBeanProperty(placeholderName);
-        return Optional.of(new IterablePlaceholderData(List.of(new ReflectionResolver(value, customPlaceholderRegistry)), 1));
+        if (property instanceof Collection<?> collection) {
+          List<PlaceholderResolver> list = collection.stream()
+              .map(object -> new ReflectionResolver(object, customPlaceholderRegistry))
+              .collect(Collectors.toList());
+          return Optional.of(new IterablePlaceholderData(list, list.size()));
+        }
+        if (bean.equals(property)) {
+          return Optional.of(new IterablePlaceholderData(List.of(new ReflectionResolver(bean, customPlaceholderRegistry)), 1));
+        } else {
+          var value = getBeanProperty(placeholderName);
+          return Optional.of(new IterablePlaceholderData(List.of(new ReflectionResolver(value, customPlaceholderRegistry)), 1));
+        }
       }
     } catch (NoSuchMethodException | IllegalArgumentException e) {
       logger.debug("Did not find placeholder {}", placeholderName);
@@ -176,6 +169,23 @@ public class ReflectionResolver extends PlaceholderResolver {
       throw new IllegalStateException("Could not resolve placeholderName against type.", e);
     } catch (InstantiationException e) {
       logger.warn("InstantiationException when trying to resolve placeholder %s".formatted(placeholderName), e);
+      return Optional.empty();
+    }
+  }
+
+  protected Optional<PlaceholderData> resolveSimplePlaceholder(Object property, String placeholderName, Locale locale) {
+    if (property instanceof Number number) {
+      var numberFormat = findNumberFormat(placeholderName, locale);
+      return Optional.of(new ScalarPlaceholderData(numberFormat.format(number)));
+    } else if (property instanceof Enum || property instanceof String || ReflectionUtils.isWrapperType(property.getClass())) {
+      return Optional.of(new ScalarPlaceholderData(property.toString()));
+    } else if (property instanceof Temporal temporal) {
+      return formatTemporal(placeholderName, temporal, locale);
+    } else if (property instanceof Path path && isFieldAnnotatedWith(bean.getClass(), placeholderName, Image.class)) {
+      return ReflectionUtils.findFieldAnnotation(bean.getClass(), placeholderName, Image.class)
+          .map(image -> new ImagePlaceholderData(path)
+              .withMaxWidth(image.maxWidth()));
+    } else {
       return Optional.empty();
     }
   }
