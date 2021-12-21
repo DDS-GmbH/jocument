@@ -12,6 +12,5 @@ public class QuotePlaceholder extends CustomWordPlaceholderData {
     var paragraph = document.insertNewParagraph(WordUtilities.openCursor(placeholder).orElseThrow());
     paragraph.createRun().setText("Live your life not celebrating victories, but overcoming defeats.");
     WordUtilities.removeIfExists(placeholder);
-
   }
 }

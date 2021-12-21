@@ -225,40 +225,6 @@ class WordGeneratorTest {
     }
 
     @Test
-    @DisplayName("Do not fail when placeholder mapping can not be opened.")
-    void shouldNotFailOnUnavailableMappingFile() throws InterruptedException {
-        // Arrange
-        PlaceholderMapperImpl.configure("/does/not/exist");
-        Template template = Template.fromClassPath("/templates/word/UserProfileTemplate.docx")
-            .orElseThrow();
-        PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.PICARD_PERSON);
-
-        // Act
-        Document document = template.startGeneration(resolver);
-        document.blockUntilCompletion(60000L); // 1 minute
-
-        // Assert
-        assertThat(document.completed(), is(true));
-    }
-
-    @Test
-    @DisplayName("Do not fail when placeholder mapping can not be opened.")
-    void shouldNotFailOnNullMappingFile() throws InterruptedException {
-        // Arrange
-        PlaceholderMapperImpl.configure(null);
-        Template template = Template.fromClassPath("/templates/word/UserProfileTemplate.docx")
-            .orElseThrow();
-        PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.PICARD_PERSON);
-
-        // Act
-        Document document = template.startGeneration(resolver);
-        document.blockUntilCompletion(60000L); // 1 minute
-
-        // Assert
-        assertThat(document.completed(), is(true));
-    }
-
-    @Test
     @DisplayName("Resolve future placeholder")
     void shouldResolveFuture() throws IOException, InterruptedException {
         // Assemble

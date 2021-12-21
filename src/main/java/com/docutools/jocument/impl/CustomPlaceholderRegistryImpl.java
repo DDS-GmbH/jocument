@@ -17,7 +17,7 @@ public class CustomPlaceholderRegistryImpl implements CustomPlaceholderRegistry 
   }
 
   @Override
-  public Optional<PlaceholderData> resolve(String placeholder)
+  public Optional<PlaceholderData> resolve(String placeholder, Object unused)
       throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
     if (customWordPlaceholderDataMap.containsKey(placeholder)) {
       return Optional.of(customWordPlaceholderDataMap.get(placeholder).getConstructor().newInstance());
@@ -27,7 +27,7 @@ public class CustomPlaceholderRegistryImpl implements CustomPlaceholderRegistry 
   }
 
   @Override
-  public boolean governs(String placeholderName) {
+  public boolean governs(String placeholderName, Object unused) {
     return customWordPlaceholderDataMap.containsKey(placeholderName);
   }
 }
