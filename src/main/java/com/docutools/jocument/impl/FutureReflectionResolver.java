@@ -24,7 +24,6 @@ import org.apache.logging.log4j.Logger;
  */
 public class FutureReflectionResolver extends ReflectionResolver {
   private static final Logger logger = LogManager.getLogger();
-  private final PlaceholderMapper placeholderMapper = new PlaceholderMapperImpl();
 
   public FutureReflectionResolver(Object value) {
     this(value, new CustomPlaceholderRegistryImpl()); //NoOp CustomPlaceholderRegistry
@@ -34,26 +33,11 @@ public class FutureReflectionResolver extends ReflectionResolver {
     super(value, customPlaceholderRegistry);
   }
 
-
   @Override
-  public Optional<PlaceholderData> resolve(String placeholderName, Locale locale) {
-    logger.debug("Trying to resolve placeholder {}", placeholderName);
-    placeholderName = placeholderMapper.map(placeholderName);
-    Optional<PlaceholderData> result = Optional.empty();
-    for (String property : placeholderName.split("\\.")) {
-      result = result.isEmpty()
-          ? doResolve(property, locale)
-          : result
-          .flatMap(r -> r.stream().findAny())
-          .flatMap(r -> r.resolve(property, locale));
-    }
-    return result;
-  }
-
-  private Optional<PlaceholderData> doResolve(String placeholderName, Locale locale) {
+  public Optional<PlaceholderData> doResolve(String placeholderName, Locale locale) {
     try {
-      if (customPlaceholderRegistry.governs(placeholderName)) {
-        return customPlaceholderRegistry.resolve(placeholderName);
+      if (customPlaceholderRegistry.governs(placeholderName, bean)) {
+        return customPlaceholderRegistry.resolve(placeholderName, bean);
       }
       var property = getBeanProperty(placeholderName);
       if (property == null) {

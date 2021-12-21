@@ -7,8 +7,8 @@ import java.util.Optional;
 public interface CustomPlaceholderRegistry {
   void addHandler(String placeholder, Class<? extends CustomWordPlaceholderData> customWordPlaceholderDataClass);
 
-  Optional<PlaceholderData> resolve(String placeholder)
+  Optional<PlaceholderData> resolve(String placeholder, Object object)
       throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException;
 
-  boolean governs(String placeholderName);
+  boolean governs(String placeholderName, Object object);
 }
