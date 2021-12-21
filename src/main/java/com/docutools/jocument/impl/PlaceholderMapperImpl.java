@@ -32,9 +32,8 @@ public class PlaceholderMapperImpl implements PlaceholderMapper {
       var path = Path.of(pathString);
       var file = path.toFile();
       if (file.exists() && file.canRead()) {
-        try {
+        try (var reader = new BufferedReader(new FileReader(file))) {
           logger.info("Parsing mappings");
-          var reader = new BufferedReader(new FileReader(file));
           placeholderMappings = reader.lines()
               .filter(line -> !line.isEmpty())
               .filter(line -> !line.startsWith("//"))
@@ -50,7 +49,7 @@ public class PlaceholderMapperImpl implements PlaceholderMapper {
         logger.error("Mappings file {} can not be read", pathString);
       }
     } else {
-      logger.info("No mapper found");
+      logger.info("Path to mapping file is null");
     }
   }
 }

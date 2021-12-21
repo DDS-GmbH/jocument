@@ -11,6 +11,7 @@ import com.docutools.jocument.Template;
 import com.docutools.jocument.TestUtils;
 import com.docutools.jocument.impl.CustomPlaceholderRegistryImpl;
 import com.docutools.jocument.impl.FutureReflectionResolver;
+import com.docutools.jocument.impl.PlaceholderMapperImpl;
 import com.docutools.jocument.impl.ReflectionResolver;
 import com.docutools.jocument.sample.model.SampleModelData;
 import com.docutools.jocument.sample.placeholders.QuotePlaceholder;
@@ -193,7 +194,6 @@ class WordGeneratorTest {
             equalTo("Live your life not celebrating victories, but overcoming defeats."));
     }
 
-
     @Test
     @DisplayName("Resolve legacy placeholder")
     void shouldResolveLegacy() throws IOException, InterruptedException {
@@ -222,6 +222,40 @@ class WordGeneratorTest {
         assertThat(documentWrapper.bodyElement(8).asParagraph().text(), equalTo("USS Enterprise"));
         assertThat(documentWrapper.bodyElement(9).asParagraph().text(), equalTo("US Defiant"));
         assertThat(documentWrapper.bodyElement(11).asParagraph().text(), equalTo("And that’s that."));
+    }
+
+    @Test
+    @DisplayName("Do not fail when placeholder mapping can not be opened.")
+    void shouldNotFailOnUnavailableMappingFile() throws InterruptedException {
+        // Arrange
+        PlaceholderMapperImpl.configure("/does/not/exist");
+        Template template = Template.fromClassPath("/templates/word/UserProfileTemplate.docx")
+            .orElseThrow();
+        PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.PICARD_PERSON);
+
+        // Act
+        Document document = template.startGeneration(resolver);
+        document.blockUntilCompletion(60000L); // 1 minute
+
+        // Assert
+        assertThat(document.completed(), is(true));
+    }
+
+    @Test
+    @DisplayName("Do not fail when placeholder mapping can not be opened.")
+    void shouldNotFailOnNullMappingFile() throws InterruptedException {
+        // Arrange
+        PlaceholderMapperImpl.configure(null);
+        Template template = Template.fromClassPath("/templates/word/UserProfileTemplate.docx")
+            .orElseThrow();
+        PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.PICARD_PERSON);
+
+        // Act
+        Document document = template.startGeneration(resolver);
+        document.blockUntilCompletion(60000L); // 1 minute
+
+        // Assert
+        assertThat(document.completed(), is(true));
     }
 
     @Test
