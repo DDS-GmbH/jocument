@@ -2,6 +2,7 @@ package com.docutools.jocument.impl;
 
 import com.docutools.jocument.CustomPlaceholderRegistry;
 import com.docutools.jocument.PlaceholderData;
+import com.docutools.jocument.PlaceholderMapper;
 import com.docutools.jocument.PlaceholderResolver;
 import com.docutools.jocument.annotations.Format;
 import com.docutools.jocument.annotations.Image;
@@ -48,6 +49,8 @@ public class ReflectionResolver extends PlaceholderResolver {
   protected final Object bean;
   private final PropertyUtilsBean pub = new PropertyUtilsBean();
   protected final CustomPlaceholderRegistry customPlaceholderRegistry;
+  private final PlaceholderMapper placeholderMapper = new PlaceholderMapperImpl();
+
 
   public ReflectionResolver(Object value) {
     this(value, new CustomPlaceholderRegistryImpl()); //NoOp CustomPlaceholderRegistry
@@ -124,21 +127,31 @@ public class ReflectionResolver extends PlaceholderResolver {
   @Override
   public Optional<PlaceholderData> resolve(String placeholderName, Locale locale) {
     logger.debug("Trying to resolve placeholder {}", placeholderName);
+    placeholderName = placeholderMapper.map(placeholderName);
     Optional<PlaceholderData> result = Optional.empty();
     for (String property : placeholderName.split("\\.")) {
       result = result.isEmpty()
           ? doResolve(property, locale)
           : result
-              .flatMap(r -> r.stream().findAny())
-              .flatMap(r -> r.resolve(property, locale));
+          .flatMap(r -> r.stream().findAny())
+          .flatMap(r -> r.resolve(property, locale));
     }
     return result;
   }
 
-  private Optional<PlaceholderData> doResolve(String placeholderName, Locale locale) {
+  /**
+   * Method resolving placeholders for the reflection resolver.
+   * incredibly ugly, but since doResolve is public, the overriden method of FutureReflectionResolver is used when necessary
+   * could/should maybe be made a bit more explicit by defining a common superinterface
+   *
+   * @param placeholderName The name of the placeholder
+   * @param locale          The locale to user for localization
+   * @return An optional containing `PlaceholderData` if it could be resolved
+   */
+  public Optional<PlaceholderData> doResolve(String placeholderName, Locale locale) {
     try {
-      if (customPlaceholderRegistry.governs(placeholderName)) {
-        return customPlaceholderRegistry.resolve(placeholderName);
+      if (customPlaceholderRegistry.governs(placeholderName, bean)) {
+        return customPlaceholderRegistry.resolve(placeholderName, bean);
       }
       var property = getBeanProperty(placeholderName);
       if (property == null) {
