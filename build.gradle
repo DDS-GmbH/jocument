@@ -44,7 +44,7 @@ dependencies {
 
     testImplementation('org.junit.jupiter:junit-jupiter:5.8.2')
     testImplementation("org.hamcrest:hamcrest:2.2")
-    testImplementation("com.docutools:poipath:1.1.5")
+    testImplementation("com.docutools:poipath:1.1.6")
 }
 
 tasks.withType(Checkstyle) {
