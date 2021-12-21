@@ -2,6 +2,7 @@ package com.docutools.jocument.impl;
 
 import com.docutools.jocument.CustomPlaceholderRegistry;
 import com.docutools.jocument.PlaceholderData;
+import com.docutools.jocument.PlaceholderMapper;
 import com.docutools.jocument.PlaceholderResolver;
 import com.docutools.jocument.annotations.Format;
 import com.docutools.jocument.annotations.Image;

@@ -71,7 +71,6 @@ javadoc {
 }
 
 test {
-    environment 'DT_JT_RR_PLACEHOLDER_MAPPINGS', 'src/test/resources/mappings.txt'
     useJUnitPlatform()
 }
 
