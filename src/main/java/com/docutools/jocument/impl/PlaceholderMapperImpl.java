@@ -5,7 +5,6 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 import org.apache.logging.log4j.LogManager;
@@ -13,10 +12,22 @@ import org.apache.logging.log4j.Logger;
 
 public class PlaceholderMapperImpl implements PlaceholderMapper {
   private static final Logger logger = LogManager.getLogger();
-  private static Map<String, String> placeholderMappings = new HashMap<>();
+  private static Map<String, String> placeholderMappings;
+  private static String pathString = System.getenv("DT_JT_RR_PLACEHOLDER_MAPPINGS");
 
-  static {
-    var pathString = System.getenv("DT_JT_RR_PLACEHOLDER_MAPPINGS");
+  public static void configure(String pS) {
+    pathString = pS;
+  }
+
+  @Override
+  public String map(String placeholder) {
+    if (placeholderMappings == null) {
+      setup();
+    }
+    return placeholderMappings.getOrDefault(placeholder, placeholder);
+  }
+
+  private static void setup() {
     if (pathString != null) {
       var path = Path.of(pathString);
       var file = path.toFile();
@@ -41,10 +52,5 @@ public class PlaceholderMapperImpl implements PlaceholderMapper {
     } else {
       logger.info("No mapper found");
     }
-  }
-
-  @Override
-  public String map(String placeholder) {
-    return placeholderMappings.getOrDefault(placeholder, placeholder);
   }
 }
