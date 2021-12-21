@@ -18,9 +18,9 @@ import org.apache.logging.log4j.Logger;
 /**
  * Takes a {@link Object} of any type and resolves placeholder names with reflective access to its type.
  *
- * @author codecitizen
- * @see PlaceholderResolver
- * @since 2020-02-19
+ * @author AntonOellerer
+ * @see ReflectionResolver
+ * @since 2021-12-21
  */
 public class FutureReflectionResolver extends ReflectionResolver {
   private static final Logger logger = LogManager.getLogger();

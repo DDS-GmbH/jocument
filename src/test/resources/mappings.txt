@@ -1,5 +1,10 @@
+//Captain Data
 captain-name:name
+
+// Officer Data
 officer-name:name
 officer-rank:rank
 officer-uniform:uniform
+
+// Ship Data
 service-ship-name:shipName
