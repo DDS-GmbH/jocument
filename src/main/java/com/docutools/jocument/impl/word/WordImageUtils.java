@@ -47,8 +47,21 @@ public class WordImageUtils {
    * @return the inserted image
    */
   public static XWPFPicture insertImage(XWPFParagraph paragraph, Path path, ImageStrategy imageStrategy) {
+    return insertImage(paragraph, path, imageStrategy, new Dimension(MAX_PICTURE_WIDTH, MAX_PICTURE_HEIGHT));
+  }
+
+  /**
+   * Inserts the image of the given {@link java.nio.file.Path} into the {@link org.apache.poi.xwpf.usermodel.XWPFParagraph}.
+   *
+   * @param paragraph        the paragraph
+   * @param path             the image file
+   * @param imageStrategy    the {@link ImageStrategy}
+   * @param targetDimensions the target dimensions to scale the image to
+   * @return the inserted image
+   */
+  public static XWPFPicture insertImage(XWPFParagraph paragraph, Path path, ImageStrategy imageStrategy, Dimension targetDimensions) {
     var dim = probeDimensions(path, imageStrategy)
-        .map(WordImageUtils::scaleToWordSize)
+        .map(pictureDimensions -> scaleToTargetDimensions(pictureDimensions, targetDimensions))
         .map(WordImageUtils::toEmu)
         .orElse(DEFAULT_DIM);
     var contentType = probeImageType(path);
@@ -61,6 +74,7 @@ public class WordImageUtils {
       throw new IllegalArgumentException("Could not insert image form given Path.", e);
     }
   }
+
 
   private static Optional<Dimension> probeDimensions(Path path, ImageStrategy imageStrategy) {
     try (var image = imageStrategy.load(path)) {
@@ -75,15 +89,15 @@ public class WordImageUtils {
     return new Dimension(Units.pixelToEMU(dim.width), Units.pixelToEMU(dim.height));
   }
 
-  private static boolean exceedsMaxWordSize(Dimension dimension) {
-    return dimension != null && (dimension.width > MAX_PICTURE_WIDTH || dimension.height > MAX_PICTURE_HEIGHT);
+  private static boolean exceedsTargetDimensions(Dimension imageDimensions, Dimension targetDimensions) {
+    return imageDimensions != null && (imageDimensions.width > targetDimensions.width || imageDimensions.height > targetDimensions.height);
   }
 
-  private static Dimension scaleToWordSize(Dimension dim) {
-    if (exceedsMaxWordSize(dim)) {
-      return scale(dim, MAX_PICTURE_HEIGHT, MAX_PICTURE_WIDTH);
+  private static Dimension scaleToTargetDimensions(Dimension pictureDimensions, Dimension targetDimension) {
+    if (exceedsTargetDimensions(pictureDimensions, targetDimension)) {
+      return scale(pictureDimensions, targetDimension.height, targetDimension.width);
     }
-    return dim;
+    return pictureDimensions;
   }
 
   private static Dimension scale(Dimension dim, int maxHeight, int maxWidth) {
