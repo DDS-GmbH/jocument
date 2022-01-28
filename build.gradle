@@ -8,7 +8,7 @@ plugins {
 }
 
 group 'com.docutools'
-version = '1.4.0-alpha.13'
+version = '1.4.0-alpha.5'
 
 sourceCompatibility = 17
 targetCompatibility = 17
@@ -87,8 +87,8 @@ publishing {
             name = "GitHubPackages"
             url = uri("https://maven.pkg.github.com/DDS-GmbH/jocument")
             credentials {
-                username = project.findProperty("gpr.user") ?: System.getenv("GITHUB_USERNAME")
-                password = project.findProperty("gpr.token") ?: System.getenv("GITHUB_TOKEN")
+                username = project.findProperty("gpr.gh.user") ?: System.getenv("GITHUB_USERNAME")
+                password = project.findProperty("gpr.gh.token") ?: System.getenv("GITHUB_TOKEN")
             }
         }
     }
