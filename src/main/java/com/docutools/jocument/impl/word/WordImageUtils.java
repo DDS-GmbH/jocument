@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.util.Map;
 import java.util.Optional;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -17,12 +16,6 @@ import org.apache.poi.xwpf.usermodel.XWPFParagraph;
 import org.apache.poi.xwpf.usermodel.XWPFPicture;
 
 public class WordImageUtils {
-  public static final Map<String, Integer> XWPF_CONTENT_TYPE_MAPPING =
-      Map.of(
-          "image/jpeg", Document.PICTURE_TYPE_JPEG,
-          "image/jpg", Document.PICTURE_TYPE_JPEG,
-          "image/png", Document.PICTURE_TYPE_PNG
-      );
   public static final int DEFAULT_XWPF_CONTENT_TYPE = Document.PICTURE_TYPE_JPEG;
   private static final Logger logger = LogManager.getLogger();
   /**
@@ -102,16 +95,33 @@ public class WordImageUtils {
 
   private static Dimension scale(Dimension dim, int maxHeight, int maxWidth) {
     //Compares the scale down ratio of the width and height compared to the max size and saves the larger one
-    double scale = Math.max((double) dim.height / maxHeight, (double) dim.width / maxWidth);
-    int width = (int) (dim.width / scale);
-    int height = (int) (dim.height / scale);
+    double scale = Math.max(dim.getHeight() / maxHeight, dim.getWidth() / maxWidth);
+    int width = (int) Math.ceil(dim.getWidth() / scale);
+    int height = (int) Math.ceil(dim.getHeight() / scale);
     return new Dimension(width, height);
   }
 
   private static int probeImageType(Path path) {
     return probeContentTypeSafely(path)
-        .map(contentType -> XWPF_CONTENT_TYPE_MAPPING.getOrDefault(contentType, DEFAULT_XWPF_CONTENT_TYPE))
+        .map(WordImageUtils::toPoiType)
         .orElse(DEFAULT_XWPF_CONTENT_TYPE);
+  }
+
+  private static int toPoiType(String mimeType) {
+    return switch (mimeType) {
+      case "image/x-emf" -> Document.PICTURE_TYPE_EMF;
+      case "image/x-wmf" -> Document.PICTURE_TYPE_WMF;
+      case "image/pict" -> Document.PICTURE_TYPE_PICT;
+      case "image/jpeg", "image/jpg" -> Document.PICTURE_TYPE_JPEG;
+      case "image/png" -> Document.PICTURE_TYPE_PNG;
+      case "image/dib" -> Document.PICTURE_TYPE_DIB;
+      case "image/gif" -> Document.PICTURE_TYPE_GIF;
+      case "image/tiff" -> Document.PICTURE_TYPE_TIFF;
+      case "application/postscript" -> Document.PICTURE_TYPE_EPS;
+      case "image/bmp" -> Document.PICTURE_TYPE_BMP;
+      case "image/wpg" -> Document.PICTURE_TYPE_WPG;
+      default -> Document.PICTURE_TYPE_JPEG;
+    };
   }
 
   private static Optional<String> probeContentTypeSafely(Path path) {
