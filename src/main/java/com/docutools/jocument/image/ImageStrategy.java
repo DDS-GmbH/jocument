@@ -1,5 +1,6 @@
 package com.docutools.jocument.image;
 
+import java.awt.Dimension;
 import java.io.IOException;
 import java.nio.file.Path;
 
@@ -40,5 +41,16 @@ public interface ImageStrategy {
    * @return the scaled image
    */
   ImageReference scale(ImageReference original, double scaleBy);
+
+  /**
+   * Gets the dimensions of the provided image.
+   * Separating this from {@link ImageStrategy#load(Path)} allows for more efficient methods, such as reading it from the
+   * file header or aws tags.
+   *
+   * @param path the path to the image file
+   * @return the {@link Dimension} of the image file
+   * @throws IOException if the path does not point to a valid image
+   */
+  Dimension getDimensions(Path path) throws IOException;
 
 }

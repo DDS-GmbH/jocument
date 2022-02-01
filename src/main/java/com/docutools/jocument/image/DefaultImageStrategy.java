@@ -1,11 +1,17 @@
 package com.docutools.jocument.image;
 
+import com.docutools.jocument.impl.word.WordImageUtils;
+import java.awt.Dimension;
 import java.awt.geom.AffineTransform;
 import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Iterator;
 import javax.imageio.ImageIO;
+import javax.imageio.ImageReader;
+import javax.imageio.stream.FileImageInputStream;
+import javax.imageio.stream.ImageInputStream;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -58,5 +64,27 @@ public final class DefaultImageStrategy implements ImageStrategy {
       return new DefaultImageReference(target);
     }
     throw new IncompatibleImageReferenceException();
+  }
+
+  @Override
+  // https://stackoverflow.com/a/12164026/4786733
+  public Dimension getDimensions(Path path) throws IOException {
+    log.trace("Getting image dimensions of '{}'", path);
+    var mimeType = WordImageUtils.probeContentTypeSafely(path).orElseThrow(() -> new IOException("Could not determine File Type"));
+    Iterator<ImageReader> iter = ImageIO.getImageReadersByMIMEType(mimeType);
+    while (iter.hasNext()) {
+      ImageReader reader = iter.next();
+      try (ImageInputStream stream = new FileImageInputStream(path.toFile())) {
+        reader.setInput(stream);
+        int width = reader.getWidth(reader.getMinIndex());
+        int height = reader.getHeight(reader.getMinIndex());
+        return new Dimension(width, height);
+      } catch (IOException e) {
+        log.warn("Error reading: " + path.toAbsolutePath(), e);
+      } finally {
+        reader.dispose();
+      }
+    }
+    throw new IOException("Not a known image file: " + path.toAbsolutePath());
   }
 }

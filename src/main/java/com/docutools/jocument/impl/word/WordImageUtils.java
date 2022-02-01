@@ -69,9 +69,16 @@ public class WordImageUtils {
   }
 
 
-  private static Optional<Dimension> probeDimensions(Path path, ImageStrategy imageStrategy) {
-    try (var image = imageStrategy.load(path)) {
-      return Optional.of(new Dimension(image.getWidth(), image.getHeight()));
+  /**
+   * Get the dimensions of the image at the provided path, if possible.
+   *
+   * @param path          The path to the image to get the dimensions from
+   * @param imageStrategy The image strategy to use for figuring out the dimensions
+   * @return An {@link Optional} containing the dimensions if they could be determined successfully, {@link Optional#empty()} if not
+   */
+  public static Optional<Dimension> probeDimensions(Path path, ImageStrategy imageStrategy) {
+    try {
+      return Optional.of(imageStrategy.getDimensions(path));
     } catch (Exception any) {
       logger.error("Could not probe image '%s' for dimensions.".formatted(path), any);
       return Optional.empty();
@@ -101,7 +108,14 @@ public class WordImageUtils {
     return new Dimension(width, height);
   }
 
-  private static int probeImageType(Path path) {
+  /**
+   * Get the XWPF integer representing the image type of the file at the provided {@link Path},
+   * returning `DEFAULT_XWPF_CONTENT_TYPE` if it can not be determined.
+   *
+   * @param path the path to the image file
+   * @return the {@link int} representing the image type in the xwpf system.
+   */
+  public static int probeImageType(Path path) {
     return probeContentTypeSafely(path)
         .map(WordImageUtils::toPoiType)
         .orElse(DEFAULT_XWPF_CONTENT_TYPE);
@@ -124,7 +138,13 @@ public class WordImageUtils {
     };
   }
 
-  private static Optional<String> probeContentTypeSafely(Path path) {
+  /**
+   * Get the mime type of the file at the provided {@link Path}.
+   *
+   * @param path the path to the file to examine
+   * @return an optional containing the mime type of the file if it can be determined, or {@link Optional#empty()} if not
+   */
+  public static Optional<String> probeContentTypeSafely(Path path) {
     try {
       return Optional.ofNullable(Files.probeContentType(path))
           .filter(contentType -> !contentType.isBlank());
