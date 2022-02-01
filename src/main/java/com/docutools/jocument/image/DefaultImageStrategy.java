@@ -21,7 +21,8 @@ public final class DefaultImageStrategy implements ImageStrategy {
 
   private static final Object MUTEX = new Object();
 
-  private static ImageStrategy INSTANCE;
+  //https://stackoverflow.com/a/7855774/4786733
+  private static volatile ImageStrategy INSTANCE;
 
   /**
    * Gets the singleton instance of the defualt {@link ImageStrategy} prefered by jocument.
