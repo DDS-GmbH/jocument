@@ -52,11 +52,11 @@ class WordGenerator {
 
   private void transform(IBodyElement element, List<IBodyElement> remaining) {
     logger.debug("Trying to transform element {}", element);
-    if (isLoopStart(element)) {
-      unrollLoop((XWPFParagraph) element, remaining);
-    } else if (isCustomPlaceholder(element)) {
+    if (isCustomPlaceholder(element)) {
       resolver.resolve(WordUtilities.extractPlaceholderName((XWPFParagraph) element))
           .ifPresent(placeholderData -> placeholderData.transform(element, options));
+    } else if (isLoopStart(element)) {
+      unrollLoop((XWPFParagraph) element, remaining);
     } else if (element instanceof XWPFParagraph xwpfParagraph) {
       transform(xwpfParagraph);
     } else if (element instanceof XWPFTable xwpfTable) {
