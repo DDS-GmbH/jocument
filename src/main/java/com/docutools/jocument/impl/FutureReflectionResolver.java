@@ -37,31 +37,41 @@ public class FutureReflectionResolver extends ReflectionResolver {
   public Optional<PlaceholderData> doResolve(String placeholderName, Locale locale) {
     try {
       if (customPlaceholderRegistry.governs(placeholderName, bean)) {
+        logger.info("Placeholder {} handled by custom registry", placeholderName);
         return customPlaceholderRegistry.resolve(placeholderName, bean);
       }
       var property = getBeanProperty(placeholderName);
       if (property == null) {
+        logger.debug("Placeholder {} could not be translated into a property", placeholderName);
         return Optional.empty();
       }
       if (property instanceof Future<?>) {
+        logger.debug("Placeholder {} property is a future, getting it", placeholderName);
         property = ((Future<?>) property).get();
+        logger.debug("Placeholder {} property future retrieved", placeholderName);
       }
       var simplePlaceholder = resolveSimplePlaceholder(property, placeholderName, locale);
       if (simplePlaceholder.isPresent()) {
+        logger.debug("Placeholder {} resolved to simple placeholder", placeholderName);
         return simplePlaceholder;
       } else {
         if (property instanceof Collection<?> collection) {
+          logger.debug("Placeholder {} resolved to collection", placeholderName);
           List<PlaceholderResolver> list = collection.stream()
               .map(object -> new FutureReflectionResolver(object, customPlaceholderRegistry))
               .collect(Collectors.toList());
           return Optional.of(new IterablePlaceholderData(list, list.size()));
         }
         if (bean.equals(property)) {
+          logger.debug("Placeholder {} resolved to the parent object", placeholderName);
           return Optional.of(new IterablePlaceholderData(List.of(new FutureReflectionResolver(bean, customPlaceholderRegistry)), 1));
         } else {
           var value = getBeanProperty(placeholderName);
+          logger.debug("Resolved placeholder {} to the bean property {}", placeholderName, value);
           if (value instanceof Future<?>) {
+            logger.debug("Placeholder {} property is a future, getting it", placeholderName);
             value = ((Future<?>) value).get();
+            logger.debug("Placeholder {} property future retrieved", placeholderName);
           }
           return Optional.of(new IterablePlaceholderData(List.of(new FutureReflectionResolver(value, customPlaceholderRegistry)), 1));
         }
