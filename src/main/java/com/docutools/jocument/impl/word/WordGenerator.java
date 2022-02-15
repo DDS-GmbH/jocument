@@ -61,8 +61,9 @@ class WordGenerator {
       transform(xwpfParagraph);
     } else if (element instanceof XWPFTable xwpfTable) {
       transform(xwpfTable);
+    } else {
+      logger.info("Failed to transform element {}", element);
     }
-    logger.info("Failed to transform element {}", element);
   }
 
   private void transform(XWPFTable table) {

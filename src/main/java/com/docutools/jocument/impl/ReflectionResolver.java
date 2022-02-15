@@ -126,8 +126,9 @@ public class ReflectionResolver extends PlaceholderResolver {
 
   @Override
   public Optional<PlaceholderData> resolve(String placeholderName, Locale locale) {
-    logger.debug("Trying to resolve placeholder {}", placeholderName);
+    logger.info("Trying to resolve placeholder {}", placeholderName);
     placeholderName = placeholderMapper.map(placeholderName);
+    logger.debug("Mapped to {}", placeholderName);
     Optional<PlaceholderData> result = Optional.empty();
     for (String property : placeholderName.split("\\.")) {
       result = result.isEmpty()
@@ -151,26 +152,32 @@ public class ReflectionResolver extends PlaceholderResolver {
   public Optional<PlaceholderData> doResolve(String placeholderName, Locale locale) {
     try {
       if (customPlaceholderRegistry.governs(placeholderName, bean)) {
+        logger.info("Placeholder {} handled by custom registry", placeholderName);
         return customPlaceholderRegistry.resolve(placeholderName, bean);
       }
       var property = getBeanProperty(placeholderName);
       if (property == null) {
+        logger.debug("Placeholder {} could not be translated into a property", placeholderName);
         return Optional.empty();
       }
       var simplePlaceholder = resolveSimplePlaceholder(property, placeholderName, locale);
       if (simplePlaceholder.isPresent()) {
+        logger.debug("Placeholder {} resolved to simple placeholder", placeholderName);
         return simplePlaceholder;
       } else {
         if (property instanceof Collection<?> collection) {
+          logger.debug("Placeholder {} resolved to collection", placeholderName);
           List<PlaceholderResolver> list = collection.stream()
               .map(object -> new ReflectionResolver(object, customPlaceholderRegistry))
               .collect(Collectors.toList());
           return Optional.of(new IterablePlaceholderData(list, list.size()));
         }
         if (bean.equals(property)) {
+          logger.debug("Placeholder {} resolved to the parent object", placeholderName);
           return Optional.of(new IterablePlaceholderData(List.of(new ReflectionResolver(bean, customPlaceholderRegistry)), 1));
         } else {
           var value = getBeanProperty(placeholderName);
+          logger.debug("Resolved placeholder {} to the bean property {}", placeholderName, value);
           return Optional.of(new IterablePlaceholderData(List.of(new ReflectionResolver(value, customPlaceholderRegistry)), 1));
         }
       }
