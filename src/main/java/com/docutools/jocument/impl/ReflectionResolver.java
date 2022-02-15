@@ -208,7 +208,7 @@ public class ReflectionResolver extends PlaceholderResolver {
       return bean;
     } else if (bean.getClass().isRecord()) {
       var accessor = Arrays.stream(bean.getClass().getRecordComponents())
-          .filter(recordComponent -> recordComponent.getName().equals(placeholderName))
+          .filter(recordComponent -> recordComponent.getName().toLowerCase(Locale.ROOT).equals(placeholderName.toLowerCase(Locale.ROOT)))
           .map(RecordComponent::getAccessor)
           .findFirst()
           .orElseThrow(() -> new NoSuchMethodException("Record %s does not have field %s".formatted(bean.getClass().toString(), placeholderName)));
