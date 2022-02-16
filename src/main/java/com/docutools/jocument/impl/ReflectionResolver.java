@@ -127,7 +127,12 @@ public class ReflectionResolver extends PlaceholderResolver {
   @Override
   public Optional<PlaceholderData> resolve(String placeholderName, Locale locale) {
     logger.debug("Trying to resolve placeholder {}", placeholderName);
-    placeholderName = placeholderMapper.map(placeholderName);
+    return resolveAccessor(placeholderName, locale)
+            .or(() -> placeholderMapper.map(placeholderName)
+                    .flatMap(mappedName -> resolveAccessor(mappedName, locale)));
+  }
+
+  private Optional<PlaceholderData> resolveAccessor(String placeholderName, Locale locale) {
     Optional<PlaceholderData> result = Optional.empty();
     for (String property : placeholderName.split("\\.")) {
       result = result.isEmpty()

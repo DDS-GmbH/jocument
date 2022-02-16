@@ -1,5 +1,7 @@
 package com.docutools.jocument;
 
+import java.util.Optional;
+
 public interface PlaceholderMapper {
-  String map(String placeholder);
+  Optional<String> map(String placeholder);
 }
