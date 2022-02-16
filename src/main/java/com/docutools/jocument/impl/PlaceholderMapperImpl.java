@@ -6,6 +6,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -20,11 +21,11 @@ public class PlaceholderMapperImpl implements PlaceholderMapper {
   }
 
   @Override
-  public String map(String placeholder) {
+  public Optional<String> map(String placeholder) {
     if (placeholderMappings == null) {
       setup();
     }
-    return placeholderMappings.getOrDefault(placeholder, placeholder);
+    return Optional.ofNullable(placeholderMappings.get(placeholder));
   }
 
   private static void setup() {
