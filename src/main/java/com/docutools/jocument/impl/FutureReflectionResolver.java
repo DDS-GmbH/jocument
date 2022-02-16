@@ -2,7 +2,6 @@ package com.docutools.jocument.impl;
 
 import com.docutools.jocument.CustomPlaceholderRegistry;
 import com.docutools.jocument.PlaceholderData;
-import com.docutools.jocument.PlaceholderMapper;
 import com.docutools.jocument.PlaceholderResolver;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
@@ -11,6 +10,8 @@ import java.util.Locale;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -24,13 +25,21 @@ import org.apache.logging.log4j.Logger;
  */
 public class FutureReflectionResolver extends ReflectionResolver {
   private static final Logger logger = LogManager.getLogger();
+  private final long maximumWaitTime;
 
   public FutureReflectionResolver(Object value) {
     this(value, new CustomPlaceholderRegistryImpl()); //NoOp CustomPlaceholderRegistry
   }
 
   public FutureReflectionResolver(Object value, CustomPlaceholderRegistry customPlaceholderRegistry) {
+    this(value, customPlaceholderRegistry, Long.MAX_VALUE);
+  }
+
+  public FutureReflectionResolver(Object value,
+                                  CustomPlaceholderRegistry customPlaceholderRegistry,
+                                  long maximumWaitTimeSeconds) {
     super(value, customPlaceholderRegistry);
+    this.maximumWaitTime = maximumWaitTimeSeconds;
   }
 
   @Override
@@ -47,7 +56,7 @@ public class FutureReflectionResolver extends ReflectionResolver {
       }
       if (property instanceof Future<?>) {
         logger.debug("Placeholder {} property is a future, getting it", placeholderName);
-        property = ((Future<?>) property).get();
+        property = ((Future<?>) property).get(maximumWaitTime, TimeUnit.SECONDS);
         logger.debug("Placeholder {} property future retrieved", placeholderName);
       }
       var simplePlaceholder = resolveSimplePlaceholder(property, placeholderName, locale);
@@ -58,22 +67,23 @@ public class FutureReflectionResolver extends ReflectionResolver {
         if (property instanceof Collection<?> collection) {
           logger.debug("Placeholder {} resolved to collection", placeholderName);
           List<PlaceholderResolver> list = collection.stream()
-              .map(object -> new FutureReflectionResolver(object, customPlaceholderRegistry))
+              .map(object -> new FutureReflectionResolver(object, customPlaceholderRegistry, maximumWaitTime))
               .collect(Collectors.toList());
           return Optional.of(new IterablePlaceholderData(list, list.size()));
         }
         if (bean.equals(property)) {
           logger.debug("Placeholder {} resolved to the parent object", placeholderName);
-          return Optional.of(new IterablePlaceholderData(List.of(new FutureReflectionResolver(bean, customPlaceholderRegistry)), 1));
+          return Optional.of(new IterablePlaceholderData(List.of(new FutureReflectionResolver(bean, customPlaceholderRegistry, maximumWaitTime)), 1));
         } else {
           var value = getBeanProperty(placeholderName);
           logger.debug("Resolved placeholder {} to the bean property {}", placeholderName, value);
           if (value instanceof Future<?>) {
             logger.debug("Placeholder {} property is a future, getting it", placeholderName);
-            value = ((Future<?>) value).get();
+            value = ((Future<?>) value).get(maximumWaitTime, TimeUnit.SECONDS);
             logger.debug("Placeholder {} property future retrieved", placeholderName);
           }
-          return Optional.of(new IterablePlaceholderData(List.of(new FutureReflectionResolver(value, customPlaceholderRegistry)), 1));
+          return Optional.of(
+              new IterablePlaceholderData(List.of(new FutureReflectionResolver(value, customPlaceholderRegistry, maximumWaitTime)), 1));
         }
       }
     } catch (NoSuchMethodException | IllegalArgumentException e) {
@@ -91,6 +101,9 @@ public class FutureReflectionResolver extends ReflectionResolver {
       return Optional.empty();
     } catch (ExecutionException e) {
       logger.warn("Execution exception when waiting for Future placeholder %s".formatted(placeholderName), e);
+      return Optional.empty();
+    } catch (TimeoutException e) {
+      logger.warn("Timeout exception when waiting for Future placeholder {}", placeholderName, e);
       return Optional.empty();
     }
   }
