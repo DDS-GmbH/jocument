@@ -4,6 +4,7 @@ import com.docutools.jocument.PlaceholderData;
 import com.docutools.jocument.PlaceholderResolver;
 import com.docutools.jocument.PlaceholderType;
 import com.docutools.jocument.impl.ParsingUtils;
+import com.docutools.jocument.impl.ScalarPlaceholderData;
 import com.docutools.jocument.impl.excel.interfaces.ExcelWriter;
 import com.docutools.jocument.impl.excel.util.ExcelUtils;
 import com.google.common.collect.Lists;
@@ -73,7 +74,8 @@ public class ExcelGenerator {
           if (ExcelUtils.isSimpleCell(cell)) {
             excelWriter.addCell(cell);
           } else {
-            var newCellText = resolver.resolve(ExcelUtils.getPlaceholder(cell)).orElseThrow();
+            var newCellText = resolver.resolve(ExcelUtils.getPlaceholder(cell))
+                    .orElse(new ScalarPlaceholderData("-"));
             excelWriter.addCell(cell, newCellText.toString());
           }
         }
