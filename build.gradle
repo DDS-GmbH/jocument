@@ -119,6 +119,6 @@ task jacocoAutomatedTestReport(type: JacocoReport) {
     sourceSets sourceSets.main
     executionData automatedTests
     reports {
-        xml.enabled true
+        xml.getRequired().set(true)
     }
 }
