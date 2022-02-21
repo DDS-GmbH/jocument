@@ -1,5 +1,6 @@
 package com.docutools.jocument;
 
+import java.util.Optional;
 import org.apache.poi.util.LocaleUtil;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -15,7 +16,7 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 
 @DisplayName("Template Loading")
-public class TemplateLoading {
+class TemplateLoadingTests {
 
     @Test
     @DisplayName("Load word templates from classpath.")
@@ -44,7 +45,7 @@ public class TemplateLoading {
         // Arrange
         Path path = null;
         try {
-            path = Files.createTempFile("jocument", ".docx");
+            path = Files.createTempFile("jocument-", ".docx");
             try(var in = getClass().getResourceAsStream("/templates/word/UserProfileTemplate.docx")) {
                 Files.copy(in, path, StandardCopyOption.REPLACE_EXISTING);
             }
@@ -85,17 +86,21 @@ public class TemplateLoading {
         }
 
         // Act
-        Template.from(data, MimeType.DOCX)
-                .orElseThrow();
+        Optional<Template> template = Template.from(data, MimeType.DOCX);
+
+        // Assert
+        assertThat(template.isPresent(), is(true));
     }
 
     @Test
     @DisplayName("Load Template from InputStream")
     void shouldLoadTemplateFromInputStream() throws IOException {
-        // Arrange + Act
+        // Arrange
         try(var in = getClass().getResourceAsStream("/templates/word/UserProfileTemplate.docx")) {
-            Template.from(in, MimeType.DOCX)
-                    .orElseThrow();
+            // Act
+            Optional<Template> template = Template.from(in, MimeType.DOCX);
+            // Assert
+            assertThat(template.isPresent(), is(true));
         }
     }
 }
