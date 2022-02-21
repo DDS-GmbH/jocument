@@ -45,7 +45,7 @@ public final class DefaultImageReference extends ImageReference {
       throw new ImageReferenceClosedException("Image was already closed.");
     }
 
-    var filePath = Files.createTempFile("jocument", "jpg");
+    var filePath = Files.createTempFile("jocument-", ".jpg");
     log.trace("Saving image {} to '{}'...", id, filePath);
 
     ImageIO.write(image, "JPEG", filePath.toFile());
