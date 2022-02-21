@@ -29,7 +29,6 @@ import java.util.Currency;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import org.apache.commons.beanutils.PropertyUtilsBean;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -173,8 +172,9 @@ public class ReflectionResolver extends PlaceholderResolver {
         if (property instanceof Collection<?> collection) {
           logger.debug("Placeholder {} resolved to collection", placeholderName);
           List<PlaceholderResolver> list = collection.stream()
-              .map(object -> new ReflectionResolver(object, customPlaceholderRegistry))
-              .collect(Collectors.toList());
+              // cast is needed for `.toList()`
+              .map(object -> (PlaceholderResolver) new ReflectionResolver(object, customPlaceholderRegistry))
+              .toList();
           return Optional.of(new IterablePlaceholderData(list, list.size()));
         }
         if (bean.equals(property)) {
@@ -187,7 +187,7 @@ public class ReflectionResolver extends PlaceholderResolver {
         }
       }
     } catch (NoSuchMethodException | IllegalArgumentException e) {
-      logger.debug("Did not find placeholder {}", placeholderName);
+      logger.debug("Did not find placeholder {}, {}", placeholderName, e.getMessage());
       return Optional.empty();
     } catch (IllegalAccessException | InvocationTargetException e) {
       logger.error("Could not resolve placeholder %s".formatted(placeholderName), e);
@@ -216,11 +216,12 @@ public class ReflectionResolver extends PlaceholderResolver {
   }
 
   protected Object getBeanProperty(String placeholderName) throws InvocationTargetException, IllegalAccessException, NoSuchMethodException {
+    var ignoreCasePlaceholder = placeholderName.toLowerCase();
     if (SELF_REFERENCE.equals(placeholderName)) {
       return bean;
     } else if (bean.getClass().isRecord()) {
       var accessor = Arrays.stream(bean.getClass().getRecordComponents())
-          .filter(recordComponent -> recordComponent.getName().equals(placeholderName))
+          .filter(recordComponent -> recordComponent.getName().toLowerCase().equals(ignoreCasePlaceholder))
           .map(RecordComponent::getAccessor)
           .findFirst()
           .orElseThrow(() -> new NoSuchMethodException("Record %s does not have field %s".formatted(bean.getClass().toString(), placeholderName)));
