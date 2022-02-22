@@ -43,4 +43,6 @@ public interface ExcelWriter {
   void addCell(Cell templateCell, String newCellText);
 
   void addCell(Cell cell);
+
+  void recalculateFormulas();
 }
