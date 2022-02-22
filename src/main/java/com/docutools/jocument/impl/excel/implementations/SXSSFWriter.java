@@ -12,6 +12,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.CreationHelper;
+import org.apache.poi.ss.usermodel.Hyperlink;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.xssf.streaming.SXSSFSheet;
@@ -43,6 +45,7 @@ public class SXSSFWriter implements ExcelWriter {
   private Sheet currentSheet;
   private Row currentRow;
   private int rowOffset = 0;
+  private final CreationHelper creationHelper;
   /**
    * Maps the {@link CellStyle} objects of the old workbook to the new ones.
    */
@@ -56,6 +59,7 @@ public class SXSSFWriter implements ExcelWriter {
   public SXSSFWriter(Path path) {
     workbook = new SXSSFWorkbook();
     workbook.setForceFormulaRecalculation(true);
+    this.creationHelper = workbook.getCreationHelper();
     this.path = path;
   }
 
@@ -153,8 +157,6 @@ public class SXSSFWriter implements ExcelWriter {
     newCell.setHyperlink(cell.getHyperlink());
     currentSheet.setColumnWidth(cell.getColumnIndex(), cell.getSheet().getColumnWidth(cell.getColumnIndex()));
     switch (cell.getCellType()) {
-      case _NONE -> {
-      }
       case NUMERIC -> newCell.setCellValue(cell.getNumericCellValue());
       case STRING -> newCell.setCellValue(cell.getStringCellValue());
       case FORMULA -> newCell.setCellFormula(cell.getCellFormula());
@@ -163,6 +165,13 @@ public class SXSSFWriter implements ExcelWriter {
       case ERROR -> newCell.setCellErrorValue(cell.getErrorCellValue());
       default -> {
       }
+    }
+    if (cell.getHyperlink() != null) {
+      Hyperlink hyperlink = cell.getHyperlink();
+      Hyperlink newHyperlink = creationHelper.createHyperlink(hyperlink.getType());
+      newHyperlink.setAddress(hyperlink.getAddress());
+      newHyperlink.setLabel(hyperlink.getLabel());
+      newCell.setHyperlink(newHyperlink);
     }
   }
 
