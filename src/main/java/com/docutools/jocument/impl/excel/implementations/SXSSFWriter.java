@@ -13,6 +13,7 @@ import org.apache.logging.log4j.Logger;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.CreationHelper;
+import org.apache.poi.ss.usermodel.FormulaEvaluator;
 import org.apache.poi.ss.usermodel.Hyperlink;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -25,14 +26,11 @@ import org.apache.poi.xssf.usermodel.XSSFPictureData;
 import org.apache.poi.xssf.usermodel.XSSFShape;
 
 /**
- * This is a streamed implementation of the {@link com.docutools.jocument.impl.excel.interfaces.ExcelWriter} interface.
- * The streaming is done so memory can be saved.
- * For now, the amount of rows kept in memory is set to the default, 100.
- * SXSSFWriter works by keeping a reference to the current sheet and row being edited, and copying/cloning required
- * values on the creation of new objects.
- * This is why to the `new...`/`add...` methods the original references of the template should be passed.
- * If one would like to use objects created somewhere else directly, a new implementation considering this would have
- * to be created.
+ * This is a streamed implementation of the {@link com.docutools.jocument.impl.excel.interfaces.ExcelWriter} interface. The streaming is done so
+ * memory can be saved. For now, the amount of rows kept in memory is set to the default, 100. SXSSFWriter works by keeping a reference to the current
+ * sheet and row being edited, and copying/cloning required values on the creation of new objects. This is why to the `new...`/`add...` methods the
+ * original references of the template should be passed. If one would like to use objects created somewhere else directly, a new implementation
+ * considering this would have to be created.
  *
  * @author Anton Oellerer
  * @since 2020-04-02
@@ -42,14 +40,15 @@ public class SXSSFWriter implements ExcelWriter {
 
   private final Path path;
   private final SXSSFWorkbook workbook;
-  private Sheet currentSheet;
-  private Row currentRow;
-  private int rowOffset = 0;
   private final CreationHelper creationHelper;
+  private final FormulaEvaluator formulaEvaluator;
   /**
    * Maps the {@link CellStyle} objects of the old workbook to the new ones.
    */
   private final Map<CellStyle, CellStyle> styleStyleMapping = new HashMap<>();
+  private Sheet currentSheet;
+  private Row currentRow;
+  private int rowOffset = 0;
 
   /**
    * Creates a new SXSSFWriter.
@@ -58,44 +57,9 @@ public class SXSSFWriter implements ExcelWriter {
    */
   public SXSSFWriter(Path path) {
     workbook = new SXSSFWorkbook();
-    workbook.setForceFormulaRecalculation(true);
     this.creationHelper = workbook.getCreationHelper();
+    this.formulaEvaluator = creationHelper.createFormulaEvaluator();
     this.path = path;
-  }
-
-  @Override
-  public void newSheet(Sheet sheet) {
-    logger.info("Creating new sheet of {}", sheet.getSheetName());
-    currentSheet = workbook.createSheet(sheet.getSheetName());
-    currentSheet.setActiveCell(sheet.getActiveCell());
-    currentSheet.setAutobreaks(sheet.getAutobreaks());
-    Arrays.stream(sheet.getColumnBreaks()).forEach(column -> currentSheet.setColumnBreak(column));
-    currentSheet.setDefaultColumnWidth(sheet.getDefaultColumnWidth());
-    currentSheet.setDefaultRowHeight(sheet.getDefaultRowHeight());
-    currentSheet.setDisplayFormulas(sheet.isDisplayFormulas());
-    currentSheet.setDisplayGridlines(sheet.isDisplayGridlines());
-    currentSheet.setDisplayGuts(sheet.getDisplayGuts());
-    currentSheet.setDisplayRowColHeadings(sheet.isDisplayRowColHeadings());
-    currentSheet.setDisplayZeros(sheet.isDisplayZeros());
-    currentSheet.setFitToPage(sheet.getFitToPage());
-    currentSheet.setHorizontallyCenter(sheet.getHorizontallyCenter());
-    currentSheet.setPrintGridlines(sheet.isPrintGridlines());
-    currentSheet.setPrintRowAndColumnHeadings(sheet.isPrintRowAndColumnHeadings());
-    currentSheet.setRepeatingColumns(sheet.getRepeatingColumns());
-    currentSheet.setRepeatingRows(sheet.getRepeatingRows());
-    currentSheet.setRightToLeft(sheet.isRightToLeft());
-    Arrays.stream(sheet.getRowBreaks()).forEach(row -> currentSheet.setRowBreak(row));
-    currentSheet.setRowSumsBelow(sheet.getRowSumsBelow());
-    currentSheet.setRowSumsRight(sheet.getRowSumsRight());
-    currentSheet.setSelected(sheet.isSelected());
-    currentSheet.setVerticallyCenter(sheet.getVerticallyCenter());
-
-    var drawing = (XSSFDrawing)sheet.createDrawingPatriarch();
-    for (var shape : drawing.getShapes()) {
-      if (shape instanceof XSSFPicture) {
-        transferPicture(shape, (SXSSFSheet) currentSheet);
-      }
-    }
   }
 
   private static void transferPicture(XSSFShape shape, SXSSFSheet newSheet) {
@@ -134,6 +98,41 @@ public class SXSSFWriter implements ExcelWriter {
 
     var newDrawing = newSheet.createDrawingPatriarch();
     newDrawing.createPicture(newAnchor, newPictureIndex);
+  }
+
+  @Override
+  public void newSheet(Sheet sheet) {
+    logger.info("Creating new sheet of {}", sheet.getSheetName());
+    currentSheet = workbook.createSheet(sheet.getSheetName());
+    currentSheet.setActiveCell(sheet.getActiveCell());
+    currentSheet.setAutobreaks(sheet.getAutobreaks());
+    Arrays.stream(sheet.getColumnBreaks()).forEach(column -> currentSheet.setColumnBreak(column));
+    currentSheet.setDefaultColumnWidth(sheet.getDefaultColumnWidth());
+    currentSheet.setDefaultRowHeight(sheet.getDefaultRowHeight());
+    currentSheet.setDisplayFormulas(sheet.isDisplayFormulas());
+    currentSheet.setDisplayGridlines(sheet.isDisplayGridlines());
+    currentSheet.setDisplayGuts(sheet.getDisplayGuts());
+    currentSheet.setDisplayRowColHeadings(sheet.isDisplayRowColHeadings());
+    currentSheet.setDisplayZeros(sheet.isDisplayZeros());
+    currentSheet.setFitToPage(sheet.getFitToPage());
+    currentSheet.setHorizontallyCenter(sheet.getHorizontallyCenter());
+    currentSheet.setPrintGridlines(sheet.isPrintGridlines());
+    currentSheet.setPrintRowAndColumnHeadings(sheet.isPrintRowAndColumnHeadings());
+    currentSheet.setRepeatingColumns(sheet.getRepeatingColumns());
+    currentSheet.setRepeatingRows(sheet.getRepeatingRows());
+    currentSheet.setRightToLeft(sheet.isRightToLeft());
+    Arrays.stream(sheet.getRowBreaks()).forEach(row -> currentSheet.setRowBreak(row));
+    currentSheet.setRowSumsBelow(sheet.getRowSumsBelow());
+    currentSheet.setRowSumsRight(sheet.getRowSumsRight());
+    currentSheet.setSelected(sheet.isSelected());
+    currentSheet.setVerticallyCenter(sheet.getVerticallyCenter());
+
+    var drawing = (XSSFDrawing) sheet.createDrawingPatriarch();
+    for (var shape : drawing.getShapes()) {
+      if (shape instanceof XSSFPicture) {
+        transferPicture(shape, (SXSSFSheet) currentSheet);
+      }
+    }
   }
 
   @Override
@@ -198,6 +197,11 @@ public class SXSSFWriter implements ExcelWriter {
   @Override
   public void addRowOffset(int size) {
     rowOffset += size;
+  }
+
+  @Override
+  public void recalculateFormulas() {
+    formulaEvaluator.evaluateAll();
   }
 
   private CellStyle copyCellStyle(CellStyle cellStyle) {

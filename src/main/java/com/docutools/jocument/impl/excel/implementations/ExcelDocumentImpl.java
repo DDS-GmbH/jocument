@@ -61,6 +61,7 @@ public class ExcelDocumentImpl extends DocumentImpl {
         excelWriter.newSheet(sheet);
         ExcelGenerator.apply(resolver, sheet.rowIterator(), excelWriter);
       }
+      excelWriter.recalculateFormulas();
       excelWriter.complete();
     }
     return file;
