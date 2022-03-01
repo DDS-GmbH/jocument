@@ -6,6 +6,7 @@ import com.docutools.jocument.PlaceholderMapper;
 import com.docutools.jocument.PlaceholderResolver;
 import com.docutools.jocument.annotations.Format;
 import com.docutools.jocument.annotations.Image;
+import com.docutools.jocument.annotations.MatchPlaceholder;
 import com.docutools.jocument.annotations.Money;
 import com.docutools.jocument.annotations.Numeric;
 import com.docutools.jocument.annotations.Percentage;
@@ -127,9 +128,71 @@ public class ReflectionResolver extends PlaceholderResolver {
   @Override
   public Optional<PlaceholderData> resolve(String placeholderName, Locale locale) {
     logger.debug("Trying to resolve placeholder {}", placeholderName);
-    return resolveAccessor(placeholderName, locale)
+    return tryMatchPattern(placeholderName, locale)
+        .or(() ->resolveAccessor(placeholderName, locale)
             .or(() -> placeholderMapper.map(placeholderName)
-                    .flatMap(mappedName -> resolveAccessor(mappedName, locale)));
+                .flatMap(mappedName -> resolveAccessor(mappedName, locale))));
+  }
+
+  private Optional<PlaceholderData> tryMatchPattern(String placeholderName, Locale locale) {
+    var beanClass = bean.getClass();
+    return Arrays.stream(beanClass.getMethods())
+        .filter(method -> Optional.ofNullable(method.getAnnotation(MatchPlaceholder.class))
+            .map(MatchPlaceholder::pattern)
+            .filter(placeholderName::matches)
+            .isPresent())
+        .findFirst()
+        .flatMap(method -> {
+          var returnType = method.getReturnType();
+          if(!returnType.equals(Optional.class)) {
+            logger.warn("@MatchPlaceholder-annotated method {} must return a java.util.Optional but returns {}.", method, returnType);
+            return Optional.empty();
+          }
+          try {
+            if (method.getParameterCount() == 2) {
+              var parameterTypes = method.getParameterTypes();
+              if (!parameterTypes[0].equals(String.class)) {
+                logger.warn("@MatchPlaceholder-annotated method {} must take a String (placeholderName) as first parameter, but takes {}.",
+                    method, parameterTypes[0]);
+                return Optional.empty();
+              }
+              if (!parameterTypes[1].equals(Locale.class)) {
+                logger.warn("@MatchPlaceholder-annotated method {} can only take a java.util.Locale as second parameter, but takes {}.",
+                    method, parameterTypes[1]);
+                return Optional.empty();
+              }
+              var returnValue = method.invoke(bean, placeholderName, locale);
+              if (returnValue instanceof Optional<?> optionalReturnValue) {
+                return optionalReturnValue.map(Object::toString);
+              } else {
+                logger.warn("@MatchPlaceholder-annotated method {} must take a String (placeholderName) as first parameter, but takes {}.",
+                    method, parameterTypes[0]);
+                return Optional.empty();
+              }
+            } else if (method.getParameterCount() == 1) {
+              var parameterTypes = method.getParameterTypes();
+              if (!parameterTypes[0].equals(String.class)) {
+                logger.warn("@MatchPlaceholder-annotated method {} us not a java.util.Optional!", method);
+                return Optional.empty();
+              }
+              var returnValue = method.invoke(bean, placeholderName);
+              if (returnValue instanceof Optional<?> optionalReturnValue) {
+                return optionalReturnValue.map(Object::toString);
+              } else {
+                logger.warn("@MatchPlaceholder-annotated method {} us not a java.util.Optional!", method);
+                return Optional.empty();
+              }
+            } else {
+              logger.error("@MatchPlaceholder-annotated method {} must take exactly one parameter (String) or two (String, Locale). It takes {}.",
+                  method, method.getParameterCount());
+              return Optional.empty();
+            }
+          } catch (IllegalAccessException | InvocationTargetException e) {
+            logger.error("@MatchPlaceholder-annotated method %s threw an exception.".formatted(method), e);
+            return Optional.empty();
+          }
+        })
+        .map(ScalarPlaceholderData::new);
   }
 
   private Optional<PlaceholderData> resolveAccessor(String placeholderName, Locale locale) {

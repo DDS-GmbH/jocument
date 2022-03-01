@@ -25,6 +25,9 @@ public class PlaceholderMapperImpl implements PlaceholderMapper {
     if (placeholderMappings == null) {
       setup();
     }
+    if (placeholderMappings == null) {
+      return Optional.empty();
+    }
     return Optional.ofNullable(placeholderMappings.get(placeholder));
   }
 
