@@ -8,6 +8,7 @@ import static org.hamcrest.Matchers.is;
 import com.docutools.jocument.impl.ReflectionResolver;
 import com.docutools.jocument.sample.model.SampleModelData;
 import com.docutools.jocument.sample.model.Uniform;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -146,4 +147,22 @@ public class ReflectionResolving {
     assertThat(shipCrew, equalTo(5));
     assertThat(visitedPlanets, contains("Mars", "Venus", "Jupiter"));
   }
+
+  @Test
+  @DisplayName("Resolve by Regex")
+  void shouldResolveByRegex() {
+    // Assemble
+    var rawPattern = "dd-MM-yyyy";
+    var pattern = DateTimeFormatter.ofPattern(rawPattern);
+    resolver = new ReflectionResolver(SampleModelData.ENTERPRISE);
+
+    // Act
+    var  builtDate = resolver.resolve("built-fmt-" + rawPattern)
+        .map(Object::toString)
+            .orElseThrow();
+
+    // Assert
+    assertThat(builtDate, equalTo(pattern.format(SampleModelData.ENTERPRISE.built())));
+  }
+
 }
