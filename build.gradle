@@ -24,7 +24,7 @@ repositories {
     }
 }
 
-def apachePOIVersion = '5.2.0'
+def apachePOIVersion = '5.2.1'
 
 dependencies {
     implementation('commons-beanutils:commons-beanutils:1.9.4')
