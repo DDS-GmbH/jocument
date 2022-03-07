@@ -11,7 +11,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 public abstract class DocumentImpl extends Thread implements Document {
-  public static final String GERMAN_SPECIAL_CHARACTERS = "ÄäÖöÜüß";
+  public static final String GERMAN_SPECIAL_CHARACTERS = "ÄäÖöÜüß@";
   public static final Pattern TAG_PATTERN = Pattern.compile("\\{\\{([A-Za-z0-9" + GERMAN_SPECIAL_CHARACTERS + "\\-/#.]+)}}");
   public static final Pattern LOOP_END_PATTERN = Pattern.compile("\\{\\{/([A-Za-z0-9" + GERMAN_SPECIAL_CHARACTERS + "\\-/#.]+)}}");
   private static final Logger logger = LogManager.getLogger();

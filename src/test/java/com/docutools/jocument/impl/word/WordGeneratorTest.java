@@ -16,6 +16,7 @@ import com.docutools.jocument.impl.ReflectionResolver;
 import com.docutools.jocument.sample.model.SampleModelData;
 import com.docutools.jocument.sample.placeholders.QuotePlaceholder;
 import com.docutools.poipath.xwpf.XWPFDocumentWrapper;
+import java.awt.Desktop;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.Period;
@@ -253,4 +254,22 @@ class WordGeneratorTest {
         assertThat(documentWrapper.bodyElement(9).asParagraph().text(), equalTo("US Defiant"));
         assertThat(documentWrapper.bodyElement(11).asParagraph().text(), equalTo("And that’s that."));
     }
+
+    @Test
+    @DisplayName("Resolve in scoped mode")
+    void shouldResolveInScopedMode() throws IOException, InterruptedException {
+        // Assemble
+        var template = Template.fromClassPath("/templates/word/ScopedTemplate.docx")
+            .orElseThrow();
+        var resolver = new ReflectionResolver(SampleModelData.ENTERPRISE);
+
+        // Act
+        Document document = template.startGeneration(resolver);
+        document.blockUntilCompletion(60000L); // 1 minute
+
+        // Assert
+        assertThat(document.completed(), is(true));
+        Desktop.getDesktop().open(document.getPath().toFile());
+    }
+
 }

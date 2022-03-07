@@ -44,6 +44,7 @@ import org.apache.logging.log4j.Logger;
  */
 public class ReflectionResolver extends PlaceholderResolver {
   private static final String SELF_REFERENCE = "this";
+  private static final String PARENT_SYMBOL = "@";
 
   private static final Logger logger = LogManager.getLogger();
 
@@ -51,6 +52,7 @@ public class ReflectionResolver extends PlaceholderResolver {
   private final PropertyUtilsBean pub = new PropertyUtilsBean();
   protected final CustomPlaceholderRegistry customPlaceholderRegistry;
   private final PlaceholderMapper placeholderMapper = new PlaceholderMapperImpl();
+  private final PlaceholderResolver parent;
 
 
   public ReflectionResolver(Object value) {
@@ -58,8 +60,13 @@ public class ReflectionResolver extends PlaceholderResolver {
   }
 
   public ReflectionResolver(Object value, CustomPlaceholderRegistry customPlaceholderRegistry) {
+    this(value, customPlaceholderRegistry, null);
+  }
+
+  public ReflectionResolver(Object value, CustomPlaceholderRegistry customPlaceholderRegistry, PlaceholderResolver parent) {
     this.bean = value;
     this.customPlaceholderRegistry = customPlaceholderRegistry;
+    this.parent = parent;
   }
 
   protected static boolean isFieldAnnotatedWith(Class<?> clazz, String fieldName, Class<? extends Annotation> annotation) {
@@ -199,12 +206,17 @@ public class ReflectionResolver extends PlaceholderResolver {
     Optional<PlaceholderData> result = Optional.empty();
     for (String property : placeholderName.split("\\.")) {
       result = result.isEmpty()
-          ? doResolve(property, locale)
+          ? doResolve(property, locale).or(() -> tryResolveInParent(placeholderName, locale))
           : result
           .flatMap(r -> r.stream().findAny())
           .flatMap(r -> r.resolve(property, locale));
     }
     return result;
+  }
+
+  private Optional<PlaceholderData> tryResolveInParent(String placeholderName, Locale locale) {
+    return Optional.ofNullable(parent)
+        .flatMap(parentResolver -> parentResolver.resolve(placeholderName, locale));
   }
 
   /**
@@ -218,6 +230,11 @@ public class ReflectionResolver extends PlaceholderResolver {
    */
   public Optional<PlaceholderData> doResolve(String placeholderName, Locale locale) {
     try {
+      if (PARENT_SYMBOL.equals(placeholderName)) {
+        return parent != null?
+            Optional.of(IterablePlaceholderData.of(parent))
+            : Optional.empty();
+      }
       if (customPlaceholderRegistry.governs(placeholderName, bean)) {
         logger.info("Placeholder {} handled by custom registry", placeholderName);
         return customPlaceholderRegistry.resolve(placeholderName, bean);
@@ -236,17 +253,17 @@ public class ReflectionResolver extends PlaceholderResolver {
           logger.debug("Placeholder {} resolved to collection", placeholderName);
           List<PlaceholderResolver> list = collection.stream()
               // cast is needed for `.toList()`
-              .map(object -> (PlaceholderResolver) new ReflectionResolver(object, customPlaceholderRegistry))
+              .map(object -> (PlaceholderResolver) new ReflectionResolver(object, customPlaceholderRegistry, this))
               .toList();
           return Optional.of(new IterablePlaceholderData(list, list.size()));
         }
         if (bean.equals(property)) {
           logger.debug("Placeholder {} resolved to the parent object", placeholderName);
-          return Optional.of(new IterablePlaceholderData(List.of(new ReflectionResolver(bean, customPlaceholderRegistry)), 1));
+          return Optional.of(new IterablePlaceholderData(List.of(new ReflectionResolver(bean, customPlaceholderRegistry, this)), 1));
         } else {
           var value = getBeanProperty(placeholderName);
           logger.debug("Resolved placeholder {} to the bean property {}", placeholderName, value);
-          return Optional.of(new IterablePlaceholderData(List.of(new ReflectionResolver(value, customPlaceholderRegistry)), 1));
+          return Optional.of(new IterablePlaceholderData(List.of(new ReflectionResolver(value, customPlaceholderRegistry, this)), 1));
         }
       }
     } catch (NoSuchMethodException | IllegalArgumentException e) {
