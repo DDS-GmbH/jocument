@@ -75,7 +75,7 @@ public class ExcelGenerator {
             excelWriter.addCell(cell);
           } else {
             var newCellText = resolver.resolve(ExcelUtils.getPlaceholder(cell))
-                    .orElse(new ScalarPlaceholderData("-"));
+                    .orElse(new ScalarPlaceholderData<>("-"));
             excelWriter.addCell(cell, newCellText.toString());
           }
         }

@@ -110,7 +110,7 @@ public class JsonResolver extends PlaceholderResolver {
       return fromUrlContent(data)
           .map(ImagePlaceholderData::new);
     }
-    return Optional.of(new ScalarPlaceholderData(data));
+    return Optional.of(new ScalarPlaceholderData<>(data));
   }
 
   private boolean isImage(String data) {

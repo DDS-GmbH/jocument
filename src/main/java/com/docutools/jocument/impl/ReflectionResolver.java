@@ -142,10 +142,19 @@ public class ReflectionResolver extends PlaceholderResolver {
   @Override
   public Optional<PlaceholderData> resolve(String placeholderName, Locale locale) {
     logger.debug("Trying to resolve placeholder {}", placeholderName);
-    return tryMatchPattern(placeholderName, locale)
-        .or(() -> resolveAccessor(placeholderName, locale)
-            .or(() -> placeholderMapper.map(placeholderName)
-                .flatMap(mappedName -> resolveAccessor(mappedName, locale))));
+    boolean isCondition = placeholderName.endsWith("?");
+    var strippedPlaceholderName = isCondition? placeholderName.substring(0, placeholderName.length()-1) : placeholderName;
+    var result = tryMatchPattern(strippedPlaceholderName, locale)
+        .or(() -> resolveAccessor(strippedPlaceholderName, locale)
+            .or(() -> placeholderMapper.map(strippedPlaceholderName)
+                .flatMap(mappedName -> resolve(mappedName, locale))));
+    if(isCondition) {
+      if(result.isEmpty())
+        return Optional.of(new IterablePlaceholderData()); // TODO sure?
+      var resultValue = result.get();
+      return Optional.of(resultValue.isTruthy()? new IterablePlaceholderData(this) : new IterablePlaceholderData());
+    }
+    return result;
   }
 
   private Optional<PlaceholderData> tryMatchPattern(String placeholderName, Locale locale) {
@@ -288,9 +297,9 @@ public class ReflectionResolver extends PlaceholderResolver {
   protected Optional<PlaceholderData> resolveSimplePlaceholder(Object property, String placeholderName, Locale locale) {
     if (property instanceof Number number) {
       var numberFormat = findNumberFormat(placeholderName, locale);
-      return Optional.of(new ScalarPlaceholderData(numberFormat.format(number)));
+      return Optional.of(new ScalarPlaceholderData<>(number, numberFormat::format));
     } else if (property instanceof Enum || property instanceof String || ReflectionUtils.isWrapperType(property.getClass())) {
-      return Optional.of(new ScalarPlaceholderData(property.toString()));
+      return Optional.of(new ScalarPlaceholderData<>(property));
     } else if (property instanceof Temporal temporal) {
       return formatTemporal(placeholderName, temporal, locale);
     } else if (property instanceof Path path && isFieldAnnotatedWith(bean.getClass(), placeholderName, Image.class)) {
@@ -336,7 +345,7 @@ public class ReflectionResolver extends PlaceholderResolver {
       }
       formatter = formatter.map(dateTimeFormatter -> dateTimeFormatter.withLocale(locale));
     }
-    return formatter.map(dateTimeFormatter -> new ScalarPlaceholderData(dateTimeFormatter.format(time)));
+    return formatter.map(dateTimeFormatter -> new ScalarPlaceholderData<>(time, dateTimeFormatter::format));
   }
 
   protected NumberFormat findNumberFormat(String fieldName, Locale locale) {

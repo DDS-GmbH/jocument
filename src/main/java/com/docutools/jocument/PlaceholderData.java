@@ -55,4 +55,21 @@ public interface PlaceholderData {
     throw new UnsupportedOperationException();
   }
 
+  /**
+   * Evaluates if this {@link PlaceholderData} is a truphy value. Non-truphy values are defined as:
+   *
+   * <ul>
+   *   <li>Empty string</li>
+   *   <li>Empty collection or array</li>
+   *   <li>{@code null}</li>
+   *   <li>0</li>
+   *   <li>{@code false}</li>
+   * </ul>
+   *
+   * @return {@code true} if truphy
+   */
+  default boolean isTruthy() {
+    return count() > 0;
+  }
+
 }
