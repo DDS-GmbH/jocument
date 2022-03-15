@@ -12,9 +12,6 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
-import java.util.Spliterator;
-import java.util.Spliterators;
-import java.util.stream.StreamSupport;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.poi.ss.usermodel.Cell;
@@ -158,9 +155,9 @@ public class ExcelGenerator {
       var cell = row.getCell(row.getFirstCellNum());
       if (cell.getCellType() == CellType.STRING) {
         return resolver.resolve(
-            ParsingUtils.stripBrackets(
-                cell.getStringCellValue()
-            )).map(PlaceholderData::getType)
+                ParsingUtils.stripBrackets(
+                    cell.getStringCellValue()
+                )).map(PlaceholderData::getType)
             .map(type -> type == PlaceholderType.SET)
             .orElse(false);
       }

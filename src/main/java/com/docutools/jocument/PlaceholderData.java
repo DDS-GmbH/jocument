@@ -56,7 +56,7 @@ public interface PlaceholderData {
   }
 
   /**
-   * Evaluates if this {@link PlaceholderData} is a truphy value. Non-truphy values are defined as:
+   * Evaluates if this {@link PlaceholderData} is a truthy value. Non-truthy values are defined as:
    *
    * <ul>
    *   <li>Empty string</li>
@@ -66,7 +66,7 @@ public interface PlaceholderData {
    *   <li>{@code false}</li>
    * </ul>
    *
-   * @return {@code true} if truphy
+   * @return {@code true} if truthy
    */
   default boolean isTruthy() {
     return count() > 0;
