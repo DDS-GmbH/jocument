@@ -1,5 +1,7 @@
 package com.docutools.jocument.impl;
 
+import java.util.List;
+
 public class ParsingUtils {
 
   private ParsingUtils() {
@@ -18,8 +20,7 @@ public class ParsingUtils {
     return value.substring(2, value.length() - 2);
   }
 
-  public static String getMatchingLoopEnd(String placeholder) {
-    return String.format("{{/%s}}", placeholder);
+  public static List<String> getMatchingLoopEnds(String placeholder) {
+    return List.of("{{/%s}}".formatted(placeholder), "{{end-%s}}".formatted(placeholder));
   }
-
 }
