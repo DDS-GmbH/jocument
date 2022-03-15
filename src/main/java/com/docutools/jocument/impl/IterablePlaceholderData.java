@@ -4,6 +4,7 @@ import com.docutools.jocument.PlaceholderData;
 import com.docutools.jocument.PlaceholderResolver;
 import com.docutools.jocument.PlaceholderType;
 import java.util.Arrays;
+import java.util.List;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -15,6 +16,14 @@ public class IterablePlaceholderData implements PlaceholderData {
 
   private final Iterable<PlaceholderResolver> iterable;
   private final long count;
+
+  public IterablePlaceholderData() {
+    this(List.of(), 0L);
+  }
+
+  public IterablePlaceholderData(PlaceholderResolver resolver) {
+    this(List.of(resolver), 1L);
+  }
 
   public IterablePlaceholderData(Iterable<PlaceholderResolver> iterable, long count) {
     this.iterable = iterable;

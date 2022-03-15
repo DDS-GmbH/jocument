@@ -7,7 +7,9 @@ import static org.hamcrest.Matchers.is;
 
 import com.docutools.jocument.impl.ReflectionResolver;
 import com.docutools.jocument.sample.model.SampleModelData;
+import com.docutools.jocument.sample.model.Ship;
 import com.docutools.jocument.sample.model.Uniform;
+import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Objects;
@@ -16,6 +18,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 @DisplayName("Resolve placeholders from an object graph via reflection.")
 @Tag("automated")
@@ -167,7 +171,7 @@ class ReflectionResolvingTests {
 
   @Test
   @DisplayName("Resolve by Regex ignoring case")
-    void shouldResolveByIgnoreCaseRegex() {
+  void shouldResolveByIgnoreCaseRegex() {
     // Assemble
     resolver = new ReflectionResolver(SampleModelData.ENTERPRISE);
 
@@ -179,4 +183,20 @@ class ReflectionResolvingTests {
     // Assert
     assertThat(numberOfServices, equalTo(String.valueOf(SampleModelData.ENTERPRISE.services().size())));
   }
+
+  @ValueSource(strings = {"name", "captain", "crew", "services"})
+  @ParameterizedTest(name = "Resolve falsy condition for {0} on empty ship")
+  void shouldResolveFalsyCondition(String propertyName) {
+    // Assemble
+    var emptyShip = new Ship("", null, 0, List.of(), LocalDate.now());
+    var resolver = new ReflectionResolver(emptyShip);
+
+    // Act
+    var emptyPlaceholderData = resolver.resolve(propertyName + "?")
+        .orElseThrow();
+
+    // Assert
+    assertThat(emptyPlaceholderData.count(), is(0L));
+  }
+
 }

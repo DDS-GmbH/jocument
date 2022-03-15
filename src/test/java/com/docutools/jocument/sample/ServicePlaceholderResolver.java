@@ -18,7 +18,7 @@ public class ServicePlaceholderResolver extends PlaceholderResolver {
   public Optional<PlaceholderData> resolve(String placeholderName, Locale locale) {
     switch (placeholderName) {
       case "name":
-        return Optional.of(new ScalarPlaceholderData(name));
+        return Optional.of(new ScalarPlaceholderData<>(name));
       default:
         return Optional.empty();
     }
