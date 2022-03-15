@@ -19,7 +19,7 @@ import org.junit.jupiter.api.Test;
 
 @DisplayName("Resolve placeholders from an object graph via reflection.")
 @Tag("automated")
-public class ReflectionResolving {
+class ReflectionResolvingTests {
 
   private PlaceholderResolver resolver;
 
@@ -165,4 +165,18 @@ public class ReflectionResolving {
     assertThat(builtDate, equalTo(pattern.format(SampleModelData.ENTERPRISE.built())));
   }
 
+  @Test
+  @DisplayName("Resolve by Regex ignoring case")
+    void shouldResolveByIgnoreCaseRegex() {
+    // Assemble
+    resolver = new ReflectionResolver(SampleModelData.ENTERPRISE);
+
+    // Act
+    var  numberOfServices = resolver.resolve("numberofservices")
+        .map(Object::toString)
+        .orElseThrow();
+
+    // Assert
+    assertThat(numberOfServices, equalTo(String.valueOf(SampleModelData.ENTERPRISE.services().size())));
+  }
 }

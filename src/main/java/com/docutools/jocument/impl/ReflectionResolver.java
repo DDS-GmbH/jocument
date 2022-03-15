@@ -63,6 +63,13 @@ public class ReflectionResolver extends PlaceholderResolver {
     this(value, customPlaceholderRegistry, null);
   }
 
+  /**
+   * Create a new reflection resolver with a parent registry.
+   *
+   * @param value                     The value to resolve against
+   * @param customPlaceholderRegistry The custom placeholder registry to check for custom placeholders
+   * @param parent                    The parent registry
+   */
   public ReflectionResolver(Object value, CustomPlaceholderRegistry customPlaceholderRegistry, PlaceholderResolver parent) {
     this.bean = value;
     this.customPlaceholderRegistry = customPlaceholderRegistry;
@@ -136,7 +143,7 @@ public class ReflectionResolver extends PlaceholderResolver {
   public Optional<PlaceholderData> resolve(String placeholderName, Locale locale) {
     logger.debug("Trying to resolve placeholder {}", placeholderName);
     return tryMatchPattern(placeholderName, locale)
-        .or(() ->resolveAccessor(placeholderName, locale)
+        .or(() -> resolveAccessor(placeholderName, locale)
             .or(() -> placeholderMapper.map(placeholderName)
                 .flatMap(mappedName -> resolveAccessor(mappedName, locale))));
   }
@@ -151,7 +158,7 @@ public class ReflectionResolver extends PlaceholderResolver {
         .findFirst()
         .flatMap(method -> {
           var returnType = method.getReturnType();
-          if(!returnType.equals(Optional.class)) {
+          if (!returnType.equals(Optional.class)) {
             logger.warn("@MatchPlaceholder-annotated method {} must return a java.util.Optional but returns {}.", method, returnType);
             return Optional.empty();
           }
@@ -231,8 +238,8 @@ public class ReflectionResolver extends PlaceholderResolver {
   public Optional<PlaceholderData> doResolve(String placeholderName, Locale locale) {
     try {
       if (PARENT_SYMBOL.equals(placeholderName)) {
-        return parent != null?
-            Optional.of(IterablePlaceholderData.of(parent))
+        return parent != null
+            ? Optional.of(IterablePlaceholderData.of(parent))
             : Optional.empty();
       }
       if (customPlaceholderRegistry.governs(placeholderName, bean)) {

@@ -27,4 +27,9 @@ public record Ship(String name, Captain captain, int crew, List<Service> service
     return Optional.empty();
   }
 
+  @MatchPlaceholder(pattern = "(?i)numberOfServices")
+  public Optional<String> getNumberOfServices(String placeholder) {
+    return Optional.of(String.valueOf(services.size()));
+  }
+
 }
