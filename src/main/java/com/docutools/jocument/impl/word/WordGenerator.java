@@ -10,7 +10,6 @@ import com.docutools.jocument.impl.ParsingUtils;
 import java.util.List;
 import java.util.Locale;
 import java.util.regex.MatchResult;
-import java.util.stream.Collectors;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.poi.util.LocaleUtil;
@@ -116,7 +115,7 @@ class WordGenerator {
         //Could be written nice with `takeUntil(element -> (element instanceof XP xp && eLM.equals(WU.toString(xp)))
         .takeWhile(element -> !(element instanceof XWPFParagraph xwpfParagraph
             && endLoopMarker.equals(WordUtilities.toString(xwpfParagraph))))
-        .collect(Collectors.toList());
+        .toList();
   }
 
   private boolean isLoopStart(IBodyElement element) {
@@ -145,6 +144,6 @@ class WordGenerator {
     logger.debug("Resolving placeholder {}", placeholderName);
     return resolver.resolve(placeholderName, locale)
         .map(PlaceholderData::toString)
-        .orElse("-");
+        .orElse("");
   }
 }

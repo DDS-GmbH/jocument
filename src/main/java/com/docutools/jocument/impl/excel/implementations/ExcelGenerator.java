@@ -12,9 +12,6 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
-import java.util.Spliterator;
-import java.util.Spliterators;
-import java.util.stream.StreamSupport;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.poi.ss.usermodel.Cell;
@@ -23,9 +20,8 @@ import org.apache.poi.ss.usermodel.Row;
 
 
 /**
- * This class is responsible for creating excel report rows from template rows.
- * It is used recursively when resolving nested loops.
- * Because of this, the generator is agnostic of enclosing structures like sheets and workbooks.
+ * This class is responsible for creating excel report rows from template rows. It is used recursively when resolving nested loops. Because of this,
+ * the generator is agnostic of enclosing structures like sheets and workbooks.
  *
  * @author Anton Oellerer
  * @since 2020-04-10
@@ -75,7 +71,7 @@ public class ExcelGenerator {
             excelWriter.addCell(cell);
           } else {
             var newCellText = resolver.resolve(ExcelUtils.getPlaceholder(cell))
-                    .orElse(new ScalarPlaceholderData<>("-"));
+                .orElse(new ScalarPlaceholderData<>(""));
             excelWriter.addCell(cell, newCellText.toString());
           }
         }
@@ -159,9 +155,9 @@ public class ExcelGenerator {
       var cell = row.getCell(row.getFirstCellNum());
       if (cell.getCellType() == CellType.STRING) {
         return resolver.resolve(
-            ParsingUtils.stripBrackets(
-                cell.getStringCellValue()
-            )).map(PlaceholderData::getType)
+                ParsingUtils.stripBrackets(
+                    cell.getStringCellValue()
+                )).map(PlaceholderData::getType)
             .map(type -> type == PlaceholderType.SET)
             .orElse(false);
       }

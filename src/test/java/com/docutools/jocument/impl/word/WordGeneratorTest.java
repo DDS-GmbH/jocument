@@ -2,6 +2,7 @@ package com.docutools.jocument.impl.word;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 
 import com.docutools.jocument.CustomPlaceholderRegistry;
@@ -11,12 +12,10 @@ import com.docutools.jocument.Template;
 import com.docutools.jocument.TestUtils;
 import com.docutools.jocument.impl.CustomPlaceholderRegistryImpl;
 import com.docutools.jocument.impl.FutureReflectionResolver;
-import com.docutools.jocument.impl.PlaceholderMapperImpl;
 import com.docutools.jocument.impl.ReflectionResolver;
 import com.docutools.jocument.sample.model.SampleModelData;
 import com.docutools.jocument.sample.placeholders.QuotePlaceholder;
 import com.docutools.poipath.xwpf.XWPFDocumentWrapper;
-import java.awt.Desktop;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.Period;
@@ -243,12 +242,13 @@ class WordGeneratorTest {
         var documentWrapper = new XWPFDocumentWrapper(xwpfDocument);
         assertThat(documentWrapper.bodyElement(0).asParagraph().text(), equalTo("Captain: Jean-Luc Picard"));
         assertThat(documentWrapper.bodyElement(2).asParagraph().text(), equalTo("First Officer"));
-        assertThat(documentWrapper.bodyElement(3).asTable().row(0).cell(0).bodyElement(0).asParagraph().text(), equalTo("Name"));
-        assertThat(documentWrapper.bodyElement(3).asTable().row(0).cell(1).bodyElement(0).asParagraph().text(), equalTo("Rank"));
-        assertThat(documentWrapper.bodyElement(3).asTable().row(0).cell(2).bodyElement(0).asParagraph().text(), equalTo("Uniform"));
-        assertThat(documentWrapper.bodyElement(3).asTable().row(1).cell(0).bodyElement(0).asParagraph().text(), equalTo("Riker"));
-        assertThat(documentWrapper.bodyElement(3).asTable().row(1).cell(1).bodyElement(0).asParagraph().text(), equalTo("3"));
-        assertThat(documentWrapper.bodyElement(3).asTable().row(1).cell(2).bodyElement(0).asParagraph().text(), equalTo("Red"));
+        var table = documentWrapper.bodyElement(3).asTable();
+        assertThat(table.row(0).cell(0).bodyElement(0).asParagraph().text(), equalTo("Name"));
+        assertThat(table.row(0).cell(1).bodyElement(0).asParagraph().text(), equalTo("Rank"));
+        assertThat(table.row(0).cell(2).bodyElement(0).asParagraph().text(), equalTo("Uniform"));
+        assertThat(table.row(1).cell(0).bodyElement(0).asParagraph().text(), equalTo("Riker"));
+        assertThat(table.row(1).cell(1).bodyElement(0).asParagraph().text(), equalTo("3"));
+        assertThat(table.row(1).cell(2).bodyElement(0).asParagraph().text(), equalTo("Red"));
         assertThat(documentWrapper.bodyElement(6).asParagraph().text(), equalTo("Services"));
         assertThat(documentWrapper.bodyElement(8).asParagraph().text(), equalTo("USS Enterprise"));
         assertThat(documentWrapper.bodyElement(9).asParagraph().text(), equalTo("US Defiant"));
@@ -269,7 +269,59 @@ class WordGeneratorTest {
 
         // Assert
         assertThat(document.completed(), is(true));
-        Desktop.getDesktop().open(document.getPath().toFile());
+        xwpfDocument = TestUtils.getXWPFDocumentFromDocument(document);
+        var documentWrapper = new XWPFDocumentWrapper(xwpfDocument);
+        var table = documentWrapper.bodyElement(0).asTable();
+        assertThat(table.row(0).cell(0).bodyElement(0).asParagraph().text(), equalTo("Ship"));
+        assertThat(table.row(0).cell(1).bodyElement(0).asParagraph().text(), equalTo("Crew"));
+        assertThat(table.row(0).cell(2).bodyElement(0).asParagraph().text(), equalTo("Captain"));
+        assertThat(table.row(0).cell(3).bodyElement(0).asParagraph().text(), equalTo("Officer"));
+        assertThat(table.row(1).cell(0).bodyElement(0).asParagraph().text(), equalTo(SampleModelData.ENTERPRISE.name()));
+        assertThat(table.row(1).cell(1).bodyElement(0).asParagraph().text(), equalTo(String.valueOf(SampleModelData.ENTERPRISE.crew())));
+        assertThat(table.row(1).cell(2).bodyElement(0).asParagraph().text(), equalTo(SampleModelData.ENTERPRISE.captain().getName()));
+        assertThat(table.row(1).cell(3).bodyElement(0).asParagraph().text(), equalTo(SampleModelData.ENTERPRISE.captain().getOfficer().getName()));
     }
 
+    @Test
+    @DisplayName("Resolve truthy conditional")
+    void shouldResolveTruthyConditional() throws IOException, InterruptedException {
+        // Assemble
+        var template = Template.fromClassPath("/templates/word/ConditionalTemplate.docx")
+            .orElseThrow();
+        var resolver = new ReflectionResolver(SampleModelData.ENTERPRISE);
+
+        // Act
+        Document document = template.startGeneration(resolver);
+        document.blockUntilCompletion(60000L); // 1 minute
+
+        // Assert
+        assertThat(document.completed(), is(true));
+        xwpfDocument = TestUtils.getXWPFDocumentFromDocument(document);
+        var documentWrapper = new XWPFDocumentWrapper(xwpfDocument);
+        var services = SampleModelData.ENTERPRISE.services();
+        var servicesOnePlanets = services.get(0).getVisitedPlanets();
+        var servicesTwoPlanets = services.get(1).getVisitedPlanets();
+        assertThat(documentWrapper.bodyElement(0).asParagraph().text(), equalTo(servicesOnePlanets.get(0).getPlanetName()));
+        assertThat(documentWrapper.bodyElement(1).asParagraph().text(), equalTo(servicesTwoPlanets.get(0).getPlanetName()));
+        assertThat(documentWrapper.bodyElement(2).asParagraph().text(), equalTo(servicesTwoPlanets.get(1).getPlanetName()));
+    }
+
+    @Test
+    @DisplayName("Resolve falsy conditional")
+    void shouldResolveFalsyConditional() throws IOException, InterruptedException {
+        // Assemble
+        var template = Template.fromClassPath("/templates/word/ConditionalTemplate.docx")
+            .orElseThrow();
+        var resolver = new ReflectionResolver(SampleModelData.ENTERPRISE_WITHOUT_SERVICES);
+
+        // Act
+        Document document = template.startGeneration(resolver);
+        document.blockUntilCompletion(60000L); // 1 minute
+
+        // Assert
+        assertThat(document.completed(), is(true));
+        xwpfDocument = TestUtils.getXWPFDocumentFromDocument(document);
+        var documentWrapper = new XWPFDocumentWrapper(xwpfDocument);
+        assertThat(documentWrapper.document().getBodyElements(), hasSize(0));
+    }
 }
