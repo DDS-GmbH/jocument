@@ -1,5 +1,7 @@
 package com.docutools.jocument.impl;
 
+import java.util.List;
+
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -23,8 +25,8 @@ public class ParsingUtils {
     return value.substring(2, value.length() - 2);
   }
 
-  public static String getMatchingLoopEnd(String placeholder) {
-    return String.format("{{/%s}}", placeholder);
+  public static List<String> getMatchingLoopEnds(String placeholder) {
+    return List.of("{{/%s}}".formatted(placeholder), "{{end-%s}}".formatted(placeholder));
   }
 
   public static Matcher matchPlaceholders(String value) {
