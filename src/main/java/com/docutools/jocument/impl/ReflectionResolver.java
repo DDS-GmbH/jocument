@@ -49,8 +49,8 @@ public class ReflectionResolver extends PlaceholderResolver {
   private static final Logger logger = LogManager.getLogger();
 
   protected final Object bean;
-  private final PropertyUtilsBean pub = new PropertyUtilsBean();
   protected final CustomPlaceholderRegistry customPlaceholderRegistry;
+  private final PropertyUtilsBean pub = new PropertyUtilsBean();
   private final PlaceholderMapper placeholderMapper = new PlaceholderMapperImpl();
   private final PlaceholderResolver parent;
 
@@ -143,21 +143,22 @@ public class ReflectionResolver extends PlaceholderResolver {
   public Optional<PlaceholderData> resolve(String placeholderName, Locale locale) {
     logger.debug("Trying to resolve placeholder {}", placeholderName);
     boolean isCondition = placeholderName.endsWith("?");
-    var strippedPlaceholderName = isCondition? placeholderName.substring(0, placeholderName.length()-1) : placeholderName;
-    var result = tryMatchPattern(strippedPlaceholderName, locale)
-        .or(() -> resolveAccessor(strippedPlaceholderName, locale)
-            .or(() -> placeholderMapper.map(strippedPlaceholderName)
-                .flatMap(mappedName -> resolve(mappedName, locale))));
-    if(isCondition) {
-      if(result.isEmpty())
-        return Optional.of(new IterablePlaceholderData()); // TODO sure?
-      var resultValue = result.get();
-      return Optional.of(resultValue.isTruthy()? new IterablePlaceholderData(this) : new IterablePlaceholderData());
+    placeholderName = isCondition ? placeholderName.substring(0, placeholderName.length() - 1) : placeholderName;
+    Optional<PlaceholderData> result = resolveStripped(locale, placeholderName);
+    if (isCondition) {
+      return evaluateCondition(result);
     }
     return result;
   }
 
-  private Optional<PlaceholderData> tryMatchPattern(String placeholderName, Locale locale) {
+  private Optional<PlaceholderData> resolveStripped(Locale locale, String placeholder) {
+    return matchPattern(placeholder, locale)
+        .or(() -> resolveAccessor(placeholder, locale)
+            .or(() -> placeholderMapper.map(placeholder)
+                .flatMap(mappedName -> resolve(mappedName, locale))));
+  }
+
+  private Optional<PlaceholderData> matchPattern(String placeholderName, Locale locale) {
     var beanClass = bean.getClass();
     return Arrays.stream(beanClass.getMethods())
         .filter(method -> Optional.ofNullable(method.getAnnotation(MatchPlaceholder.class))
@@ -236,9 +237,8 @@ public class ReflectionResolver extends PlaceholderResolver {
   }
 
   /**
-   * Method resolving placeholders for the reflection resolver.
-   * incredibly ugly, but since doResolve is public, the overriden method of FutureReflectionResolver is used when necessary
-   * could/should maybe be made a bit more explicit by defining a common superinterface
+   * Method resolving placeholders for the reflection resolver. incredibly ugly, but since doResolve is public, the overriden method of
+   * FutureReflectionResolver is used when necessary could/should maybe be made a bit more explicit by defining a common superinterface
    *
    * @param placeholderName The name of the placeholder
    * @param locale          The locale to user for localization
@@ -325,6 +325,13 @@ public class ReflectionResolver extends PlaceholderResolver {
     } else {
       return pub.getProperty(bean, placeholderName);
     }
+  }
+
+  private Optional<PlaceholderData> evaluateCondition(Optional<PlaceholderData> result) {
+    if (result.isPresent() && result.get().isTruthy()) {
+      return Optional.of(new IterablePlaceholderData(this));
+    }
+    return Optional.of(new IterablePlaceholderData());
   }
 
   protected Optional<PlaceholderData> formatTemporal(String placeholderName, Temporal time, Locale locale) {

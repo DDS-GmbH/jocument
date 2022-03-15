@@ -14,6 +14,7 @@ public class SampleModelData {
   public static final Person PICARD_PERSON = new Person("Jean-Luc", "Picard", LocalDate.of(1948, 9, 23));
   public static final List<Captain> CAPTAINS;
   public static final Ship ENTERPRISE;
+  public static final Ship ENTERPRISE_WITHOUT_SERVICES;
 
   static {
     try {
@@ -36,6 +37,7 @@ public class SampleModelData {
           CompletableFuture.completedFuture(new FirstOfficer("Riker", 3, Uniform.Red)),
           CompletableFuture.completedFuture(services),
           CompletableFuture.completedFuture(Path.of(SampleModelData.class.getResource("/images/picardProfile.jpg").toURI())));
+      ENTERPRISE_WITHOUT_SERVICES = new Ship("USS Enterprise", PICARD, 5, Collections.emptyList(), LocalDate.now());
     } catch (URISyntaxException e) {
       throw new RuntimeException(e);
     }
