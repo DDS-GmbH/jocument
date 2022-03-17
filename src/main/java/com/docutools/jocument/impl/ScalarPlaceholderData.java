@@ -31,6 +31,11 @@ public class ScalarPlaceholderData<T> implements PlaceholderData {
   }
 
   @Override
+  public Object getRawValue() {
+    return value;
+  }
+
+  @Override
   public boolean isTruthy() {
     // TODO can be replaced with Java pattern matching when out of preview
     if (value instanceof Number number) {

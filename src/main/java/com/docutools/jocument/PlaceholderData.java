@@ -56,6 +56,15 @@ public interface PlaceholderData {
   }
 
   /**
+   * Tries to return the raw value behind the {@link PlaceholderData}. May not be implemented in all sepcifications.
+   *
+   * @return the raw value
+   */
+  default Object getRawValue() {
+    throw new UnsupportedOperationException();
+  }
+
+  /**
    * Evaluates if this {@link PlaceholderData} is a truthy value. Non-truthy values are defined as:
    *
    * <ul>
