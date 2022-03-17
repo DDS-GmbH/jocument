@@ -51,9 +51,11 @@ class WordGenerator {
 
   private void transform(IBodyElement element, List<IBodyElement> remaining) {
     logger.debug("Trying to transform element {}", element);
+    Locale locale = WordUtilities.detectMostCommonLocale(element.getBody().getXWPFDocument())
+        .orElse(LocaleUtil.getUserLocale());
     if (isCustomPlaceholder(element)) {
       resolver.resolve(WordUtilities.extractPlaceholderName((XWPFParagraph) element))
-          .ifPresent(placeholderData -> placeholderData.transform(element, options));
+          .ifPresent(placeholderData -> placeholderData.transform(element, locale, options));
     } else if (isLoopStart(element)) {
       unrollLoop((XWPFParagraph) element, remaining);
     } else if (element instanceof XWPFParagraph xwpfParagraph) {
