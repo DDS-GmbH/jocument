@@ -1,7 +1,12 @@
 package com.docutools.jocument;
 
+import com.docutools.jocument.formatting.LocalisedPlaceholderDataFormatter;
+import com.docutools.jocument.formatting.PlaceholderDataFormatter;
+import com.docutools.jocument.formatting.PlaceholderDataFormattingOption;
 import com.docutools.jocument.image.DefaultImageStrategy;
 import com.docutools.jocument.image.ImageStrategy;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -17,6 +22,7 @@ public final class GenerationOptionsBuilder {
   }
 
   private ImageStrategy imageStrategy;
+  private final List<PlaceholderDataFormattingOption> formattingOptions = new ArrayList<>();
 
   public GenerationOptionsBuilder() {
     this.imageStrategy = DefaultImageStrategy.instance();
@@ -27,8 +33,17 @@ public final class GenerationOptionsBuilder {
     return this;
   }
 
+  public <T> GenerationOptionsBuilder format(Class<T> filter, PlaceholderDataFormatter<T> formatter) {
+    return format(filter, (l, v) -> formatter.format(v));
+  }
+
+  public <T> GenerationOptionsBuilder format(Class<T> filter, LocalisedPlaceholderDataFormatter<T> formatter) {
+    formattingOptions.add(new PlaceholderDataFormattingOption<T>(obj -> obj.getClass().isAssignableFrom(filter), formatter));
+    return this;
+  }
+
   public GenerationOptions build() {
-    return new GenerationOptions(imageStrategy);
+    return new GenerationOptions(imageStrategy, formattingOptions);
   }
 
 }
