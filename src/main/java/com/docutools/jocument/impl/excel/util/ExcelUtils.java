@@ -16,6 +16,10 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 public class ExcelUtils {
+
+  private ExcelUtils() {
+  }
+
   private static final Logger logger = LogManager.getLogger();
 
   public static String getPlaceholder(Cell cell) {
@@ -72,11 +76,11 @@ public class ExcelUtils {
    * @return Whether the matching loop-end string for the placeholder was found in this row
    */
   public static boolean isMatchingLoopEnd(Row row, String placeholder) {
-    var endPlaceholder = ParsingUtils.getMatchingLoopEnd(placeholder);
+    var endPlaceholders = ParsingUtils.getMatchingLoopEnds(placeholder);
     if (getNumberOfNonEmptyCells(row) == 1) {
       var cell = row.getCell(row.getFirstCellNum());
       if (cell.getCellType() == CellType.STRING) {
-        return cell.getStringCellValue().equals(endPlaceholder);
+        return endPlaceholders.stream().anyMatch(endPlaceholder -> cell.getStringCellValue().equals(endPlaceholder));
       }
     }
     return false;
