@@ -41,6 +41,10 @@ public abstract class PlaceholderResolver {
    * @param locale          the localisation settings
    * @return if the name could've been resolved the localised {@link com.docutools.jocument.PlaceholderData}
    */
-  public abstract Optional<PlaceholderData> resolve(String placeholderName, Locale locale);
+  public Optional<PlaceholderData> resolve(String placeholderName, Locale locale) {
+    return doResolve(placeholderName, locale);
+  }
+
+  protected abstract Optional<PlaceholderData> doResolve(String placeholderName, Locale locale);
 
 }

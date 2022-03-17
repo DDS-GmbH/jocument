@@ -43,7 +43,7 @@ public class FutureReflectionResolver extends ReflectionResolver {
   }
 
   @Override
-  public Optional<PlaceholderData> doResolve(String placeholderName, Locale locale) {
+  public Optional<PlaceholderData> doReflectiveResolve(String placeholderName, Locale locale) {
     try {
       if (customPlaceholderRegistry.governs(placeholderName, bean)) {
         logger.info("Placeholder {} handled by custom registry", placeholderName);

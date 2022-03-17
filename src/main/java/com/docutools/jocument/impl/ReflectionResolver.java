@@ -140,7 +140,7 @@ public class ReflectionResolver extends PlaceholderResolver {
   }
 
   @Override
-  public Optional<PlaceholderData> resolve(String placeholderName, Locale locale) {
+  protected Optional<PlaceholderData> doResolve(String placeholderName, Locale locale) {
     logger.debug("Trying to resolve placeholder {}", placeholderName);
     boolean isCondition = placeholderName.endsWith("?");
     placeholderName = isCondition ? placeholderName.substring(0, placeholderName.length() - 1) : placeholderName;
@@ -223,7 +223,7 @@ public class ReflectionResolver extends PlaceholderResolver {
     Optional<PlaceholderData> result = Optional.empty();
     for (String property : placeholderName.split("\\.")) {
       result = result.isEmpty()
-          ? doResolve(property, locale).or(() -> tryResolveInParent(placeholderName, locale))
+          ? doReflectiveResolve(property, locale).or(() -> tryResolveInParent(placeholderName, locale))
           : result
           .flatMap(r -> r.stream().findAny())
           .flatMap(r -> r.resolve(property, locale));
@@ -237,14 +237,14 @@ public class ReflectionResolver extends PlaceholderResolver {
   }
 
   /**
-   * Method resolving placeholders for the reflection resolver. incredibly ugly, but since doResolve is public, the overriden method of
+   * Method resolving placeholders for the reflection resolver. incredibly ugly, but since doReflectiveResolve is public, the overriden method of
    * FutureReflectionResolver is used when necessary could/should maybe be made a bit more explicit by defining a common superinterface
    *
    * @param placeholderName The name of the placeholder
    * @param locale          The locale to user for localization
    * @return An optional containing `PlaceholderData` if it could be resolved
    */
-  public Optional<PlaceholderData> doResolve(String placeholderName, Locale locale) {
+  public Optional<PlaceholderData> doReflectiveResolve(String placeholderName, Locale locale) {
     try {
       if (PARENT_SYMBOL.equals(placeholderName)) {
         return parent != null
