@@ -68,12 +68,7 @@ public class JsonResolver extends PlaceholderResolver {
   }
 
   @Override
-  public Optional<PlaceholderData> resolve(String placeholderName) {
-    return resolve(placeholderName, Locale.getDefault());
-  }
-
-  @Override
-  public Optional<PlaceholderData> resolve(String placeholderName, Locale locale) {
+  protected Optional<PlaceholderData> doResolve(String placeholderName, Locale locale) {
     logger.debug("Trying to resolve placeholder {}", placeholderName);
     if (jsonElement.isJsonObject()) {
       return fromObject(placeholderName, jsonElement.getAsJsonObject());
