@@ -7,6 +7,7 @@ import com.docutools.jocument.impl.word.WordUtilities;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Locale;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.poi.xwpf.usermodel.IBodyElement;
@@ -30,7 +31,7 @@ public class ImagePlaceholderData extends CustomWordPlaceholderData {
   }
 
   @Override
-  protected void transform(IBodyElement placeholder, XWPFDocument document, GenerationOptions options) {
+  protected void transform(IBodyElement placeholder, XWPFDocument document, Locale locale, GenerationOptions options) {
     Path path = applyOptions(options);
     try {
       var paragraph = document.insertNewParagraph(WordUtilities.openCursor(placeholder).orElseThrow());
