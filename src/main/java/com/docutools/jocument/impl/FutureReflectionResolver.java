@@ -1,6 +1,8 @@
 package com.docutools.jocument.impl;
 
 import com.docutools.jocument.CustomPlaceholderRegistry;
+import com.docutools.jocument.GenerationOptions;
+import com.docutools.jocument.GenerationOptionsBuilder;
 import com.docutools.jocument.PlaceholderData;
 import com.docutools.jocument.PlaceholderResolver;
 import java.lang.reflect.InvocationTargetException;
@@ -38,8 +40,16 @@ public class FutureReflectionResolver extends ReflectionResolver {
   public FutureReflectionResolver(Object value,
                                   CustomPlaceholderRegistry customPlaceholderRegistry,
                                   long maximumWaitTimeSeconds) {
+    this(value, customPlaceholderRegistry, GenerationOptionsBuilder.buildDefaultOptions(), maximumWaitTimeSeconds);
+  }
+
+  public FutureReflectionResolver(Object value,
+                                  CustomPlaceholderRegistry customPlaceholderRegistry,
+                                  GenerationOptions options,
+                                  long maximumWaitTimeSeconds) {
     super(value, customPlaceholderRegistry);
     this.maximumWaitTime = maximumWaitTimeSeconds;
+    setOptions(options);
   }
 
   @Override
@@ -67,13 +77,13 @@ public class FutureReflectionResolver extends ReflectionResolver {
         if (property instanceof Collection<?> collection) {
           logger.debug("Placeholder {} resolved to collection", placeholderName);
           List<PlaceholderResolver> list = collection.stream()
-              .map(object -> new FutureReflectionResolver(object, customPlaceholderRegistry, maximumWaitTime))
+              .map(object -> new FutureReflectionResolver(object, customPlaceholderRegistry, options, maximumWaitTime))
               .collect(Collectors.toList());
           return Optional.of(new IterablePlaceholderData(list, list.size()));
         }
         if (bean.equals(property)) {
           logger.debug("Placeholder {} resolved to the parent object", placeholderName);
-          return Optional.of(new IterablePlaceholderData(List.of(new FutureReflectionResolver(bean, customPlaceholderRegistry, maximumWaitTime)), 1));
+          return Optional.of(new IterablePlaceholderData(List.of(new FutureReflectionResolver(bean, customPlaceholderRegistry, options, maximumWaitTime)), 1));
         } else {
           var value = getBeanProperty(placeholderName);
           logger.debug("Resolved placeholder {} to the bean property {}", placeholderName, value);
@@ -83,7 +93,7 @@ public class FutureReflectionResolver extends ReflectionResolver {
             logger.debug("Placeholder {} property future retrieved", placeholderName);
           }
           return Optional.of(
-              new IterablePlaceholderData(List.of(new FutureReflectionResolver(value, customPlaceholderRegistry, maximumWaitTime)), 1));
+              new IterablePlaceholderData(List.of(new FutureReflectionResolver(value, customPlaceholderRegistry, options, maximumWaitTime)), 1));
         }
       }
     } catch (NoSuchMethodException | IllegalArgumentException e) {
