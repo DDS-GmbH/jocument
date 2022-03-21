@@ -1,6 +1,8 @@
 package com.docutools.jocument.impl;
 
 import com.docutools.jocument.CustomPlaceholderRegistry;
+import com.docutools.jocument.GenerationOptions;
+import com.docutools.jocument.GenerationOptionsBuilder;
 import com.docutools.jocument.PlaceholderData;
 import com.docutools.jocument.PlaceholderMapper;
 import com.docutools.jocument.PlaceholderResolver;
@@ -60,7 +62,7 @@ public class ReflectionResolver extends PlaceholderResolver {
   }
 
   public ReflectionResolver(Object value, CustomPlaceholderRegistry customPlaceholderRegistry) {
-    this(value, customPlaceholderRegistry, null);
+    this(value, customPlaceholderRegistry, GenerationOptionsBuilder.buildDefaultOptions(), null);
   }
 
   /**
@@ -70,10 +72,11 @@ public class ReflectionResolver extends PlaceholderResolver {
    * @param customPlaceholderRegistry The custom placeholder registry to check for custom placeholders
    * @param parent                    The parent registry
    */
-  public ReflectionResolver(Object value, CustomPlaceholderRegistry customPlaceholderRegistry, PlaceholderResolver parent) {
+  public ReflectionResolver(Object value, CustomPlaceholderRegistry customPlaceholderRegistry, GenerationOptions options, PlaceholderResolver parent) {
     this.bean = value;
     this.customPlaceholderRegistry = customPlaceholderRegistry;
     this.parent = parent;
+    setOptions(options);
   }
 
   protected static boolean isFieldAnnotatedWith(Class<?> clazz, String fieldName, Class<? extends Annotation> annotation) {
@@ -269,17 +272,17 @@ public class ReflectionResolver extends PlaceholderResolver {
           logger.debug("Placeholder {} resolved to collection", placeholderName);
           List<PlaceholderResolver> list = collection.stream()
               // cast is needed for `.toList()`
-              .map(object -> (PlaceholderResolver) new ReflectionResolver(object, customPlaceholderRegistry, this))
+              .map(object -> (PlaceholderResolver) new ReflectionResolver(object, customPlaceholderRegistry, options, this))
               .toList();
           return Optional.of(new IterablePlaceholderData(list, list.size()));
         }
         if (bean.equals(property)) {
           logger.debug("Placeholder {} resolved to the parent object", placeholderName);
-          return Optional.of(new IterablePlaceholderData(List.of(new ReflectionResolver(bean, customPlaceholderRegistry, this)), 1));
+          return Optional.of(new IterablePlaceholderData(List.of(new ReflectionResolver(bean, customPlaceholderRegistry, options, this)), 1));
         } else {
           var value = getBeanProperty(placeholderName);
           logger.debug("Resolved placeholder {} to the bean property {}", placeholderName, value);
-          return Optional.of(new IterablePlaceholderData(List.of(new ReflectionResolver(value, customPlaceholderRegistry, this)), 1));
+          return Optional.of(new IterablePlaceholderData(List.of(new ReflectionResolver(value, customPlaceholderRegistry, options, this)), 1));
         }
       }
     } catch (NoSuchMethodException | IllegalArgumentException e) {
