@@ -7,7 +7,10 @@ import com.docutools.jocument.image.DefaultImageStrategy;
 import com.docutools.jocument.image.ImageStrategy;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.function.BiFunction;
 
 /**
  * Builder for {@link GenerationOptions}, use {@link this#buildDefaultOptions()} to take all default options for {@link GenerationOptions}.
@@ -23,6 +26,7 @@ public final class GenerationOptionsBuilder {
 
   private ImageStrategy imageStrategy;
   private final List<PlaceholderDataFormattingOption> formattingOptions = new ArrayList<>();
+  private BiFunction<String, Locale, Optional<String>> translationFunction = null;
 
   public GenerationOptionsBuilder() {
     this.imageStrategy = DefaultImageStrategy.instance();
@@ -42,8 +46,13 @@ public final class GenerationOptionsBuilder {
     return this;
   }
 
+  public GenerationOptionsBuilder withTranslation(BiFunction<String, Locale, Optional<String>> translationFunction) {
+    this.translationFunction = translationFunction;
+    return this;
+  }
+
   public GenerationOptions build() {
-    return new GenerationOptions(imageStrategy, formattingOptions);
+    return new GenerationOptions(imageStrategy, formattingOptions, translationFunction);
   }
 
 }
