@@ -3,11 +3,13 @@ package com.docutools.jocument.impl.excel.util;
 import com.docutools.jocument.PlaceholderResolver;
 import com.docutools.jocument.impl.DocumentImpl;
 import com.docutools.jocument.impl.ParsingUtils;
-
-import java.util.*;
-import java.util.stream.StreamSupport;
-
 import com.docutools.jocument.impl.ScalarPlaceholderData;
+import java.util.Iterator;
+import java.util.Locale;
+import java.util.Optional;
+import java.util.Spliterator;
+import java.util.Spliterators;
+import java.util.stream.StreamSupport;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.poi.ss.usermodel.Cell;
@@ -18,6 +20,13 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 public class ExcelUtils {
   private static final Logger logger = LogManager.getLogger();
 
+  /**
+   * Find and replace the placeholders found in value using given resolver.
+   *
+   * @param value     Text value with placeholders to be replaced.
+   * @param resolver  {@link PlaceholderResolver} used to resolve the placeholders found in value.
+   * @return          String with replaced placeholders.
+   */
   public static String replacePlaceholders(String value, PlaceholderResolver resolver) {
     var matcher = ParsingUtils.matchPlaceholders(value);
     return matcher.replaceAll(matchResult -> resolver.resolve(matchResult.group(1))
