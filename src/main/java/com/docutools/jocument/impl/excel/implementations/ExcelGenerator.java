@@ -12,9 +12,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
-import java.util.Spliterator;
-import java.util.Spliterators;
-import java.util.stream.StreamSupport;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.poi.ss.usermodel.Cell;
@@ -71,7 +69,10 @@ public class ExcelGenerator {
       } else {
         excelWriter.newRow(row);
         for (Cell cell : row) {
-          if (ExcelUtils.isSimpleCell(cell)) {
+          if (ExcelUtils.isHyperlinkFormula(cell)) {
+            var newCellText = ExcelUtils.replacePlaceholders(cell.getCellFormula(), resolver);
+            excelWriter.addCell(cell, newCellText);
+          } else if (ExcelUtils.isSimpleCell(cell)) {
             excelWriter.addCell(cell);
           } else {
             var newCellText = resolver.resolve(ExcelUtils.getPlaceholder(cell))
