@@ -1,8 +1,12 @@
 package com.docutools.jocument.impl;
 
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class ParsingUtils {
+
+  private static final Pattern PLACEHOLDER_PATTERN = Pattern.compile("\\{\\{([^{}]+)?}}");
 
   private ParsingUtils() {
   }
@@ -22,5 +26,9 @@ public class ParsingUtils {
 
   public static List<String> getMatchingLoopEnds(String placeholder) {
     return List.of("{{/%s}}".formatted(placeholder), "{{end-%s}}".formatted(placeholder));
+  }
+
+  public static Matcher matchPlaceholders(String value) {
+    return PLACEHOLDER_PATTERN.matcher(value);
   }
 }
