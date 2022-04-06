@@ -58,6 +58,10 @@ public class ExcelUtils {
     return ParsingUtils.matchPlaceholders(cellValue).find();
   }
 
+  public static boolean isHyperlinkFormula(Cell cell) {
+    return cell.getCellType() == CellType.FORMULA && cell.getCellFormula().startsWith("HYPERLINK");
+  }
+
   /**
    * This method replaces the string content of a cell with the replacement string.
    *
