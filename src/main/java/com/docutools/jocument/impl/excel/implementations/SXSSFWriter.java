@@ -12,6 +12,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.xssf.streaming.SXSSFSheet;
@@ -175,7 +176,11 @@ public class SXSSFWriter implements ExcelWriter {
     newCell.setCellStyle(styleStyleMapping.computeIfAbsent(templateCell.getCellStyle(), this::copyCellStyle));
     newCell.setHyperlink(templateCell.getHyperlink());
     currentSheet.setColumnWidth(templateCell.getColumnIndex(), templateCell.getSheet().getColumnWidth(templateCell.getColumnIndex()));
-    newCell.setCellValue(newCellText);
+    if (templateCell.getCellType() == CellType.FORMULA) {
+      newCell.setCellFormula(newCellText);
+    } else {
+      newCell.setCellValue(newCellText);
+    }
   }
 
   @Override

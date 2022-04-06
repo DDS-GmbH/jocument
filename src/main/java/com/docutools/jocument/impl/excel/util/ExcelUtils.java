@@ -1,7 +1,9 @@
 package com.docutools.jocument.impl.excel.util;
 
+import com.docutools.jocument.PlaceholderResolver;
 import com.docutools.jocument.impl.DocumentImpl;
 import com.docutools.jocument.impl.ParsingUtils;
+import com.docutools.jocument.impl.ScalarPlaceholderData;
 import java.util.Iterator;
 import java.util.Locale;
 import java.util.Optional;
@@ -22,6 +24,14 @@ public class ExcelUtils {
 
   private static final Logger logger = LogManager.getLogger();
 
+  public static String replacePlaceholders(String value, PlaceholderResolver resolver) {
+    var matcher = ParsingUtils.matchPlaceholders(value);
+    return matcher.replaceAll(matchResult -> resolver.resolve(matchResult.group(1))
+        .orElse(new ScalarPlaceholderData("-"))
+        .toString()
+    );
+  }
+
   public static String getPlaceholder(Cell cell) {
     return ParsingUtils.stripBrackets(cell.getStringCellValue());
   }
@@ -33,6 +43,10 @@ public class ExcelUtils {
   public static boolean isSimpleCell(Cell cell) {
     return cell.getCellType() != CellType.STRING
         || cell.getCellType() == CellType.STRING && !DocumentImpl.TAG_PATTERN.asPredicate().test(cell.getStringCellValue());
+  }
+
+  public static boolean isHyperlinkFormula(Cell cell) {
+    return cell.getCellType() == CellType.FORMULA && cell.getCellFormula().startsWith("HYPERLINK");
   }
 
   /**
