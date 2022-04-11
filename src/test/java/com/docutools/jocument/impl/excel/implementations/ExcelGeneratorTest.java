@@ -8,6 +8,7 @@ import com.docutools.jocument.impl.ReflectionResolver;
 import com.docutools.jocument.sample.model.SampleModelData;
 import com.docutools.poipath.PoiPath;
 import com.docutools.poipath.xssf.XSSFWorkbookWrapper;
+import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
@@ -205,4 +206,25 @@ class ExcelGeneratorTest {
         assertThat(documentWrapper.sheet(0).row(0).cell(0).text(), equalTo("orf.at"));
         assertThat(documentWrapper.sheet(0).row(0).cell(0).cell().getHyperlink().getAddress(), equalTo("https://orf.at/"));
     }
+
+  @Test
+  void shouldResolveHyperlinkFormula() throws InterruptedException, IOException {
+    // Arrange
+    Template template = Template.fromClassPath("/templates/excel/HyperlinkFormula.xlsx")
+        .orElseThrow();
+    PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.PICARD);
+
+    // Act
+    Document document = template.startGeneration(resolver);
+    document.blockUntilCompletion(60000L); // 1 minute
+
+    // Assert
+    assertThat(document.completed(), is(true));
+    var workbook = TestUtils.getXSSFWorkbookFromDocument(document);
+    var firstSheet = PoiPath.xssf(workbook).sheet(0);;
+    assertThat(firstSheet.row(0).cell(0).cell().getCellType(), equalTo(CellType.FORMULA));
+    assertThat(firstSheet.row(0).cell(0).cell().getCellFormula(),
+        equalTo("HYPERLINK(\"https://link.me/USS Enterprise\", \"USS Enterprise\")"));
+    assertThat(firstSheet.row(0).cell(0).stringValue(), equalTo("USS Enterprise"));
+  }
 }
