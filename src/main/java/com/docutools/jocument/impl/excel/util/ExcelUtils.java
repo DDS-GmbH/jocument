@@ -22,8 +22,16 @@ public class ExcelUtils {
 
   private static final Logger logger = LogManager.getLogger();
 
-  public static String replacePlaceholders(String value, PlaceholderResolver resolver) {
-    var matcher = ParsingUtils.matchPlaceholders(value);
+  /**
+   * Find and replace the placeholders found in value using given resolver.
+   *
+   * @param cell      the cell with placeholders to be replaced.
+   * @param resolver  {@link PlaceholderResolver} used to resolve the placeholders found in value.
+   * @return          String with replaced placeholders.
+   */
+  public static String replacePlaceholders(Cell cell, PlaceholderResolver resolver) {
+    String cellValue = getCellContentAsString(cell);
+    var matcher = ParsingUtils.matchPlaceholders(cellValue);
     return matcher.replaceAll(matchResult -> resolver.resolve(matchResult.group(1))
         .orElse(new ScalarPlaceholderData("-"))
         .toString()
@@ -43,8 +51,9 @@ public class ExcelUtils {
         || cell.getCellType() == CellType.STRING && !DocumentImpl.TAG_PATTERN.asPredicate().test(cell.getStringCellValue());
   }
 
-  public static boolean isHyperlinkFormula(Cell cell) {
-    return cell.getCellType() == CellType.FORMULA && cell.getCellFormula().startsWith("HYPERLINK");
+  public static boolean containsPlaceholder(Cell cell) {
+    String cellValue = getCellContentAsString(cell);
+    return ParsingUtils.matchPlaceholders(cellValue).find();
   }
 
   /**
