@@ -9,6 +9,9 @@ import java.util.Map;
 import java.util.Optional;
 import org.apache.commons.lang3.ClassUtils;
 
+/**
+ * Resolver to access map properties (placeholders can be used as keys of a {@link Map})
+ */
 public class MapResolver extends PlaceholderResolver {
 
   private final Map<String, Object> map;

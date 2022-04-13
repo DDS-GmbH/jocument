@@ -229,13 +229,11 @@ public class ReflectionResolver extends PlaceholderResolver {
     for (String property : placeholderName.split("\\.")) {
       result = result.isEmpty()
           ? doReflectiveResolve(property, locale).or(() -> tryResolveInParent(placeholderName, locale))
-          : result.map(placeholderData -> resolveChild(placeholderData, property, locale));
+          : result
+          .flatMap(r -> r.stream().findAny())
+          .flatMap(r -> r.resolve(property, locale));
     }
     return result;
-  }
-
-  private PlaceholderData resolveChild(PlaceholderData placeholderData, String property, Locale locale) {
-    return placeholderData.stream().findAny().flatMap(r -> r.resolve(property, locale)).orElse(null);
   }
 
   private Optional<PlaceholderData> tryResolveInParent(String placeholderName, Locale locale) {
