@@ -21,5 +21,9 @@ public enum PlaceholderType {
    * The transformation of the placeholder object is implemented by the {@link com.docutools.jocument.PlaceholderData}
    * object.
    */
-  CUSTOM
+  CUSTOM,
+  /**
+   * A map of values where the placeholder can be resolved against the map keys.
+   */
+  MAP,
 }

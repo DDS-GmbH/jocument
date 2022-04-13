@@ -35,6 +35,7 @@ dependencies {
 
     implementation("com.google.code.gson:gson:2.8.9")
     implementation("org.apache.tika:tika-core:2.2.1")
+    implementation("org.apache.commons:commons-lang3:3.12.0")
 
     runtimeOnly group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.17.1'
     implementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.17.1'

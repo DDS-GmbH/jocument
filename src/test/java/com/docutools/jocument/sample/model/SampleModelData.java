@@ -5,6 +5,7 @@ import java.nio.file.Path;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 public class SampleModelData {
@@ -18,6 +19,7 @@ public class SampleModelData {
 
   static {
     try {
+      var staff = Map.of("cook", "Puro Okin");
       var services = List.of(new Service("USS Enterprise", Collections.singletonList(
               new PlanetServiceInfo("Mars", Collections.singletonList(new City("Nova Rojava"))))),
           new Service("US Defiant", List.of(
@@ -30,14 +32,14 @@ public class SampleModelData {
           services,
           Path.of(SampleModelData.class.getResource("/images/picardProfile.jpg").toURI()));
       CAPTAINS = List.of(PICARD);
-      ENTERPRISE = new Ship("USS Enterprise", PICARD, 5, services, LocalDate.now());
+      ENTERPRISE = new Ship("USS Enterprise", PICARD, 5, services, LocalDate.now(), staff);
       FUTURE_PICARD = new FutureCaptain(CompletableFuture.completedFuture("Jean-Luc Picard"),
           CompletableFuture.completedFuture(4),
           CompletableFuture.completedFuture(Uniform.Red),
           CompletableFuture.completedFuture(new FirstOfficer("Riker", 3, Uniform.Red)),
           CompletableFuture.completedFuture(services),
           CompletableFuture.completedFuture(Path.of(SampleModelData.class.getResource("/images/picardProfile.jpg").toURI())));
-      ENTERPRISE_WITHOUT_SERVICES = new Ship("USS Enterprise", PICARD, 5, Collections.emptyList(), LocalDate.now());
+      ENTERPRISE_WITHOUT_SERVICES = new Ship("USS Enterprise", PICARD, 5, Collections.emptyList(), LocalDate.now(), staff);
     } catch (URISyntaxException e) {
       throw new RuntimeException(e);
     }

@@ -3,18 +3,21 @@ package com.docutools.jocument.impl;
 import com.docutools.jocument.CustomPlaceholderRegistry;
 import com.docutools.jocument.GenerationOptions;
 import com.docutools.jocument.GenerationOptionsBuilder;
+import com.docutools.jocument.MapPlaceholderData;
 import com.docutools.jocument.PlaceholderData;
 import com.docutools.jocument.PlaceholderResolver;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
+import org.apache.commons.lang3.ClassUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -74,7 +77,20 @@ public class FutureReflectionResolver extends ReflectionResolver {
         logger.debug("Placeholder {} resolved to simple placeholder", placeholderName);
         return simplePlaceholder;
       } else {
-        if (property instanceof Collection<?> collection) {
+        if (property instanceof Map<?, ?> valueMap) {
+          logger.debug("Placeholder {} resolved to map", placeholderName);
+          Map<String, PlaceholderData> dataMap = valueMap.entrySet()
+              .stream()
+              .map(entry -> {
+                var mapValue = entry.getValue();
+                var scalarType = ClassUtils.isPrimitiveOrWrapper(entry.getValue().getClass()) || mapValue instanceof String;
+                PlaceholderData placeholderData = scalarType ? new ScalarPlaceholderData<>(entry.getValue()) :
+                    new IterablePlaceholderData(new ReflectionResolver(entry.getValue(), customPlaceholderRegistry, options, this));
+                return Map.entry(entry.getKey().toString().toLowerCase(), placeholderData);
+              })
+              .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+          return Optional.of(new MapPlaceholderData(dataMap));
+        } else if (property instanceof Collection<?> collection) {
           logger.debug("Placeholder {} resolved to collection", placeholderName);
           List<PlaceholderResolver> list = collection.stream()
               .map(object -> new FutureReflectionResolver(object, customPlaceholderRegistry, options, maximumWaitTime))

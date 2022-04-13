@@ -12,6 +12,7 @@ import com.docutools.jocument.sample.model.Uniform;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.BeforeEach;
@@ -184,11 +185,11 @@ class ReflectionResolvingTests {
     assertThat(numberOfServices, equalTo(String.valueOf(SampleModelData.ENTERPRISE.services().size())));
   }
 
-  @ValueSource(strings = {"name", "captain", "crew", "services"})
+  @ValueSource(strings = {"name", "captain", "crew", "services", "staff"})
   @ParameterizedTest(name = "Resolve falsy condition for {0} on empty ship")
   void shouldResolveFalsyCondition(String propertyName) {
     // Assemble
-    var emptyShip = new Ship("", null, 0, List.of(), LocalDate.now());
+    var emptyShip = new Ship("", null, 0, List.of(), LocalDate.now(), Map.of());
     var resolver = new ReflectionResolver(emptyShip);
 
     // Act
@@ -199,4 +200,31 @@ class ReflectionResolvingTests {
     assertThat(emptyPlaceholderData.count(), is(0L));
   }
 
+  @Test
+  @DisplayName("Resolve map key")
+  void shouldResolveMapKey() {
+    // Assemble
+    resolver = new ReflectionResolver(Map.of("technician", "Elsy Kachikian"));
+
+    // Act
+    var technician = resolver.resolve("technician")
+        .orElseThrow();
+
+    // Assert
+    assertThat(technician.getRawValue(), equalTo("Elsy Kachikian"));
+  }
+
+  @Test
+  @DisplayName("Resolve nested map key")
+  void shouldResolveNestedMapKey() {
+    // Assemble
+    resolver = new ReflectionResolver(SampleModelData.ENTERPRISE);
+
+    // Act
+    var cook = resolver.resolve("staff.cook")
+        .orElseThrow();
+
+    // Assert
+    assertThat(cook.getRawValue(), equalTo(SampleModelData.ENTERPRISE.staff().get("cook")));
+  }
 }

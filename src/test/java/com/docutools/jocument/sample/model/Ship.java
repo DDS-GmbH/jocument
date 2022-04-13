@@ -4,11 +4,12 @@ import com.docutools.jocument.annotations.MatchPlaceholder;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public record Ship(String name, Captain captain, int crew, List<Service> services, LocalDate built) {
+public record Ship(String name, Captain captain, int crew, List<Service> services, LocalDate built, Map<String, String> staff) {
 
   private static final Logger log = LogManager.getLogger(Ship.class);
 
