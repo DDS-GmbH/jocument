@@ -10,7 +10,12 @@ import java.util.stream.StreamSupport;
 
 public class IterablePlaceholderData implements PlaceholderData {
 
-  public static IterablePlaceholderData of(PlaceholderResolver...resolvers) {
+  public IterablePlaceholderData(PlaceholderResolver resolver, int size) {
+    this.iterable = List.of(resolver);
+    this.count = size;
+  }
+
+  public static IterablePlaceholderData of(PlaceholderResolver... resolvers) {
     return new IterablePlaceholderData(Arrays.asList(resolvers), resolvers.length);
   }
 

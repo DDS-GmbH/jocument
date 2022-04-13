@@ -3,11 +3,9 @@ package com.docutools.jocument.impl;
 import com.docutools.jocument.CustomPlaceholderRegistry;
 import com.docutools.jocument.GenerationOptions;
 import com.docutools.jocument.GenerationOptionsBuilder;
-import com.docutools.jocument.MapPlaceholderData;
 import com.docutools.jocument.PlaceholderData;
 import com.docutools.jocument.PlaceholderMapper;
 import com.docutools.jocument.PlaceholderResolver;
-import com.docutools.jocument.PlaceholderType;
 import com.docutools.jocument.annotations.Format;
 import com.docutools.jocument.annotations.Image;
 import com.docutools.jocument.annotations.MatchPlaceholder;
@@ -35,9 +33,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import org.apache.commons.beanutils.PropertyUtilsBean;
-import org.apache.commons.lang3.ClassUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -231,13 +227,6 @@ public class ReflectionResolver extends PlaceholderResolver {
   private Optional<PlaceholderData> resolveAccessor(String placeholderName, Locale locale) {
     Optional<PlaceholderData> result = Optional.empty();
     for (String property : placeholderName.split("\\.")) {
-      if (bean instanceof Map<?, ?> map) {
-        var object = map.get(property);
-        if (object instanceof PlaceholderData placeholderData) {
-          result = Optional.of(placeholderData);
-          continue;
-        }
-      }
       result = result.isEmpty()
           ? doReflectiveResolve(property, locale).or(() -> tryResolveInParent(placeholderName, locale))
           : result.map(placeholderData -> resolveChild(placeholderData, property, locale));
@@ -246,11 +235,7 @@ public class ReflectionResolver extends PlaceholderResolver {
   }
 
   private PlaceholderData resolveChild(PlaceholderData placeholderData, String property, Locale locale) {
-    if (placeholderData.getType().equals(PlaceholderType.MAP)) {
-      return ((Map<String, PlaceholderData>) placeholderData.getRawValue()).get(property.toLowerCase());
-    } else {
-      return placeholderData.stream().findAny().flatMap(r -> r.resolve(property, locale)).orElse(null);
-    }
+    return placeholderData.stream().findAny().flatMap(r -> r.resolve(property, locale)).orElse(null);
   }
 
   private Optional<PlaceholderData> tryResolveInParent(String placeholderName, Locale locale) {
@@ -287,19 +272,9 @@ public class ReflectionResolver extends PlaceholderResolver {
         logger.debug("Placeholder {} resolved to simple placeholder", placeholderName);
         return simplePlaceholder;
       } else {
-        if (property instanceof Map<?, ?> valueMap) {
+        if (property instanceof Map valueMap) {
           logger.debug("Placeholder {} resolved to map", placeholderName);
-          Map<String, PlaceholderData> dataMap = valueMap.entrySet()
-              .stream()
-              .map(entry -> {
-                var mapValue = entry.getValue();
-                var scalarType = ClassUtils.isPrimitiveOrWrapper(entry.getValue().getClass()) || mapValue instanceof String;
-                PlaceholderData placeholderData = scalarType ? new ScalarPlaceholderData<>(entry.getValue()) :
-                    new IterablePlaceholderData(new ReflectionResolver(entry.getValue(), customPlaceholderRegistry, options, this));
-                return Map.entry(entry.getKey().toString().toLowerCase(), placeholderData);
-              })
-              .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-          return Optional.of(new MapPlaceholderData(dataMap));
+          return Optional.of(new IterablePlaceholderData(new MapResolver(valueMap, customPlaceholderRegistry, this, options), valueMap.size()));
         } else if (property instanceof Collection<?> collection) {
           logger.debug("Placeholder {} resolved to collection", placeholderName);
           List<PlaceholderResolver> list = collection.stream()

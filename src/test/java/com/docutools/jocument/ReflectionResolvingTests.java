@@ -227,4 +227,23 @@ class ReflectionResolvingTests {
     // Assert
     assertThat(cook.getRawValue(), equalTo(SampleModelData.ENTERPRISE.staff().get("cook")));
   }
+
+  @Test
+  @DisplayName("Resolve map block")
+  void shouldResolveMapBlock() {
+    // Assemble
+    resolver = new ReflectionResolver(SampleModelData.ENTERPRISE);
+
+    // Act
+    var cook = resolver.resolve("staff")
+        .map(data -> data.stream()
+            .map(r -> r.resolve("cook")
+                .map(PlaceholderData::toString)
+                .orElseThrow())
+            .collect(Collectors.toList()))
+        .orElseThrow();
+    // Act
+    assertThat(cook, contains("Puro Okin"));
+  }
+
 }

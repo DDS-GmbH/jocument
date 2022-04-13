@@ -3,8 +3,7 @@ package com.docutools.jocument;
 import java.util.Map;
 import java.util.stream.Stream;
 
-public record MapPlaceholderData(Map<String, PlaceholderData> map)
-    implements PlaceholderData {
+public record MapPlaceholderData(Map<String, PlaceholderData> map) implements PlaceholderData {
 
   @Override
   public PlaceholderType getType() {
