@@ -1,13 +1,13 @@
 package com.docutools.jocument.impl.excel.util;
 
+import com.docutools.jocument.PlaceholderResolver;
 import com.docutools.jocument.impl.DocumentImpl;
 import com.docutools.jocument.impl.ParsingUtils;
-import java.util.Iterator;
-import java.util.Locale;
-import java.util.Optional;
-import java.util.Spliterator;
-import java.util.Spliterators;
+
+import java.util.*;
 import java.util.stream.StreamSupport;
+
+import com.docutools.jocument.impl.ScalarPlaceholderData;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.poi.ss.usermodel.Cell;
@@ -22,6 +22,22 @@ public class ExcelUtils {
 
   private static final Logger logger = LogManager.getLogger();
 
+  /**
+   * Find and replace the placeholders found in value using given resolver.
+   *
+   * @param cell      the cell with placeholders to be replaced.
+   * @param resolver  {@link PlaceholderResolver} used to resolve the placeholders found in value.
+   * @return          String with replaced placeholders.
+   */
+  public static String replacePlaceholders(Cell cell, PlaceholderResolver resolver) {
+    String cellValue = getCellContentAsString(cell);
+    var matcher = ParsingUtils.matchPlaceholders(cellValue);
+    return matcher.replaceAll(matchResult -> resolver.resolve(matchResult.group(1))
+        .orElse(new ScalarPlaceholderData("-"))
+        .toString()
+    );
+  }
+
   public static String getPlaceholder(Cell cell) {
     return ParsingUtils.stripBrackets(cell.getStringCellValue());
   }
@@ -33,6 +49,11 @@ public class ExcelUtils {
   public static boolean isSimpleCell(Cell cell) {
     return cell.getCellType() != CellType.STRING
         || cell.getCellType() == CellType.STRING && !DocumentImpl.TAG_PATTERN.asPredicate().test(cell.getStringCellValue());
+  }
+
+  public static boolean containsPlaceholder(Cell cell) {
+    String cellValue = getCellContentAsString(cell);
+    return ParsingUtils.matchPlaceholders(cellValue).find();
   }
 
   /**

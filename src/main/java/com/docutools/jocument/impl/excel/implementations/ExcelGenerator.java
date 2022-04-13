@@ -67,12 +67,11 @@ public class ExcelGenerator {
       } else {
         excelWriter.newRow(row);
         for (Cell cell : row) {
-          if (ExcelUtils.isSimpleCell(cell)) {
+          if (ExcelUtils.containsPlaceholder(cell)) {
+            var newCellText = ExcelUtils.replacePlaceholders(cell, resolver);
+            excelWriter.addCell(cell, newCellText);
+          } else if (ExcelUtils.isSimpleCell(cell)) {
             excelWriter.addCell(cell);
-          } else {
-            var newCellText = resolver.resolve(ExcelUtils.getPlaceholder(cell))
-                .orElse(new ScalarPlaceholderData<>(""));
-            excelWriter.addCell(cell, newCellText.toString());
           }
         }
       }
