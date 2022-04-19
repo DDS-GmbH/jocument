@@ -2,17 +2,16 @@ package com.docutools.jocument.impl;
 
 import com.docutools.jocument.CustomPlaceholderRegistry;
 import com.docutools.jocument.PlaceholderData;
-import com.docutools.jocument.impl.word.CustomWordPlaceholderData;
 import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
 public class CustomPlaceholderRegistryImpl implements CustomPlaceholderRegistry {
-  private final Map<String, Class<? extends CustomWordPlaceholderData>> customWordPlaceholderDataMap = new HashMap<>();
+  private final Map<String, Class<? extends PlaceholderData>> customWordPlaceholderDataMap = new HashMap<>();
 
   @Override
-  public void addHandler(String placeholder, Class<? extends CustomWordPlaceholderData> customWordPlaceholderDataClass) {
+  public void addHandler(String placeholder, Class<? extends PlaceholderData> customWordPlaceholderDataClass) {
     customWordPlaceholderDataMap.put(placeholder, customWordPlaceholderDataClass);
   }
 
