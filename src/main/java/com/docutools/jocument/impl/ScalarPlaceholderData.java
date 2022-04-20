@@ -4,6 +4,7 @@ import com.docutools.jocument.PlaceholderData;
 import com.docutools.jocument.PlaceholderType;
 import java.util.Collection;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Function;
 
 public class ScalarPlaceholderData<T> implements PlaceholderData {
@@ -48,6 +49,8 @@ public class ScalarPlaceholderData<T> implements PlaceholderData {
       return !collection.isEmpty();
     } else if (value instanceof Object[] array) {
       return array.length > 0;
+    } else if (value instanceof Optional<?> optional) {
+      return optional.isPresent();
     }
     return value != null;
   }

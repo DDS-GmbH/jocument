@@ -43,6 +43,14 @@ public class FutureReflectionResolver extends ReflectionResolver {
     this(value, customPlaceholderRegistry, GenerationOptionsBuilder.buildDefaultOptions(), maximumWaitTimeSeconds);
   }
 
+  /**
+   * Create a new Future Reflection Resolver.
+   *
+   * @param value                     The value to resolve upon
+   * @param customPlaceholderRegistry A custom placeholder registry for custom placeholders
+   * @param options                   Generation options
+   * @param maximumWaitTimeSeconds    The maximum wait time to wait for futures
+   */
   public FutureReflectionResolver(Object value,
                                   CustomPlaceholderRegistry customPlaceholderRegistry,
                                   GenerationOptions options,
@@ -64,11 +72,7 @@ public class FutureReflectionResolver extends ReflectionResolver {
         logger.debug("Placeholder {} could not be translated into a property", placeholderName);
         return Optional.empty();
       }
-      if (property instanceof Future<?>) {
-        logger.debug("Placeholder {} property is a future, getting it", placeholderName);
-        property = ((Future<?>) property).get(maximumWaitTime, TimeUnit.SECONDS);
-        logger.debug("Placeholder {} property future retrieved", placeholderName);
-      }
+      property = resolveNonFinalValue(property, placeholderName);
       var simplePlaceholder = resolveSimplePlaceholder(property, placeholderName, locale);
       if (simplePlaceholder.isPresent()) {
         logger.debug("Placeholder {} resolved to simple placeholder", placeholderName);
@@ -83,15 +87,12 @@ public class FutureReflectionResolver extends ReflectionResolver {
         }
         if (bean.equals(property)) {
           logger.debug("Placeholder {} resolved to the parent object", placeholderName);
-          return Optional.of(new IterablePlaceholderData(List.of(new FutureReflectionResolver(bean, customPlaceholderRegistry, options, maximumWaitTime)), 1));
+          return Optional.of(
+              new IterablePlaceholderData(List.of(new FutureReflectionResolver(bean, customPlaceholderRegistry, options, maximumWaitTime)), 1));
         } else {
           var value = getBeanProperty(placeholderName);
           logger.debug("Resolved placeholder {} to the bean property {}", placeholderName, value);
-          if (value instanceof Future<?>) {
-            logger.debug("Placeholder {} property is a future, getting it", placeholderName);
-            value = ((Future<?>) value).get(maximumWaitTime, TimeUnit.SECONDS);
-            logger.debug("Placeholder {} property future retrieved", placeholderName);
-          }
+          value = resolveNonFinalValue(value, placeholderName);
           return Optional.of(
               new IterablePlaceholderData(List.of(new FutureReflectionResolver(value, customPlaceholderRegistry, options, maximumWaitTime)), 1));
         }
@@ -115,6 +116,29 @@ public class FutureReflectionResolver extends ReflectionResolver {
     } catch (TimeoutException e) {
       logger.warn("Timeout exception when waiting for Future placeholder {}", placeholderName, e);
       return Optional.empty();
+    } catch (EmptyOptionalException e) {
+      logger.warn("Placeholder {} property is an empty optional", e.getMessage());
+      return Optional.empty();
     }
+  }
+
+  private Object resolveNonFinalValue(Object property, String placeholderName)
+      throws ExecutionException, InterruptedException, TimeoutException, EmptyOptionalException {
+    var resolvedProperty = property;
+    if (property instanceof Future<?> future) {
+      logger.debug("Placeholder {} property is a future, getting it", placeholderName);
+      resolvedProperty = future.get(maximumWaitTime, TimeUnit.SECONDS);
+      logger.debug("Placeholder {} property future retrieved", placeholderName);
+    }
+    if (property instanceof Optional<?> optional) {
+      logger.debug("Placeholder {} property is an optional, getting it", placeholderName);
+      if (optional.isEmpty()) {
+        throw new EmptyOptionalException(placeholderName);
+      } else {
+        resolvedProperty = optional.get();
+        logger.debug("Optional placeholder {} property contained {}", placeholderName, property);
+      }
+    }
+    return resolvedProperty;
   }
 }

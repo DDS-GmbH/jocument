@@ -75,6 +75,7 @@ public interface PlaceholderData {
    *   <li>{@code null}</li>
    *   <li>0</li>
    *   <li>{@code false}</li>
+   *   <li>Empty {@link java.util.Optional}</li>
    * </ul>
    *
    * @return {@code true} if truthy
