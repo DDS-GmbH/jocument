@@ -8,7 +8,7 @@ import java.util.Optional;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public record Ship(String name, Captain captain, int crew, List<Service> services, LocalDate built) {
+public record Ship(String name, Captain captain, int crew, List<Service> services, LocalDate built, Optional<String> currentPosition) {
 
   private static final Logger log = LogManager.getLogger(Ship.class);
 

@@ -5,6 +5,7 @@ import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 
+import com.docutools.jocument.impl.FutureReflectionResolver;
 import com.docutools.jocument.impl.ReflectionResolver;
 import com.docutools.jocument.sample.model.SampleModelData;
 import com.docutools.jocument.sample.model.Ship;
@@ -13,6 +14,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -184,12 +186,12 @@ class ReflectionResolvingTests {
     assertThat(numberOfServices, equalTo(String.valueOf(SampleModelData.ENTERPRISE.services().size())));
   }
 
-  @ValueSource(strings = {"name", "captain", "crew", "services"})
+  @ValueSource(strings = {"name", "captain", "crew", "services", "currentPosition"})
   @ParameterizedTest(name = "Resolve falsy condition for {0} on empty ship")
   void shouldResolveFalsyCondition(String propertyName) {
     // Assemble
-    var emptyShip = new Ship("", null, 0, List.of(), LocalDate.now());
-    var resolver = new ReflectionResolver(emptyShip);
+    var emptyShip = new Ship("", null, 0, List.of(), LocalDate.now(), Optional.empty());
+    var resolver = new FutureReflectionResolver(emptyShip);
 
     // Act
     var emptyPlaceholderData = resolver.resolve(propertyName + "?")
@@ -199,4 +201,16 @@ class ReflectionResolvingTests {
     assertThat(emptyPlaceholderData.count(), is(0L));
   }
 
+  @Test
+  void shouldResolveNonemptyOptional() {
+    // Assemble
+    var resolver = new FutureReflectionResolver(SampleModelData.ENTERPRISE);
+
+    // Act
+    var position = resolver.resolve("currentPosition")
+        .orElseThrow();
+
+    // Assert
+    assertThat(position.getRawValue(), equalTo(SampleModelData.ENTERPRISE.currentPosition().get()));
+  }
 }
