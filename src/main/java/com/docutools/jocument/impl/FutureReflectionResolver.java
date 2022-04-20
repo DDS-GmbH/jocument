@@ -130,7 +130,7 @@ public class FutureReflectionResolver extends ReflectionResolver {
       resolvedProperty = future.get(maximumWaitTime, TimeUnit.SECONDS);
       logger.debug("Placeholder {} property future retrieved", placeholderName);
     }
-    if (property instanceof Optional<?> optional) {
+    if (resolvedProperty instanceof Optional<?> optional) {
       logger.debug("Placeholder {} property is an optional, getting it", placeholderName);
       if (optional.isEmpty()) {
         throw new EmptyOptionalException(placeholderName);
