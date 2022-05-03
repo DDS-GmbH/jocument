@@ -1,6 +1,7 @@
 package com.docutools.jocument.sample.model;
 
 import com.docutools.jocument.annotations.Image;
+import com.docutools.jocument.annotations.Translatable;
 import java.nio.file.Path;
 import java.util.List;
 
@@ -13,14 +14,17 @@ public class Captain {
   private final List<Service> services;
   @Image(maxWidth = 100)
   private final Path profilePic;
+  @Translatable
+  private final String commandingStyle;
 
-  public Captain(String name, int rank, Uniform uniform, FirstOfficer officer, List<Service> services, Path profilePic) {
+  public Captain(String name, int rank, Uniform uniform, FirstOfficer officer, List<Service> services, Path profilePic, String commandingStyle) {
     this.name = name;
     this.rank = rank;
     this.uniform = uniform;
     this.officer = officer;
     this.services = services;
     this.profilePic = profilePic;
+    this.commandingStyle = commandingStyle;
   }
 
   public String getName() {
@@ -45,5 +49,9 @@ public class Captain {
 
   public Path getProfilePic() {
     return profilePic;
+  }
+
+  public String getCommandingStyle() {
+    return commandingStyle;
   }
 }

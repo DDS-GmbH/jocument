@@ -73,7 +73,7 @@ public class FutureReflectionResolver extends ReflectionResolver {
         return Optional.empty();
       }
       property = resolveNonFinalValue(property, placeholderName);
-      var simplePlaceholder = resolveSimplePlaceholder(property, placeholderName, locale);
+      var simplePlaceholder = resolveSimplePlaceholder(property, placeholderName, locale, options);
       if (simplePlaceholder.isPresent()) {
         logger.debug("Placeholder {} resolved to simple placeholder", placeholderName);
         return simplePlaceholder;
