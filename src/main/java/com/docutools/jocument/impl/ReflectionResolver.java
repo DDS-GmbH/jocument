@@ -307,6 +307,13 @@ public class ReflectionResolver extends PlaceholderResolver {
       return Optional.of(new ScalarPlaceholderData<>(number, numberFormat::format));
     } else if (property instanceof String propertyString && isFieldAnnotatedWith(bean.getClass(), placeholderName, Translatable.class)) {
       return Optional.of(new ScalarPlaceholderData<>(options.translate(propertyString, locale).orElse(propertyString)));
+    } else if (property instanceof Enum<?> enumProperty && isFieldAnnotatedWith(bean.getClass(), placeholderName, Translatable.class)) {
+      var translation = options.translate(enumProperty.toString(), locale);
+      if (translation.isPresent()) {
+        return Optional.of(new ScalarPlaceholderData<>(translation.get()));
+      } else {
+        return Optional.of(new ScalarPlaceholderData<>(enumProperty));
+      }
     } else if (property instanceof Enum || property instanceof String || ReflectionUtils.isWrapperType(property.getClass())) {
       return Optional.of(new ScalarPlaceholderData<>(property));
     } else if (property instanceof Temporal temporal) {

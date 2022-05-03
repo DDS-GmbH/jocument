@@ -58,7 +58,7 @@ class CustomTranslationsTests {
   }
 
   @Test
-  void translatesAnnotatedTerm() {
+  void translatesAnnotatedString() {
     // Arrange
     var options = new GenerationOptionsBuilder()
         .withTranslation((term, locale) -> {
@@ -75,6 +75,26 @@ class CustomTranslationsTests {
 
     // Assert
     assertThat(commandingStyle.get().getRawValue(), equalTo("Einfühlend"));
+  }
+
+  @Test
+  void translatesAnnotatedEnum() {
+    // Arrange
+    var options = new GenerationOptionsBuilder()
+        .withTranslation((term, locale) -> {
+          if (term.equals("Red") && locale.equals(Locale.GERMAN)) {
+            return Optional.of("Rot");
+          }
+          return Optional.empty();
+        })
+        .build();
+    PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.PICARD, new CustomPlaceholderRegistryImpl(), options, null);
+
+    // Act
+    Optional<PlaceholderData> commandingStyle = resolver.resolve("uniform", Locale.GERMAN);
+
+    // Assert
+    assertThat(commandingStyle.get().getRawValue(), equalTo("Rot"));
   }
 
   public static class CustomTranslatedPlaceholder extends CustomWordPlaceholderData {

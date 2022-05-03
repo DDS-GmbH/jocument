@@ -9,6 +9,7 @@ public class Captain {
 
   private final String name;
   private final int rank;
+  @Translatable
   private final Uniform uniform;
   private final FirstOfficer officer;
   private final List<Service> services;
