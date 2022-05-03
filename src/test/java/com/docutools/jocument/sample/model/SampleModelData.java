@@ -29,7 +29,8 @@ public class SampleModelData {
           Uniform.Red,
           new FirstOfficer("Riker", 3, Uniform.Red),
           services,
-          Path.of(SampleModelData.class.getResource("/images/picardProfile.jpg").toURI()));
+          Path.of(SampleModelData.class.getResource("/images/picardProfile.jpg").toURI()),
+          "sympathetic");
       CAPTAINS = List.of(PICARD);
       ENTERPRISE = new Ship("USS Enterprise", PICARD, 5, services, LocalDate.now(), Optional.of("Mos Eisley"));
       FUTURE_PICARD = new FutureCaptain(CompletableFuture.completedFuture("Jean-Luc Picard"),

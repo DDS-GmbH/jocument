@@ -12,6 +12,7 @@ import com.docutools.jocument.annotations.MatchPlaceholder;
 import com.docutools.jocument.annotations.Money;
 import com.docutools.jocument.annotations.Numeric;
 import com.docutools.jocument.annotations.Percentage;
+import com.docutools.jocument.annotations.Translatable;
 import com.docutools.jocument.impl.word.placeholders.ImagePlaceholderData;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
@@ -72,7 +73,10 @@ public class ReflectionResolver extends PlaceholderResolver {
    * @param customPlaceholderRegistry The custom placeholder registry to check for custom placeholders
    * @param parent                    The parent registry
    */
-  public ReflectionResolver(Object value, CustomPlaceholderRegistry customPlaceholderRegistry, GenerationOptions options, PlaceholderResolver parent) {
+  public ReflectionResolver(Object value,
+                            CustomPlaceholderRegistry customPlaceholderRegistry,
+                            GenerationOptions options,
+                            PlaceholderResolver parent) {
     this.bean = value;
     this.customPlaceholderRegistry = customPlaceholderRegistry;
     this.parent = parent;
@@ -263,7 +267,7 @@ public class ReflectionResolver extends PlaceholderResolver {
         logger.debug("Placeholder {} could not be translated into a property", placeholderName);
         return Optional.empty();
       }
-      var simplePlaceholder = resolveSimplePlaceholder(property, placeholderName, locale);
+      var simplePlaceholder = resolveSimplePlaceholder(property, placeholderName, locale, options);
       if (simplePlaceholder.isPresent()) {
         logger.debug("Placeholder {} resolved to simple placeholder", placeholderName);
         return simplePlaceholder;
@@ -297,18 +301,19 @@ public class ReflectionResolver extends PlaceholderResolver {
     }
   }
 
-  protected Optional<PlaceholderData> resolveSimplePlaceholder(Object property, String placeholderName, Locale locale) {
+  protected Optional<PlaceholderData> resolveSimplePlaceholder(Object property, String placeholderName, Locale locale, GenerationOptions options) {
     if (property instanceof Number number) {
       var numberFormat = findNumberFormat(placeholderName, locale);
       return Optional.of(new ScalarPlaceholderData<>(number, numberFormat::format));
+    } else if (property instanceof String propertyString && isFieldAnnotatedWith(bean.getClass(), placeholderName, Translatable.class)) {
+      return Optional.of(new ScalarPlaceholderData<>(options.translate(propertyString, locale).orElse(propertyString)));
     } else if (property instanceof Enum || property instanceof String || ReflectionUtils.isWrapperType(property.getClass())) {
       return Optional.of(new ScalarPlaceholderData<>(property));
     } else if (property instanceof Temporal temporal) {
       return formatTemporal(placeholderName, temporal, locale);
     } else if (property instanceof Path path && isFieldAnnotatedWith(bean.getClass(), placeholderName, Image.class)) {
       return ReflectionUtils.findFieldAnnotation(bean.getClass(), placeholderName, Image.class)
-          .map(image -> new ImagePlaceholderData(path)
-              .withMaxWidth(image.maxWidth()));
+          .map(image -> new ImagePlaceholderData(path).withMaxWidth(image.maxWidth()));
     } else {
       return Optional.empty();
     }
