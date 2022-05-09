@@ -48,7 +48,7 @@ public abstract class PlaceholderResolver {
   }
 
   private PlaceholderData format(Locale locale, PlaceholderData original) {
-    if(original instanceof ScalarPlaceholderData<?>) {
+    if (original instanceof ScalarPlaceholderData<?>) {
       return options.tryToFormat(locale, original).orElse(original);
     }
     return original;
