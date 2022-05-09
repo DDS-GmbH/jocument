@@ -30,15 +30,17 @@ public final class DefaultImageStrategy implements ImageStrategy {
    * @return the default {@link ImageStrategy}
    */
   public static ImageStrategy instance() {
-    if (INSTANCE == null) {
+    ImageStrategy localRef = INSTANCE;
+    if (localRef == null) {
       synchronized (MUTEX) {
-        if (INSTANCE == null) {
-          INSTANCE = new DefaultImageStrategy();
+        localRef = INSTANCE;
+        if (localRef == null) {
+          localRef = INSTANCE = new DefaultImageStrategy();
           log.trace("Initialized singleton");
         }
       }
     }
-    return INSTANCE;
+    return localRef;
   }
 
   private DefaultImageStrategy() {
@@ -81,7 +83,7 @@ public final class DefaultImageStrategy implements ImageStrategy {
         int height = reader.getHeight(reader.getMinIndex());
         return new Dimension(width, height);
       } catch (IOException e) {
-        log.warn("Error reading: " + path.toAbsolutePath(), e);
+        log.warn("Error reading: %s".formatted(path.toAbsolutePath()), e);
       } finally {
         reader.dispose();
       }

@@ -38,7 +38,7 @@ public class ScalarPlaceholderData<T> implements PlaceholderData {
 
   @Override
   public boolean isTruthy() {
-    // TODO can be replaced with Java pattern matching when out of preview
+    // can be replaced with Java pattern matching when out of preview
     if (value instanceof Number number) {
       return number.longValue() != 0L;
     } else if (value instanceof String string) {

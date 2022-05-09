@@ -14,7 +14,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.stream.Collectors;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -81,8 +80,8 @@ public class FutureReflectionResolver extends ReflectionResolver {
         if (property instanceof Collection<?> collection) {
           logger.debug("Placeholder {} resolved to collection", placeholderName);
           List<PlaceholderResolver> list = collection.stream()
-              .map(object -> new FutureReflectionResolver(object, customPlaceholderRegistry, options, maximumWaitTime))
-              .collect(Collectors.toList());
+              .map(object -> (PlaceholderResolver) new FutureReflectionResolver(object, customPlaceholderRegistry, options, maximumWaitTime))
+              .toList();
           return Optional.of(new IterablePlaceholderData(list, list.size()));
         }
         if (bean.equals(property)) {
