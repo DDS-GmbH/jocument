@@ -3,6 +3,7 @@ package com.docutools.jocument;
 import com.docutools.jocument.formatting.PlaceholderDataFormattingOption;
 import com.docutools.jocument.image.ImageStrategy;
 import com.docutools.jocument.impl.ScalarPlaceholderData;
+import java.time.Duration;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
@@ -15,6 +16,7 @@ import java.util.function.BiFunction;
  * @since 2021-03-24
  */
 public record GenerationOptions(ImageStrategy imageStrategy,
+                                Duration maximumWaitTime,
                                 List<PlaceholderDataFormattingOption> formattingOptions,
                                 BiFunction<String, Locale, Optional<String>> translationFunction) {
 

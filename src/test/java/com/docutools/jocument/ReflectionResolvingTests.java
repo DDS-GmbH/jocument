@@ -5,7 +5,6 @@ import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 
-import com.docutools.jocument.impl.FutureReflectionResolver;
 import com.docutools.jocument.impl.ReflectionResolver;
 import com.docutools.jocument.sample.model.SampleModelData;
 import com.docutools.jocument.sample.model.Ship;
@@ -191,20 +190,20 @@ class ReflectionResolvingTests {
   void shouldResolveFalsyCondition(String propertyName) {
     // Assemble
     var emptyShip = new Ship("", null, 0, List.of(), LocalDate.now(), Optional.empty());
-    var resolver = new FutureReflectionResolver(emptyShip);
+    var resolver = new ReflectionResolver(emptyShip);
 
     // Act
     var emptyPlaceholderData = resolver.resolve(propertyName + "?")
         .orElseThrow();
 
     // Assert
-    assertThat(emptyPlaceholderData.count(), is(0L));
+    assertThat(emptyPlaceholderData.isTruthy(), is(false));
   }
 
   @Test
   void shouldResolveNonemptyOptional() {
     // Assemble
-    var resolver = new FutureReflectionResolver(SampleModelData.ENTERPRISE);
+    var resolver = new ReflectionResolver(SampleModelData.ENTERPRISE);
 
     // Act
     var position = resolver.resolve("currentPosition")

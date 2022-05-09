@@ -33,6 +33,10 @@ import java.util.Currency;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import org.apache.commons.beanutils.PropertyUtilsBean;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -55,7 +59,6 @@ public class ReflectionResolver extends PlaceholderResolver {
   private final PropertyUtilsBean pub = new PropertyUtilsBean();
   private final PlaceholderMapper placeholderMapper = new PlaceholderMapperImpl();
   private final PlaceholderResolver parent;
-
 
   public ReflectionResolver(Object value) {
     this(value, new CustomPlaceholderRegistryImpl()); //NoOp CustomPlaceholderRegistry
@@ -159,9 +162,7 @@ public class ReflectionResolver extends PlaceholderResolver {
 
   private Optional<PlaceholderData> resolveStripped(Locale locale, String placeholder) {
     return matchPattern(placeholder, locale)
-        .or(() -> resolveAccessor(placeholder, locale)
-            .or(() -> placeholderMapper.map(placeholder)
-                .flatMap(mappedName -> resolve(mappedName, locale))));
+        .or(() -> resolveAccessor(placeholderMapper.map(placeholder).orElse(placeholder), locale));
   }
 
   private Optional<PlaceholderData> matchPattern(String placeholderName, Locale locale) {
@@ -243,14 +244,13 @@ public class ReflectionResolver extends PlaceholderResolver {
   }
 
   /**
-   * Method resolving placeholders for the reflection resolver. incredibly ugly, but since doReflectiveResolve is public, the overriden method of
-   * FutureReflectionResolver is used when necessary could/should maybe be made a bit more explicit by defining a common superinterface
+   * Method resolving placeholders for the reflection resolver.
    *
    * @param placeholderName The name of the placeholder
    * @param locale          The locale to user for localization
    * @return An optional containing `PlaceholderData` if it could be resolved
    */
-  public Optional<PlaceholderData> doReflectiveResolve(String placeholderName, Locale locale) {
+  private Optional<PlaceholderData> doReflectiveResolve(String placeholderName, Locale locale) {
     try {
       if (PARENT_SYMBOL.equals(placeholderName)) {
         return parent != null
@@ -266,6 +266,7 @@ public class ReflectionResolver extends PlaceholderResolver {
         logger.debug("Placeholder {} could not be translated into a property", placeholderName);
         return Optional.empty();
       }
+      property = resolveNonFinalValue(property, placeholderName);
       var simplePlaceholder = resolveSimplePlaceholder(property, placeholderName, locale, options);
       if (simplePlaceholder.isPresent()) {
         logger.debug("Placeholder {} resolved to simple placeholder", placeholderName);
@@ -285,6 +286,7 @@ public class ReflectionResolver extends PlaceholderResolver {
         } else {
           var value = getBeanProperty(placeholderName);
           logger.debug("Resolved placeholder {} to the bean property {}", placeholderName, value);
+          value = resolveNonFinalValue(value, placeholderName);
           return Optional.of(new IterablePlaceholderData(List.of(new ReflectionResolver(value, customPlaceholderRegistry, options, this)), 1));
         }
       }
@@ -297,10 +299,23 @@ public class ReflectionResolver extends PlaceholderResolver {
     } catch (InstantiationException e) {
       logger.warn("InstantiationException when trying to resolve placeholder %s".formatted(placeholderName), e);
       return Optional.empty();
+    } catch (InterruptedException e) {
+      logger.warn("InterruptedException when waiting for Future placeholder %s".formatted(placeholderName), e);
+      Thread.currentThread().interrupt();
+      return Optional.empty();
+    } catch (ExecutionException e) {
+      logger.warn("Execution exception when waiting for Future placeholder %s".formatted(placeholderName), e);
+      return Optional.empty();
+    } catch (TimeoutException e) {
+      logger.warn("Timeout exception when waiting for Future placeholder {}", placeholderName, e);
+      return Optional.empty();
+    } catch (EmptyOptionalException e) {
+      logger.warn("Placeholder {} property is an empty optional", e.getMessage());
+      return Optional.empty();
     }
   }
 
-  protected Optional<PlaceholderData> resolveSimplePlaceholder(Object property, String placeholderName, Locale locale, GenerationOptions options) {
+  private Optional<PlaceholderData> resolveSimplePlaceholder(Object property, String placeholderName, Locale locale, GenerationOptions options) {
     if (property instanceof Number number) {
       var numberFormat = findNumberFormat(placeholderName, locale);
       return Optional.of(new ScalarPlaceholderData<>(number, numberFormat::format));
@@ -325,7 +340,7 @@ public class ReflectionResolver extends PlaceholderResolver {
     }
   }
 
-  protected Object getBeanProperty(String placeholderName) throws InvocationTargetException, IllegalAccessException, NoSuchMethodException {
+  private Object getBeanProperty(String placeholderName) throws InvocationTargetException, IllegalAccessException, NoSuchMethodException {
     var ignoreCasePlaceholder = placeholderName.toLowerCase();
     if (SELF_REFERENCE.equals(placeholderName)) {
       return bean;
@@ -348,7 +363,7 @@ public class ReflectionResolver extends PlaceholderResolver {
     return Optional.of(new IterablePlaceholderData());
   }
 
-  protected Optional<PlaceholderData> formatTemporal(String placeholderName, Temporal time, Locale locale) {
+  private Optional<PlaceholderData> formatTemporal(String placeholderName, Temporal time, Locale locale) {
     Optional<DateTimeFormatter> formatter;
     if (isFieldAnnotatedWith(bean.getClass(), placeholderName, Format.class)) {
       formatter = ReflectionUtils.findFieldAnnotation(bean.getClass(), placeholderName, Format.class)
@@ -369,7 +384,7 @@ public class ReflectionResolver extends PlaceholderResolver {
     return formatter.map(dateTimeFormatter -> new ScalarPlaceholderData<>(time, dateTimeFormatter::format));
   }
 
-  protected NumberFormat findNumberFormat(String fieldName, Locale locale) {
+  private NumberFormat findNumberFormat(String fieldName, Locale locale) {
     return ReflectionUtils.findFieldAnnotation(bean.getClass(), fieldName, Percentage.class)
         .map(percentage -> toNumberFormat(percentage, locale))
         .or(() -> ReflectionUtils.findFieldAnnotation(bean.getClass(), fieldName, Money.class)
@@ -380,5 +395,25 @@ public class ReflectionResolver extends PlaceholderResolver {
           logger.info("Did not find formatting directive for {}, formatting according to locale {}", fieldName, locale);
           return NumberFormat.getInstance(locale);
         });
+  }
+
+  private Object resolveNonFinalValue(Object property, String placeholderName)
+      throws ExecutionException, InterruptedException, TimeoutException, EmptyOptionalException {
+    var resolvedProperty = property;
+    if (property instanceof Future<?> future) {
+      logger.debug("Placeholder {} property is a future, getting it", placeholderName);
+      resolvedProperty = future.get(options.maximumWaitTime().toSeconds(), TimeUnit.SECONDS);
+      logger.debug("Placeholder {} property future retrieved", placeholderName);
+    }
+    if (resolvedProperty instanceof Optional<?> optional) {
+      logger.debug("Placeholder {} property is an optional, getting it", placeholderName);
+      if (optional.isEmpty()) {
+        throw new EmptyOptionalException(placeholderName);
+      } else {
+        resolvedProperty = optional.get();
+        logger.debug("Optional placeholder {} property contained {}", placeholderName, property);
+      }
+    }
+    return resolvedProperty;
   }
 }

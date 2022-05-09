@@ -11,7 +11,6 @@ import com.docutools.jocument.PlaceholderResolver;
 import com.docutools.jocument.Template;
 import com.docutools.jocument.TestUtils;
 import com.docutools.jocument.impl.CustomPlaceholderRegistryImpl;
-import com.docutools.jocument.impl.FutureReflectionResolver;
 import com.docutools.jocument.impl.ReflectionResolver;
 import com.docutools.jocument.sample.model.SampleModelData;
 import com.docutools.jocument.sample.placeholders.QuotePlaceholder;
@@ -200,7 +199,7 @@ class WordGeneratorTest {
         // Assemble
         Template template = Template.fromClassPath("/templates/word/LegacyCollectionsTemplate.docx")
             .orElseThrow();
-        PlaceholderResolver resolver = new FutureReflectionResolver(SampleModelData.PICARD);
+        PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.PICARD);
 
         // Act
         Document document = template.startGeneration(resolver);
@@ -230,7 +229,7 @@ class WordGeneratorTest {
         // Assemble
         Template template = Template.fromClassPath("/templates/word/CollectionsTemplate.docx")
             .orElseThrow();
-        PlaceholderResolver resolver = new FutureReflectionResolver(SampleModelData.FUTURE_PICARD);
+        PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.FUTURE_PICARD);
 
         // Act
         Document document = template.startGeneration(resolver);
@@ -331,7 +330,7 @@ class WordGeneratorTest {
         // Assemble
         Template template = Template.fromClassPath("/templates/word/ProfilePicTemplate.docx")
             .orElseThrow();
-        PlaceholderResolver resolver = new FutureReflectionResolver(SampleModelData.FUTURE_PICARD);
+        PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.FUTURE_PICARD);
 
         // Act
         Document document = template.startGeneration(resolver);
