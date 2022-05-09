@@ -324,4 +324,23 @@ class WordGeneratorTest {
         var documentWrapper = new XWPFDocumentWrapper(xwpfDocument);
         assertThat(documentWrapper.document().getBodyElements(), hasSize(0));
     }
+
+    @Test
+    @DisplayName("Scale large picture")
+    void shouldScaleLargePicture() throws IOException, InterruptedException {
+        // Assemble
+        Template template = Template.fromClassPath("/templates/word/ProfilePicTemplate.docx")
+            .orElseThrow();
+        PlaceholderResolver resolver = new FutureReflectionResolver(SampleModelData.FUTURE_PICARD);
+
+        // Act
+        Document document = template.startGeneration(resolver);
+        document.blockUntilCompletion(60000L); // 1 minute
+
+        // Assert
+        assertThat(document.completed(), is(true));
+        xwpfDocument = TestUtils.getXWPFDocumentFromDocument(document);
+        var documentWrapper = new XWPFDocumentWrapper(xwpfDocument);
+        assertThat(documentWrapper.bodyElement(0).asParagraph().run(0).pictures(), hasSize(1));
+    }
 }

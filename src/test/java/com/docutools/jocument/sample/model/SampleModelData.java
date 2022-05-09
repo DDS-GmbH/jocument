@@ -38,7 +38,7 @@ public class SampleModelData {
           CompletableFuture.completedFuture(Uniform.Red),
           CompletableFuture.completedFuture(new FirstOfficer("Riker", 3, Uniform.Red)),
           CompletableFuture.completedFuture(services),
-          CompletableFuture.completedFuture(Path.of(SampleModelData.class.getResource("/images/picardProfile.jpg").toURI())));
+          CompletableFuture.completedFuture(Path.of(SampleModelData.class.getResource("/images/picardProfileLarge.jpg").toURI())));
       ENTERPRISE_WITHOUT_SERVICES = new Ship("USS Enterprise", PICARD, 5, Collections.emptyList(), LocalDate.now(), Optional.empty());
     } catch (URISyntaxException e) {
       throw new RuntimeException(e);
