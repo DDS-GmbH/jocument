@@ -33,7 +33,6 @@ import java.util.Currency;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import org.apache.commons.beanutils.PropertyUtilsBean;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -196,21 +195,21 @@ public class ReflectionResolver extends PlaceholderResolver {
               if (returnValue instanceof Optional<?> optionalReturnValue) {
                 return optionalReturnValue.map(Object::toString);
               } else {
-                logger.warn("@MatchPlaceholder-annotated method {} must take a String (placeholderName) as first parameter, but takes {}.",
-                    method, parameterTypes[0]);
+                logger.warn("@MatchPlaceholder-annotated method {} must return `Optional<T>`, but returns {}.", method, returnValue.getClass());
                 return Optional.empty();
               }
             } else if (method.getParameterCount() == 1) {
               var parameterTypes = method.getParameterTypes();
               if (!parameterTypes[0].equals(String.class)) {
-                logger.warn("@MatchPlaceholder-annotated method {} us not a java.util.Optional!", method);
+                logger.warn("@MatchPlaceholder-annotated method {} must take a String (placeholderName) as first parameter, but takes {}.",
+                    method, parameterTypes[0]);
                 return Optional.empty();
               }
               var returnValue = method.invoke(bean, placeholderName);
               if (returnValue instanceof Optional<?> optionalReturnValue) {
                 return optionalReturnValue.map(Object::toString);
               } else {
-                logger.warn("@MatchPlaceholder-annotated method {} us not a java.util.Optional!", method);
+                logger.warn("@MatchPlaceholder-annotated method {} does not return a java.util.Optional!", method);
                 return Optional.empty();
               }
             } else {
