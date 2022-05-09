@@ -73,6 +73,7 @@ public class ReflectionResolver extends PlaceholderResolver {
    *
    * @param value                     The value to resolve against
    * @param customPlaceholderRegistry The custom placeholder registry to check for custom placeholders
+   * @param options                   Options for generating the document
    * @param parent                    The parent registry
    */
   public ReflectionResolver(Object value,
@@ -83,6 +84,19 @@ public class ReflectionResolver extends PlaceholderResolver {
     this.customPlaceholderRegistry = customPlaceholderRegistry;
     this.parent = parent;
     setOptions(options);
+  }
+
+  /**
+   * Create a new reflection resolver with a parent registry.
+   *
+   * @param value                     The value to resolve against
+   * @param customPlaceholderRegistry The custom placeholder registry to check for custom placeholders
+   * @param options                   Options for generating the document
+   */
+  public ReflectionResolver(Object value,
+                            CustomPlaceholderRegistry customPlaceholderRegistry,
+                            GenerationOptions options) {
+    this(value, customPlaceholderRegistry, options, null);
   }
 
   protected static boolean isFieldAnnotatedWith(Class<?> clazz, String fieldName, Class<? extends Annotation> annotation) {
