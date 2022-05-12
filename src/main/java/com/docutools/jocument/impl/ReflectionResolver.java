@@ -175,7 +175,9 @@ public class ReflectionResolver extends PlaceholderResolver {
   }
 
   private Optional<PlaceholderData> resolveStripped(Locale locale, String placeholder) {
-    return matchPattern(placeholder, locale).or(() -> resolveAccessor(placeholder, locale));
+    return matchPattern(placeholder, locale)
+        .or(() -> resolveFieldAccessor(placeholder, locale))
+        .or(() -> tryResolveInParent(placeholder, locale));
   }
 
   private Optional<PlaceholderData> matchPattern(String placeholderName, Locale locale) {
@@ -239,18 +241,22 @@ public class ReflectionResolver extends PlaceholderResolver {
         .map(ScalarPlaceholderData::new);
   }
 
-  private Optional<PlaceholderData> resolveAccessor(String placeholderName, Locale locale) {
+  private Optional<PlaceholderData> resolveFieldAccessor(String placeholderName, Locale locale) {
+    return resolveChain(placeholderName, locale)
+        .or(() -> placeholderMapper.map(placeholderName)
+            .flatMap(mappedPlaceholder -> resolveChain(mappedPlaceholder, locale)));
+
+  }
+
+  private Optional<PlaceholderData> resolveChain(String placeholderName, Locale locale) {
     Optional<PlaceholderData> result = Optional.empty();
     for (String property : placeholderName.split("\\.")) {
       result = result
-          .flatMap(r -> r.stream().findFirst())
-          .flatMap(r -> r.resolve(property, locale))
+          .flatMap(placeholderData -> placeholderData.stream().findFirst())
+          .flatMap(childResolver -> childResolver.resolve(property, locale))
           .or(() -> doReflectiveResolve(property, locale));
     }
-    return result
-        .or(() -> placeholderMapper.map(placeholderName)
-            .flatMap(mappedPlaceholder -> resolveAccessor(mappedPlaceholder, locale)))
-        .or(() -> tryResolveInParent(placeholderName, locale));
+    return result;
   }
 
   private Optional<PlaceholderData> tryResolveInParent(String placeholderName, Locale locale) {
