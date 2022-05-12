@@ -175,7 +175,8 @@ public class ReflectionResolver extends PlaceholderResolver {
   }
 
   private String strip(String placeholderName) {
-    return placeholderMapper.tryToMap(placeholderName).substring(0, placeholderName.length() - 1);
+    var placeholder = placeholderMapper.tryToMap(placeholderName);
+    return placeholder.substring(0, placeholder.length() - 1);
   }
 
   private Optional<PlaceholderData> resolveStripped(Locale locale, String placeholder) {
