@@ -165,6 +165,7 @@ public class ReflectionResolver extends PlaceholderResolver {
   @Override
   protected Optional<PlaceholderData> doResolve(String placeholderName, Locale locale) {
     logger.debug("Trying to resolve placeholder {}", placeholderName);
+    placeholderName = placeholderMapper.tryToMap(placeholderName);
     boolean isCondition = placeholderName.endsWith("?");
     placeholderName = isCondition ? placeholderName.substring(0, placeholderName.length() - 1) : placeholderName;
     Optional<PlaceholderData> result = resolveStripped(locale, placeholderName);
@@ -175,8 +176,7 @@ public class ReflectionResolver extends PlaceholderResolver {
   }
 
   private Optional<PlaceholderData> resolveStripped(Locale locale, String placeholder) {
-    return matchPattern(placeholder, locale)
-        .or(() -> resolveAccessor(placeholderMapper.map(placeholder).orElse(placeholder), locale));
+    return matchPattern(placeholder, locale).or(() -> resolveAccessor(placeholder, locale));
   }
 
   private Optional<PlaceholderData> matchPattern(String placeholderName, Locale locale) {
