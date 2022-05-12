@@ -165,8 +165,8 @@ public class ReflectionResolver extends PlaceholderResolver {
   @Override
   protected Optional<PlaceholderData> doResolve(String placeholderName, Locale locale) {
     logger.debug("Trying to resolve placeholder {}", placeholderName);
-    boolean isCondition = placeholderName.endsWith("?");
-    placeholderName = isCondition ? placeholderName.substring(0, placeholderName.length() - 1) : placeholderName;
+    boolean isCondition = placeholderMapper.tryToMap(placeholderName).endsWith("?");
+    placeholderName = isCondition ? strip(placeholderName) : placeholderName;
     Optional<PlaceholderData> result = resolveStripped(locale, placeholderName);
     if (isCondition) {
       return evaluateCondition(result);
@@ -174,9 +174,15 @@ public class ReflectionResolver extends PlaceholderResolver {
     return result;
   }
 
+  private String strip(String placeholderName) {
+    var placeholder = placeholderMapper.tryToMap(placeholderName);
+    return placeholder.substring(0, placeholder.length() - 1);
+  }
+
   private Optional<PlaceholderData> resolveStripped(Locale locale, String placeholder) {
     return matchPattern(placeholder, locale)
-        .or(() -> resolveAccessor(placeholderMapper.map(placeholder).orElse(placeholder), locale));
+        .or(() -> resolveFieldAccessor(placeholder, locale))
+        .or(() -> tryResolveInParent(placeholder, locale));
   }
 
   private Optional<PlaceholderData> matchPattern(String placeholderName, Locale locale) {
@@ -240,14 +246,20 @@ public class ReflectionResolver extends PlaceholderResolver {
         .map(ScalarPlaceholderData::new);
   }
 
-  private Optional<PlaceholderData> resolveAccessor(String placeholderName, Locale locale) {
+  private Optional<PlaceholderData> resolveFieldAccessor(String placeholderName, Locale locale) {
+    return resolveChain(placeholderName, locale)
+        .or(() -> placeholderMapper.map(placeholderName)
+            .flatMap(mappedPlaceholder -> resolveChain(mappedPlaceholder, locale)));
+
+  }
+
+  private Optional<PlaceholderData> resolveChain(String placeholderName, Locale locale) {
     Optional<PlaceholderData> result = Optional.empty();
     for (String property : placeholderName.split("\\.")) {
-      result = result.isEmpty()
-          ? doReflectiveResolve(property, locale).or(() -> tryResolveInParent(placeholderName, locale))
-          : result
-          .flatMap(r -> r.stream().findAny())
-          .flatMap(r -> r.resolve(property, locale));
+      result = result
+          .flatMap(placeholderData -> placeholderData.stream().findFirst())
+          .flatMap(childResolver -> childResolver.resolve(property, locale))
+          .or(() -> doReflectiveResolve(property, locale));
     }
     return result;
   }

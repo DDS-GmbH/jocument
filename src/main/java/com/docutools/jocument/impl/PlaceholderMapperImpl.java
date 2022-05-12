@@ -31,6 +31,11 @@ public class PlaceholderMapperImpl implements PlaceholderMapper {
     return Optional.ofNullable(placeholderMappings.get(placeholder));
   }
 
+  @Override
+  public String tryToMap(String placeholder) {
+    return map(placeholder).orElse(placeholder);
+  }
+
   private static void setup() {
     if (pathString != null) {
       var path = Path.of(pathString);
