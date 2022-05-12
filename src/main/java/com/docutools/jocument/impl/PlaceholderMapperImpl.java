@@ -16,8 +16,8 @@ public class PlaceholderMapperImpl implements PlaceholderMapper {
   private static Map<String, String> placeholderMappings;
   private static String pathString = System.getenv("DT_JT_RR_PLACEHOLDER_MAPPINGS");
 
-  public static void configure(String pathString2) {
-    pathString = pathString2;
+  public static void configure(String pathString) {
+    PlaceholderMapperImpl.pathString = pathString;
   }
 
   @Override
