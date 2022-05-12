@@ -54,8 +54,8 @@ public class ReflectionResolver extends PlaceholderResolver {
 
   private static final Logger logger = LogManager.getLogger();
 
-  protected final Object bean;
-  protected final CustomPlaceholderRegistry customPlaceholderRegistry;
+  private final Object bean;
+  private final CustomPlaceholderRegistry customPlaceholderRegistry;
   private final PropertyUtilsBean pub = new PropertyUtilsBean();
   private final PlaceholderMapper placeholderMapper = new PlaceholderMapperImpl();
   private final PlaceholderResolver parent;
@@ -87,7 +87,7 @@ public class ReflectionResolver extends PlaceholderResolver {
   }
 
   /**
-   * Create a new reflection resolver with a parent registry.
+   * Create a new reflection resolver with no parent registry.
    *
    * @param value                     The value to resolve against
    * @param customPlaceholderRegistry The custom placeholder registry to check for custom placeholders
@@ -99,7 +99,7 @@ public class ReflectionResolver extends PlaceholderResolver {
     this(value, customPlaceholderRegistry, options, null);
   }
 
-  protected static boolean isFieldAnnotatedWith(Class<?> clazz, String fieldName, Class<? extends Annotation> annotation) {
+  private static boolean isFieldAnnotatedWith(Class<?> clazz, String fieldName, Class<? extends Annotation> annotation) {
     try {
       return clazz.getDeclaredField(fieldName)
           .getDeclaredAnnotation(annotation) != null;
@@ -430,14 +430,16 @@ public class ReflectionResolver extends PlaceholderResolver {
       logger.debug("Placeholder {} property is a future, getting it", placeholderName);
       resolvedProperty = future.get(options.maximumWaitTime().toSeconds(), TimeUnit.SECONDS);
       logger.debug("Placeholder {} property future retrieved", placeholderName);
+      resolvedProperty = resolveNonFinalValue(resolvedProperty, placeholderName);
     }
-    if (resolvedProperty instanceof Optional<?> optional) {
+    if (property instanceof Optional<?> optional) {
       logger.debug("Placeholder {} property is an optional, getting it", placeholderName);
       if (optional.isEmpty()) {
         throw new EmptyOptionalException(placeholderName);
       } else {
         resolvedProperty = optional.get();
         logger.debug("Optional placeholder {} property contained {}", placeholderName, property);
+        resolvedProperty = resolveNonFinalValue(resolvedProperty, placeholderName);
       }
     }
     return resolvedProperty;
