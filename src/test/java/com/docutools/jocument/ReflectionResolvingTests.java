@@ -9,6 +9,14 @@ import com.docutools.jocument.impl.ReflectionResolver;
 import com.docutools.jocument.sample.model.SampleModelData;
 import com.docutools.jocument.sample.model.Ship;
 import com.docutools.jocument.sample.model.Uniform;
+import com.docutools.jocument.sample.reflection.ValidSingleParameterMatch;
+import com.docutools.jocument.sample.reflection.ValidTwoParameterMatch;
+import com.docutools.jocument.sample.reflection.WrongParameterOneTwoParameters;
+import com.docutools.jocument.sample.reflection.WrongParameterSingleParameter;
+import com.docutools.jocument.sample.reflection.WrongParameterTwoTwoParameters;
+import com.docutools.jocument.sample.reflection.WrongReturnSingleParameter;
+import com.docutools.jocument.sample.reflection.WrongReturnTwoParameters;
+import java.lang.reflect.InvocationTargetException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -211,5 +219,36 @@ class ReflectionResolvingTests {
 
     // Assert
     assertThat(position.getRawValue(), equalTo(SampleModelData.ENTERPRISE.currentPosition().get()));
+  }
+
+  @ParameterizedTest(name = "Resolve falsy condition for {0} on empty ship")
+  @ValueSource(classes = {ValidSingleParameterMatch.class, ValidTwoParameterMatch.class})
+  void shouldResolveValidMatchMethods(Object clazz)
+      throws NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
+    // Assemble
+    var resolver = new ReflectionResolver(((Class<?>) clazz).getConstructor().newInstance());
+
+    // Act
+    var result = resolver.resolve("test");
+
+    // Assert
+    assertThat(result.isPresent(), is(true));
+    assertThat(result.get().getType(), equalTo(PlaceholderType.SCALAR));
+    assertThat(result.get().getRawValue(), equalTo(""));
+  }
+
+  @ParameterizedTest(name = "Resolve falsy condition for {0} on empty ship")
+  @ValueSource(classes = {WrongParameterSingleParameter.class, WrongReturnSingleParameter.class, WrongParameterOneTwoParameters.class,
+      WrongParameterTwoTwoParameters.class, WrongReturnTwoParameters.class})
+  void shouldResolveWrongMatchMethods(Object clazz)
+      throws NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
+    // Assemble
+    var resolver = new ReflectionResolver(((Class<?>) clazz).getConstructor().newInstance());
+
+    // Act
+    var position = resolver.resolve("test");
+
+    // Assert
+    assertThat(position.isEmpty(), equalTo(true));
   }
 }
