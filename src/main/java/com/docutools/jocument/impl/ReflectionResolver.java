@@ -16,6 +16,7 @@ import com.docutools.jocument.annotations.Translatable;
 import com.docutools.jocument.impl.word.placeholders.ImagePlaceholderData;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.lang.reflect.RecordComponent;
 import java.math.RoundingMode;
 import java.nio.file.Path;
@@ -186,64 +187,76 @@ public class ReflectionResolver extends PlaceholderResolver {
   }
 
   private Optional<PlaceholderData> matchPattern(String placeholderName, Locale locale) {
-    var beanClass = bean.getClass();
-    return Arrays.stream(beanClass.getMethods())
-        .filter(method -> Optional.ofNullable(method.getAnnotation(MatchPlaceholder.class))
-            .map(MatchPlaceholder::pattern)
-            .filter(placeholderName::matches)
-            .isPresent())
-        .findFirst()
+    return findMethod(placeholderName)
         .flatMap(method -> {
           var returnType = method.getReturnType();
-          if (!returnType.equals(Optional.class)) {
-            logger.warn("@MatchPlaceholder-annotated method {} must return a java.util.Optional but returns {}.", method, returnType);
-            return Optional.empty();
-          }
-          try {
-            if (method.getParameterCount() == 2) {
-              var parameterTypes = method.getParameterTypes();
-              if (!parameterTypes[0].equals(String.class)) {
-                logger.warn("@MatchPlaceholder-annotated method {} must take a String (placeholderName) as first parameter, but takes {}.",
-                    method, parameterTypes[0]);
-                return Optional.empty();
-              }
-              if (!parameterTypes[1].equals(Locale.class)) {
-                logger.warn("@MatchPlaceholder-annotated method {} can only take a java.util.Locale as second parameter, but takes {}.",
-                    method, parameterTypes[1]);
-                return Optional.empty();
-              }
-              var returnValue = method.invoke(bean, placeholderName, locale);
-              if (returnValue instanceof Optional<?> optionalReturnValue) {
-                return optionalReturnValue.map(Object::toString);
+          if (returnType.equals(Optional.class)) {
+            try {
+              if (method.getParameterCount() == 1) {
+                return evaluateSingleParameterFunction(placeholderName, method);
+              } else if (method.getParameterCount() == 2) {
+                return evaluateTwoParameterFunction(placeholderName, locale, method);
               } else {
-                logger.warn("@MatchPlaceholder-annotated method {} must return `Optional<T>`, but returns {}.", method, returnValue.getClass());
+                logger.error("@MatchPlaceholder-annotated method {} must take exactly one parameter (String) or two (String, Locale). It takes {}.",
+                    method, method.getParameterCount());
                 return Optional.empty();
               }
-            } else if (method.getParameterCount() == 1) {
-              var parameterTypes = method.getParameterTypes();
-              if (!parameterTypes[0].equals(String.class)) {
-                logger.warn("@MatchPlaceholder-annotated method {} must take a String (placeholderName) as first parameter, but takes {}.",
-                    method, parameterTypes[0]);
-                return Optional.empty();
-              }
-              var returnValue = method.invoke(bean, placeholderName);
-              if (returnValue instanceof Optional<?> optionalReturnValue) {
-                return optionalReturnValue.map(Object::toString);
-              } else {
-                logger.warn("@MatchPlaceholder-annotated method {} does not return a java.util.Optional!", method);
-                return Optional.empty();
-              }
-            } else {
-              logger.error("@MatchPlaceholder-annotated method {} must take exactly one parameter (String) or two (String, Locale). It takes {}.",
-                  method, method.getParameterCount());
+            } catch (IllegalAccessException | InvocationTargetException e) {
+              logger.error("@MatchPlaceholder-annotated method %s threw an exception.".formatted(method), e);
               return Optional.empty();
             }
-          } catch (IllegalAccessException | InvocationTargetException e) {
-            logger.error("@MatchPlaceholder-annotated method %s threw an exception.".formatted(method), e);
+          } else {
+            logger.warn("@MatchPlaceholder-annotated method {} must return a java.util.Optional but returns {}.", method, returnType);
             return Optional.empty();
           }
         })
         .map(ScalarPlaceholderData::new);
+  }
+
+  private Optional<Method> findMethod(String placeholderName) {
+    var beanClass = bean.getClass();
+    return Arrays.stream(beanClass.getMethods()).filter(
+        method -> Optional.ofNullable(method.getAnnotation(MatchPlaceholder.class)).map(MatchPlaceholder::pattern).filter(placeholderName::matches)
+            .isPresent()).findFirst();
+  }
+
+  private Optional<String> evaluateSingleParameterFunction(String placeholderName, Method method)
+      throws IllegalAccessException, InvocationTargetException {
+    var parameterTypes = method.getParameterTypes();
+    if (!parameterTypes[0].equals(String.class)) {
+      logger.warn("@MatchPlaceholder-annotated method {} must take a String (placeholderName) as first parameter, but takes {}.", method,
+          parameterTypes[0]);
+      return Optional.empty();
+    }
+    var returnValue = method.invoke(bean, placeholderName);
+    if (returnValue instanceof Optional<?> optionalReturnValue) {
+      return optionalReturnValue.map(Object::toString);
+    } else {
+      logger.warn("@MatchPlaceholder-annotated method {} does not return a java.util.Optional!", method);
+      return Optional.empty();
+    }
+  }
+
+  private Optional<String> evaluateTwoParameterFunction(String placeholderName, Locale locale, Method method)
+      throws IllegalAccessException, InvocationTargetException {
+    var parameterTypes = method.getParameterTypes();
+    if (!parameterTypes[0].equals(String.class)) {
+      logger.warn("@MatchPlaceholder-annotated method {} must take a String (placeholderName) as first parameter, but takes {}.", method,
+          parameterTypes[0]);
+      return Optional.empty();
+    }
+    if (!parameterTypes[1].equals(Locale.class)) {
+      logger.warn("@MatchPlaceholder-annotated method {} can only take a java.util.Locale as second parameter, but takes {}.", method,
+          parameterTypes[1]);
+      return Optional.empty();
+    }
+    var returnValue = method.invoke(bean, placeholderName, locale);
+    if (returnValue instanceof Optional<?> optionalReturnValue) {
+      return optionalReturnValue.map(Object::toString);
+    } else {
+      logger.warn("@MatchPlaceholder-annotated method {} must return `Optional<T>`, but returns {}.", method, returnValue.getClass());
+      return Optional.empty();
+    }
   }
 
   private Optional<PlaceholderData> resolveFieldAccessor(String placeholderName, Locale locale) {
@@ -279,51 +292,46 @@ public class ReflectionResolver extends PlaceholderResolver {
   private Optional<PlaceholderData> doReflectiveResolve(String placeholderName, Locale locale) {
     try {
       if (PARENT_SYMBOL.equals(placeholderName)) {
-        return parent != null
-            ? Optional.of(IterablePlaceholderData.of(parent))
-            : Optional.empty();
+        return Optional
+            .ofNullable(parent)
+            .map(IterablePlaceholderData::of);
       }
       if (customPlaceholderRegistry.governs(placeholderName, bean)) {
         logger.info("Placeholder {} handled by custom registry", placeholderName);
         return customPlaceholderRegistry.resolve(placeholderName, bean);
       }
-      var property = getBeanProperty(placeholderName);
-      if (property == null) {
+      var wrappedProperty = getBeanProperty(placeholderName);
+      if (wrappedProperty.isEmpty()) {
         logger.debug("Placeholder {} could not be translated into a property", placeholderName);
         return Optional.empty();
       }
-      property = resolveNonFinalValue(property, placeholderName);
+      var property = resolveNonFinalValue(wrappedProperty.get(), placeholderName);
       var simplePlaceholder = resolveSimplePlaceholder(property, placeholderName, locale, options);
       if (simplePlaceholder.isPresent()) {
         logger.debug("Placeholder {} resolved to simple placeholder", placeholderName);
         return simplePlaceholder;
+      } else if (property instanceof Collection<?> collection) {
+        logger.debug("Placeholder {} resolved to collection", placeholderName);
+        List<PlaceholderResolver> list = collection.stream()
+            // cast is needed for `.toList()`
+            .map(object -> (PlaceholderResolver) new ReflectionResolver(object, customPlaceholderRegistry, options, this))
+            .toList();
+        return Optional.of(new IterablePlaceholderData(list, list.size()));
+      } else if (bean.equals(property)) {
+        logger.debug("Placeholder {} resolved to self", placeholderName);
+        return Optional.of(new IterablePlaceholderData(List.of(new ReflectionResolver(bean, customPlaceholderRegistry, options, this)), 1));
       } else {
-        if (property instanceof Collection<?> collection) {
-          logger.debug("Placeholder {} resolved to collection", placeholderName);
-          List<PlaceholderResolver> list = collection.stream()
-              // cast is needed for `.toList()`
-              .map(object -> (PlaceholderResolver) new ReflectionResolver(object, customPlaceholderRegistry, options, this))
-              .toList();
-          return Optional.of(new IterablePlaceholderData(list, list.size()));
-        }
-        if (bean.equals(property)) {
-          logger.debug("Placeholder {} resolved to the parent object", placeholderName);
-          return Optional.of(new IterablePlaceholderData(List.of(new ReflectionResolver(bean, customPlaceholderRegistry, options, this)), 1));
-        } else {
-          var value = getBeanProperty(placeholderName);
-          logger.debug("Resolved placeholder {} to the bean property {}", placeholderName, value);
-          value = resolveNonFinalValue(value, placeholderName);
-          return Optional.of(new IterablePlaceholderData(List.of(new ReflectionResolver(value, customPlaceholderRegistry, options, this)), 1));
-        }
+        return Optional.of(new IterablePlaceholderData(List.of(new ReflectionResolver(property, customPlaceholderRegistry, options, this)), 1));
+
       }
     } catch (NoSuchMethodException | IllegalArgumentException e) {
       logger.debug("Did not find placeholder {}, {}", placeholderName, e.getMessage());
       return Optional.empty();
     } catch (IllegalAccessException | InvocationTargetException e) {
-      logger.error("Could not resolve placeholder %s".formatted(placeholderName), e);
-      throw new IllegalStateException("Could not resolve placeholderName against type.", e);
+      logger.error("Could not call method of placeholder %s".formatted(placeholderName), e);
+      return Optional.empty();
     } catch (InstantiationException e) {
-      logger.warn("InstantiationException when trying to resolve placeholder %s".formatted(placeholderName), e);
+      logger.warn("InstantiationException when resolving custom placeholder %s".formatted(placeholderName), e);
       return Optional.empty();
     } catch (InterruptedException e) {
       logger.warn("InterruptedException when waiting for Future placeholder %s".formatted(placeholderName), e);
@@ -366,19 +374,19 @@ public class ReflectionResolver extends PlaceholderResolver {
     }
   }
 
-  private Object getBeanProperty(String placeholderName) throws InvocationTargetException, IllegalAccessException, NoSuchMethodException {
+  private Optional<Object> getBeanProperty(String placeholderName) throws InvocationTargetException, IllegalAccessException, NoSuchMethodException {
     var ignoreCasePlaceholder = placeholderName.toLowerCase();
     if (SELF_REFERENCE.equals(placeholderName)) {
-      return bean;
+      return Optional.ofNullable(bean);
     } else if (bean.getClass().isRecord()) {
       var accessor = Arrays.stream(bean.getClass().getRecordComponents())
           .filter(recordComponent -> recordComponent.getName().toLowerCase().equals(ignoreCasePlaceholder))
           .map(RecordComponent::getAccessor)
           .findFirst()
           .orElseThrow(() -> new NoSuchMethodException("Record %s does not have field %s".formatted(bean.getClass().toString(), placeholderName)));
-      return accessor.invoke(bean);
+      return Optional.ofNullable(accessor.invoke(bean));
     } else {
-      return pub.getProperty(bean, placeholderName);
+      return Optional.ofNullable(pub.getProperty(bean, placeholderName));
     }
   }
 
@@ -430,7 +438,7 @@ public class ReflectionResolver extends PlaceholderResolver {
       logger.debug("Placeholder {} property is a future, getting it", placeholderName);
       resolvedProperty = future.get(options.maximumWaitTime().toSeconds(), TimeUnit.SECONDS);
       logger.debug("Placeholder {} property future retrieved", placeholderName);
-      resolvedProperty = resolveNonFinalValue(resolvedProperty, placeholderName);
+      return resolveNonFinalValue(resolvedProperty, placeholderName);
     }
     if (property instanceof Optional<?> optional) {
       logger.debug("Placeholder {} property is an optional, getting it", placeholderName);
@@ -439,7 +447,7 @@ public class ReflectionResolver extends PlaceholderResolver {
       } else {
         resolvedProperty = optional.get();
         logger.debug("Optional placeholder {} property contained {}", placeholderName, property);
-        resolvedProperty = resolveNonFinalValue(resolvedProperty, placeholderName);
+        return resolveNonFinalValue(resolvedProperty, placeholderName);
       }
     }
     return resolvedProperty;
