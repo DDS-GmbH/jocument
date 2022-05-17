@@ -1,5 +1,6 @@
 package com.docutools.jocument;
 
+import com.docutools.jocument.impl.ScalarPlaceholderData;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
@@ -41,6 +42,18 @@ public abstract class PlaceholderResolver {
    * @param locale          the localisation settings
    * @return if the name could've been resolved the localised {@link com.docutools.jocument.PlaceholderData}
    */
-  public abstract Optional<PlaceholderData> resolve(String placeholderName, Locale locale);
+  public Optional<PlaceholderData> resolve(String placeholderName, Locale locale) {
+    return doResolve(placeholderName, locale)
+        .map(placeholderData -> format(locale, placeholderData));
+  }
+
+  private PlaceholderData format(Locale locale, PlaceholderData original) {
+    if (original instanceof ScalarPlaceholderData<?>) {
+      return options.tryToFormat(locale, original).orElse(original);
+    }
+    return original;
+  }
+
+  protected abstract Optional<PlaceholderData> doResolve(String placeholderName, Locale locale);
 
 }

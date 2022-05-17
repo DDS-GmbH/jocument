@@ -48,7 +48,7 @@ public class ExcelDocumentImpl extends DocumentImpl {
   @Override
   protected Path generate() throws IOException {
     logger.info("Starting generation");
-    Path file = Files.createTempFile("document", ".xlsx");
+    Path file = Files.createTempFile("jocument-", ".xlsx");
     ExcelWriter excelWriter = new SXSSFWriter(file);
     try (XSSFWorkbook workbook = new XSSFWorkbook(template.openStream())) {
       var locale = ExcelUtils.getWorkbookLanguage(workbook).orElse(Locale.getDefault());
@@ -61,6 +61,7 @@ public class ExcelDocumentImpl extends DocumentImpl {
         excelWriter.newSheet(sheet);
         ExcelGenerator.apply(resolver, sheet.rowIterator(), excelWriter);
       }
+    } finally {
       excelWriter.recalculateFormulas();
       excelWriter.complete();
     }

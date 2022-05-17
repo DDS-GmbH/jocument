@@ -10,7 +10,6 @@ import com.docutools.jocument.impl.ParsingUtils;
 import java.util.List;
 import java.util.Locale;
 import java.util.regex.MatchResult;
-import java.util.stream.Collectors;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.poi.util.LocaleUtil;
@@ -52,17 +51,20 @@ class WordGenerator {
 
   private void transform(IBodyElement element, List<IBodyElement> remaining) {
     logger.debug("Trying to transform element {}", element);
-    if (isLoopStart(element)) {
-      unrollLoop((XWPFParagraph) element, remaining);
-    } else if (isCustomPlaceholder(element)) {
+    Locale locale = WordUtilities.detectMostCommonLocale(element.getBody().getXWPFDocument())
+        .orElse(LocaleUtil.getUserLocale());
+    if (isCustomPlaceholder(element)) {
       resolver.resolve(WordUtilities.extractPlaceholderName((XWPFParagraph) element))
-          .ifPresent(placeholderData -> placeholderData.transform(element, options));
+          .ifPresent(placeholderData -> placeholderData.transform(element, locale, options));
+    } else if (isLoopStart(element)) {
+      unrollLoop((XWPFParagraph) element, remaining);
     } else if (element instanceof XWPFParagraph xwpfParagraph) {
       transform(xwpfParagraph);
     } else if (element instanceof XWPFTable xwpfTable) {
       transform(xwpfTable);
+    } else {
+      logger.info("Failed to transform element {}", element);
     }
-    logger.info("Failed to transform element {}", element);
   }
 
   private void transform(XWPFTable table) {
@@ -109,13 +111,13 @@ class WordGenerator {
   }
 
   private List<IBodyElement> getLoopBody(String placeholderName, List<IBodyElement> remaining) {
-    var endLoopMarker = String.format("{{/%s}}", placeholderName);
-    logger.debug("Getting loop body from {} to {}", placeholderName, endLoopMarker);
+    var endLoopMarkers = ParsingUtils.getMatchingLoopEnds(placeholderName);
+    logger.debug("Getting loop body from {}", placeholderName);
     return remaining.stream()
         //Could be written nice with `takeUntil(element -> (element instanceof XP xp && eLM.equals(WU.toString(xp)))
         .takeWhile(element -> !(element instanceof XWPFParagraph xwpfParagraph
-            && endLoopMarker.equals(WordUtilities.toString(xwpfParagraph))))
-        .collect(Collectors.toList());
+            && endLoopMarkers.stream().anyMatch(endLoopMarker -> endLoopMarker.equals(WordUtilities.toString(xwpfParagraph)))))
+        .toList();
   }
 
   private boolean isLoopStart(IBodyElement element) {
@@ -144,6 +146,6 @@ class WordGenerator {
     logger.debug("Resolving placeholder {}", placeholderName);
     return resolver.resolve(placeholderName, locale)
         .map(PlaceholderData::toString)
-        .orElse("-");
+        .orElse("");
   }
 }

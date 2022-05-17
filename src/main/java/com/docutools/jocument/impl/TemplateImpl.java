@@ -55,7 +55,6 @@ public class TemplateImpl implements Template {
       case XLSX -> new ExcelDocumentImpl(this, resolver, options);
     };
     document.start();
-    logger.info("Finished generating from template {} with resolver {}", this, resolver);
     return document;
   }
 

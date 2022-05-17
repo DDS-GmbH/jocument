@@ -7,18 +7,32 @@ import static org.hamcrest.Matchers.is;
 
 import com.docutools.jocument.impl.ReflectionResolver;
 import com.docutools.jocument.sample.model.SampleModelData;
+import com.docutools.jocument.sample.model.Ship;
 import com.docutools.jocument.sample.model.Uniform;
+import com.docutools.jocument.sample.reflection.ValidSingleParameterMatch;
+import com.docutools.jocument.sample.reflection.ValidTwoParameterMatch;
+import com.docutools.jocument.sample.reflection.WrongParameterOneTwoParameters;
+import com.docutools.jocument.sample.reflection.WrongParameterSingleParameter;
+import com.docutools.jocument.sample.reflection.WrongParameterTwoTwoParameters;
+import com.docutools.jocument.sample.reflection.WrongReturnSingleParameter;
+import com.docutools.jocument.sample.reflection.WrongReturnTwoParameters;
+import java.lang.reflect.InvocationTargetException;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 @DisplayName("Resolve placeholders from an object graph via reflection.")
 @Tag("automated")
-public class ReflectionResolving {
+class ReflectionResolvingTests {
 
   private PlaceholderResolver resolver;
 
@@ -145,5 +159,96 @@ public class ReflectionResolving {
     assertThat(captain, equalTo(SampleModelData.PICARD.getName()));
     assertThat(shipCrew, equalTo(5));
     assertThat(visitedPlanets, contains("Mars", "Venus", "Jupiter"));
+  }
+
+  @Test
+  @DisplayName("Resolve by Regex")
+  void shouldResolveByRegex() {
+    // Assemble
+    var rawPattern = "dd-MM-yyyy";
+    var pattern = DateTimeFormatter.ofPattern(rawPattern);
+    resolver = new ReflectionResolver(SampleModelData.ENTERPRISE);
+
+    // Act
+    var  builtDate = resolver.resolve("built-fmt-" + rawPattern)
+        .map(Object::toString)
+            .orElseThrow();
+
+    // Assert
+    assertThat(builtDate, equalTo(pattern.format(SampleModelData.ENTERPRISE.built())));
+  }
+
+  @Test
+  @DisplayName("Resolve by Regex ignoring case")
+  void shouldResolveByIgnoreCaseRegex() {
+    // Assemble
+    resolver = new ReflectionResolver(SampleModelData.ENTERPRISE);
+
+    // Act
+    var  numberOfServices = resolver.resolve("numberofservices")
+        .map(Object::toString)
+        .orElseThrow();
+
+    // Assert
+    assertThat(numberOfServices, equalTo(String.valueOf(SampleModelData.ENTERPRISE.services().size())));
+  }
+
+  @ValueSource(strings = {"name", "captain", "crew", "services", "currentPosition"})
+  @ParameterizedTest(name = "Resolve falsy condition for {0} on empty ship")
+  void shouldResolveFalsyCondition(String propertyName) {
+    // Assemble
+    var emptyShip = new Ship("", null, 0, List.of(), LocalDate.now(), Optional.empty());
+    var resolver = new ReflectionResolver(emptyShip);
+
+    // Act
+    var emptyPlaceholderData = resolver.resolve(propertyName + "?")
+        .orElseThrow();
+
+    // Assert
+    assertThat(emptyPlaceholderData.isTruthy(), is(false));
+  }
+
+  @Test
+  void shouldResolveNonemptyOptional() {
+    // Assemble
+    var resolver = new ReflectionResolver(SampleModelData.ENTERPRISE);
+
+    // Act
+    var position = resolver.resolve("currentPosition")
+        .orElseThrow();
+
+    // Assert
+    assertThat(position.getRawValue(), equalTo(SampleModelData.ENTERPRISE.currentPosition().get()));
+  }
+
+  @ParameterizedTest(name = "Resolve falsy condition for {0} on empty ship")
+  @ValueSource(classes = {ValidSingleParameterMatch.class, ValidTwoParameterMatch.class})
+  void shouldResolveValidMatchMethods(Object clazz)
+      throws NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
+    // Assemble
+    var resolver = new ReflectionResolver(((Class<?>) clazz).getConstructor().newInstance());
+
+    // Act
+    var result = resolver.resolve("test");
+
+    // Assert
+    assertThat(result.isPresent(), is(true));
+    assertThat(result.get().getType(), equalTo(PlaceholderType.SCALAR));
+    assertThat(result.get().getRawValue(), equalTo(""));
+  }
+
+  @ParameterizedTest(name = "Resolve falsy condition for {0} on empty ship")
+  @ValueSource(classes = {WrongParameterSingleParameter.class, WrongReturnSingleParameter.class, WrongParameterOneTwoParameters.class,
+      WrongParameterTwoTwoParameters.class, WrongReturnTwoParameters.class})
+  void shouldResolveWrongMatchMethods(Object clazz)
+      throws NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
+    // Assemble
+    var resolver = new ReflectionResolver(((Class<?>) clazz).getConstructor().newInstance());
+
+    // Act
+    var position = resolver.resolve("test");
+
+    // Assert
+    assertThat(position.isEmpty(), equalTo(true));
   }
 }

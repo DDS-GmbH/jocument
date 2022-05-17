@@ -1,5 +1,6 @@
 package com.docutools.jocument;
 
+import java.util.Locale;
 import java.util.stream.Stream;
 
 /**
@@ -49,10 +50,38 @@ public interface PlaceholderData {
    * <p>Only used when {@link this#getType()} returns {@link com.docutools.jocument.PlaceholderType#CUSTOM}.</p>
    *
    * @param placeholder the placeholder
+   * @param locale the {@link Locale}
    * @param options the {@link GenerationOptions}
    */
-  default void transform(Object placeholder, GenerationOptions options) {
+  default void transform(Object placeholder, Locale locale, GenerationOptions options) {
     throw new UnsupportedOperationException();
+  }
+
+  /**
+   * Tries to return the raw value behind the {@link PlaceholderData}. May not be implemented in all sepcifications.
+   *
+   * @return the raw value
+   */
+  default Object getRawValue() {
+    throw new UnsupportedOperationException();
+  }
+
+  /**
+   * Evaluates if this {@link PlaceholderData} is a truthy value. Non-truthy values are defined as:
+   *
+   * <ul>
+   *   <li>Empty string</li>
+   *   <li>Empty collection or array</li>
+   *   <li>{@code null}</li>
+   *   <li>0</li>
+   *   <li>{@code false}</li>
+   *   <li>Empty {@link java.util.Optional}</li>
+   * </ul>
+   *
+   * @return {@code true} if truthy
+   */
+  default boolean isTruthy() {
+    return count() > 0;
   }
 
 }

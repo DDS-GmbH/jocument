@@ -15,10 +15,10 @@ public class SamplePlaceholderResolver extends PlaceholderResolver {
           new ServicePlaceholderResolver("US Defiant"));
 
   @Override
-  public Optional<PlaceholderData> resolve(String placeholderName, Locale locale) {
+  protected Optional<PlaceholderData> doResolve(String placeholderName, Locale locale) {
     switch (placeholderName) {
       case "name":
-        return Optional.of(new ScalarPlaceholderData("James T. Kirk"));
+        return Optional.of(new ScalarPlaceholderData<>("James T. Kirk"));
       case "services":
         return Optional.of(new IterablePlaceholderData(services, services.size()));
       default:

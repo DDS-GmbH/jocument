@@ -2,6 +2,7 @@ package com.docutools.jocument.impl.word;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 
 import com.docutools.jocument.CustomPlaceholderRegistry;
@@ -190,5 +191,156 @@ class WordGeneratorTest {
         var documentWrapper = new XWPFDocumentWrapper(xwpfDocument);
         assertThat(documentWrapper.bodyElement(0).asParagraph().run(0).text(),
             equalTo("Live your life not celebrating victories, but overcoming defeats."));
+    }
+
+    @Test
+    @DisplayName("Resolve legacy placeholder")
+    void shouldResolveLegacy() throws IOException, InterruptedException {
+        // Assemble
+        Template template = Template.fromClassPath("/templates/word/LegacyCollectionsTemplate.docx")
+            .orElseThrow();
+        PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.PICARD);
+
+        // Act
+        Document document = template.startGeneration(resolver);
+        document.blockUntilCompletion(60000L); // 1 minute
+
+        // Assert
+        assertThat(document.completed(), is(true));
+        xwpfDocument = TestUtils.getXWPFDocumentFromDocument(document);
+        var documentWrapper = new XWPFDocumentWrapper(xwpfDocument);
+        assertThat(documentWrapper.bodyElement(0).asParagraph().text(), equalTo("Captain: Jean-Luc Picard"));
+        assertThat(documentWrapper.bodyElement(1).asParagraph().text(), equalTo("Riker"));
+        assertThat(documentWrapper.bodyElement(3).asParagraph().text(), equalTo("First Officer"));
+        assertThat(documentWrapper.bodyElement(4).asTable().row(0).cell(0).bodyElement(0).asParagraph().text(), equalTo("Name"));
+        assertThat(documentWrapper.bodyElement(4).asTable().row(0).cell(1).bodyElement(0).asParagraph().text(), equalTo("Rank"));
+        assertThat(documentWrapper.bodyElement(4).asTable().row(0).cell(2).bodyElement(0).asParagraph().text(), equalTo("Uniform"));
+        assertThat(documentWrapper.bodyElement(4).asTable().row(1).cell(0).bodyElement(0).asParagraph().text(), equalTo("Riker"));
+        assertThat(documentWrapper.bodyElement(4).asTable().row(1).cell(1).bodyElement(0).asParagraph().text(), equalTo("3"));
+        assertThat(documentWrapper.bodyElement(4).asTable().row(1).cell(2).bodyElement(0).asParagraph().text(), equalTo("Red"));
+        assertThat(documentWrapper.bodyElement(7).asParagraph().text(), equalTo("Services"));
+        assertThat(documentWrapper.bodyElement(9).asParagraph().text(), equalTo("USS Enterprise"));
+        assertThat(documentWrapper.bodyElement(10).asParagraph().text(), equalTo("US Defiant"));
+        assertThat(documentWrapper.bodyElement(12).asParagraph().text(), equalTo("And that’s that."));
+    }
+
+    @Test
+    @DisplayName("Resolve future placeholder")
+    void shouldResolveFuture() throws IOException, InterruptedException {
+        // Assemble
+        Template template = Template.fromClassPath("/templates/word/CollectionsTemplate.docx")
+            .orElseThrow();
+        PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.FUTURE_PICARD);
+
+        // Act
+        Document document = template.startGeneration(resolver);
+        document.blockUntilCompletion(60000L); // 1 minute
+
+        // Assert
+        assertThat(document.completed(), is(true));
+        xwpfDocument = TestUtils.getXWPFDocumentFromDocument(document);
+        var documentWrapper = new XWPFDocumentWrapper(xwpfDocument);
+        assertThat(documentWrapper.bodyElement(0).asParagraph().text(), equalTo("Captain: Jean-Luc Picard"));
+        assertThat(documentWrapper.bodyElement(2).asParagraph().text(), equalTo("First Officer"));
+        var table = documentWrapper.bodyElement(3).asTable();
+        assertThat(table.row(0).cell(0).bodyElement(0).asParagraph().text(), equalTo("Name"));
+        assertThat(table.row(0).cell(1).bodyElement(0).asParagraph().text(), equalTo("Rank"));
+        assertThat(table.row(0).cell(2).bodyElement(0).asParagraph().text(), equalTo("Uniform"));
+        assertThat(table.row(1).cell(0).bodyElement(0).asParagraph().text(), equalTo("Riker"));
+        assertThat(table.row(1).cell(1).bodyElement(0).asParagraph().text(), equalTo("3"));
+        assertThat(table.row(1).cell(2).bodyElement(0).asParagraph().text(), equalTo("Red"));
+        assertThat(documentWrapper.bodyElement(6).asParagraph().text(), equalTo("Services"));
+        assertThat(documentWrapper.bodyElement(8).asParagraph().text(), equalTo("USS Enterprise"));
+        assertThat(documentWrapper.bodyElement(9).asParagraph().text(), equalTo("US Defiant"));
+        assertThat(documentWrapper.bodyElement(11).asParagraph().text(), equalTo("And that’s that."));
+    }
+
+    @Test
+    @DisplayName("Resolve in scoped mode")
+    void shouldResolveInScopedMode() throws IOException, InterruptedException {
+        // Assemble
+        var template = Template.fromClassPath("/templates/word/ScopedTemplate.docx")
+            .orElseThrow();
+        var resolver = new ReflectionResolver(SampleModelData.ENTERPRISE);
+
+        // Act
+        Document document = template.startGeneration(resolver);
+        document.blockUntilCompletion(60000L); // 1 minute
+
+        // Assert
+        assertThat(document.completed(), is(true));
+        xwpfDocument = TestUtils.getXWPFDocumentFromDocument(document);
+        var documentWrapper = new XWPFDocumentWrapper(xwpfDocument);
+        var table = documentWrapper.bodyElement(0).asTable();
+        assertThat(table.row(0).cell(0).bodyElement(0).asParagraph().text(), equalTo("Ship"));
+        assertThat(table.row(0).cell(1).bodyElement(0).asParagraph().text(), equalTo("Crew"));
+        assertThat(table.row(0).cell(2).bodyElement(0).asParagraph().text(), equalTo("Captain"));
+        assertThat(table.row(0).cell(3).bodyElement(0).asParagraph().text(), equalTo("Officer"));
+        assertThat(table.row(1).cell(0).bodyElement(0).asParagraph().text(), equalTo(SampleModelData.ENTERPRISE.name()));
+        assertThat(table.row(1).cell(1).bodyElement(0).asParagraph().text(), equalTo(String.valueOf(SampleModelData.ENTERPRISE.crew())));
+        assertThat(table.row(1).cell(2).bodyElement(0).asParagraph().text(), equalTo(SampleModelData.ENTERPRISE.captain().getName()));
+        assertThat(table.row(1).cell(3).bodyElement(0).asParagraph().text(), equalTo(SampleModelData.ENTERPRISE.captain().getOfficer().getName()));
+    }
+
+    @Test
+    @DisplayName("Resolve truthy conditional")
+    void shouldResolveTruthyConditional() throws IOException, InterruptedException {
+        // Assemble
+        var template = Template.fromClassPath("/templates/word/ConditionalTemplate.docx")
+            .orElseThrow();
+        var resolver = new ReflectionResolver(SampleModelData.ENTERPRISE);
+
+        // Act
+        Document document = template.startGeneration(resolver);
+        document.blockUntilCompletion(60000L); // 1 minute
+
+        // Assert
+        assertThat(document.completed(), is(true));
+        xwpfDocument = TestUtils.getXWPFDocumentFromDocument(document);
+        var documentWrapper = new XWPFDocumentWrapper(xwpfDocument);
+        var services = SampleModelData.ENTERPRISE.services();
+        var servicesOnePlanets = services.get(0).getVisitedPlanets();
+        var servicesTwoPlanets = services.get(1).getVisitedPlanets();
+        assertThat(documentWrapper.bodyElement(0).asParagraph().text(), equalTo(servicesOnePlanets.get(0).getPlanetName()));
+        assertThat(documentWrapper.bodyElement(1).asParagraph().text(), equalTo(servicesTwoPlanets.get(0).getPlanetName()));
+        assertThat(documentWrapper.bodyElement(2).asParagraph().text(), equalTo(servicesTwoPlanets.get(1).getPlanetName()));
+    }
+
+    @Test
+    @DisplayName("Resolve falsy conditional")
+    void shouldResolveFalsyConditional() throws IOException, InterruptedException {
+        // Assemble
+        var template = Template.fromClassPath("/templates/word/ConditionalTemplate.docx")
+            .orElseThrow();
+        var resolver = new ReflectionResolver(SampleModelData.ENTERPRISE_WITHOUT_SERVICES);
+
+        // Act
+        Document document = template.startGeneration(resolver);
+        document.blockUntilCompletion(60000L); // 1 minute
+
+        // Assert
+        assertThat(document.completed(), is(true));
+        xwpfDocument = TestUtils.getXWPFDocumentFromDocument(document);
+        var documentWrapper = new XWPFDocumentWrapper(xwpfDocument);
+        assertThat(documentWrapper.document().getBodyElements(), hasSize(0));
+    }
+
+    @Test
+    @DisplayName("Scale large picture")
+    void shouldScaleLargePicture() throws IOException, InterruptedException {
+        // Assemble
+        Template template = Template.fromClassPath("/templates/word/ProfilePicTemplate.docx")
+            .orElseThrow();
+        PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.FUTURE_PICARD);
+
+        // Act
+        Document document = template.startGeneration(resolver);
+        document.blockUntilCompletion(60000L); // 1 minute
+
+        // Assert
+        assertThat(document.completed(), is(true));
+        xwpfDocument = TestUtils.getXWPFDocumentFromDocument(document);
+        var documentWrapper = new XWPFDocumentWrapper(xwpfDocument);
+        assertThat(documentWrapper.bodyElement(0).asParagraph().run(0).pictures(), hasSize(1));
     }
 }

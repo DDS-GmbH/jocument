@@ -4,7 +4,6 @@ import com.docutools.jocument.PlaceholderData;
 import com.docutools.jocument.PlaceholderResolver;
 import com.docutools.jocument.PlaceholderType;
 import com.docutools.jocument.impl.ParsingUtils;
-import com.docutools.jocument.impl.ScalarPlaceholderData;
 import com.docutools.jocument.impl.excel.interfaces.ExcelWriter;
 import com.docutools.jocument.impl.excel.util.ExcelUtils;
 import com.google.common.collect.Lists;
@@ -155,9 +154,9 @@ public class ExcelGenerator {
       var cell = row.getCell(row.getFirstCellNum());
       if (cell.getCellType() == CellType.STRING) {
         return resolver.resolve(
-            ParsingUtils.stripBrackets(
-                cell.getStringCellValue()
-            )).map(PlaceholderData::getType)
+                ParsingUtils.stripBrackets(
+                    cell.getStringCellValue()
+                )).map(PlaceholderData::getType)
             .map(type -> type == PlaceholderType.SET)
             .orElse(false);
       }

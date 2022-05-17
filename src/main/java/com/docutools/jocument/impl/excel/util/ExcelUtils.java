@@ -4,21 +4,20 @@ import com.docutools.jocument.PlaceholderResolver;
 import com.docutools.jocument.impl.DocumentImpl;
 import com.docutools.jocument.impl.ParsingUtils;
 import com.docutools.jocument.impl.ScalarPlaceholderData;
-import java.util.Iterator;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.Spliterator;
 import java.util.Spliterators;
 import java.util.stream.StreamSupport;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 public class ExcelUtils {
-  private static final Logger logger = LogManager.getLogger();
+
+  private ExcelUtils() {
+  }
 
   /**
    * Find and replace the placeholders found in value using given resolver.
@@ -31,7 +30,7 @@ public class ExcelUtils {
     String cellValue = getCellContentAsString(cell);
     var matcher = ParsingUtils.matchPlaceholders(cellValue);
     return matcher.replaceAll(matchResult -> resolver.resolve(matchResult.group(1))
-        .orElse(new ScalarPlaceholderData("-"))
+        .orElse(new ScalarPlaceholderData<>("-"))
         .toString()
     );
   }
@@ -52,19 +51,6 @@ public class ExcelUtils {
   public static boolean containsPlaceholder(Cell cell) {
     String cellValue = getCellContentAsString(cell);
     return ParsingUtils.matchPlaceholders(cellValue).find();
-  }
-
-  /**
-   * This method replaces the string content of a cell with the replacement string.
-   *
-   * @param cell        The cell where the new value should be inserted
-   * @param replacement The string which should be inserted into the cell
-   * @return The cell with the new value inserted
-   */
-  public static Cell replaceCellContent(Cell cell, String replacement) {
-    logger.debug("Replacing content of cell {} with string {}", cell.getStringCellValue(), replacement);
-    cell.setCellValue(replacement);
-    return cell;
   }
 
   /**
@@ -95,11 +81,11 @@ public class ExcelUtils {
    * @return Whether the matching loop-end string for the placeholder was found in this row
    */
   public static boolean isMatchingLoopEnd(Row row, String placeholder) {
-    var endPlaceholder = ParsingUtils.getMatchingLoopEnd(placeholder);
+    var endPlaceholders = ParsingUtils.getMatchingLoopEnds(placeholder);
     if (getNumberOfNonEmptyCells(row) == 1) {
       var cell = row.getCell(row.getFirstCellNum());
       if (cell.getCellType() == CellType.STRING) {
-        return cell.getStringCellValue().equals(endPlaceholder);
+        return endPlaceholders.stream().anyMatch(endPlaceholder -> cell.getStringCellValue().equals(endPlaceholder));
       }
     }
     return false;
@@ -150,21 +136,6 @@ public class ExcelUtils {
       case ERROR -> String.valueOf(cell.getErrorCellValue());
       default -> "";
     };
-  }
-
-  /**
-   * This method checks whether the passed row contains a placeholder.
-   *
-   * @param row The row to check for a placeholder
-   * @return Whether the row contains a placeholder
-   */
-  public static boolean isSimpleRow(Row row) {
-    var isSimpleRow = true;
-    for (Iterator<Cell> it = row.cellIterator(); it.hasNext(); ) {
-      Cell cell = it.next();
-      isSimpleRow &= isSimpleCell(cell);
-    }
-    return isSimpleRow;
   }
 
   public static Optional<Locale> getWorkbookLanguage(XSSFWorkbook workbook) {

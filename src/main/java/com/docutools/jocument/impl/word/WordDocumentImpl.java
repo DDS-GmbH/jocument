@@ -27,7 +27,7 @@ public class WordDocumentImpl extends DocumentImpl {
   @Override
   protected Path generate() throws IOException {
     logger.info("Starting generation");
-    Path file = Files.createTempFile("document", ".docx");
+    Path file = Files.createTempFile("jocument-", ".docx");
     try (XWPFDocument document = new XWPFDocument(template.openStream())) {
       var locale = WordUtilities.getDocumentLanguage(document).orElse(Locale.getDefault());
       LocaleUtil.setUserLocale(locale);

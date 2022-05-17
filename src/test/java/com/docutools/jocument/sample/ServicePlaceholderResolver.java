@@ -15,10 +15,10 @@ public class ServicePlaceholderResolver extends PlaceholderResolver {
   }
 
   @Override
-  public Optional<PlaceholderData> resolve(String placeholderName, Locale locale) {
+  protected Optional<PlaceholderData> doResolve(String placeholderName, Locale locale) {
     switch (placeholderName) {
       case "name":
-        return Optional.of(new ScalarPlaceholderData(name));
+        return Optional.of(new ScalarPlaceholderData<>(name));
       default:
         return Optional.empty();
     }

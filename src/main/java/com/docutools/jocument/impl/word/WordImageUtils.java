@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.util.Map;
 import java.util.Optional;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -17,12 +16,6 @@ import org.apache.poi.xwpf.usermodel.XWPFParagraph;
 import org.apache.poi.xwpf.usermodel.XWPFPicture;
 
 public class WordImageUtils {
-  public static final Map<String, Integer> XWPF_CONTENT_TYPE_MAPPING =
-      Map.of(
-          "image/jpeg", Document.PICTURE_TYPE_JPEG,
-          "image/jpg", Document.PICTURE_TYPE_JPEG,
-          "image/png", Document.PICTURE_TYPE_PNG
-      );
   public static final int DEFAULT_XWPF_CONTENT_TYPE = Document.PICTURE_TYPE_JPEG;
   private static final Logger logger = LogManager.getLogger();
   /**
@@ -47,8 +40,21 @@ public class WordImageUtils {
    * @return the inserted image
    */
   public static XWPFPicture insertImage(XWPFParagraph paragraph, Path path, ImageStrategy imageStrategy) {
+    return insertImage(paragraph, path, imageStrategy, new Dimension(MAX_PICTURE_WIDTH, MAX_PICTURE_HEIGHT));
+  }
+
+  /**
+   * Inserts the image of the given {@link java.nio.file.Path} into the {@link org.apache.poi.xwpf.usermodel.XWPFParagraph}.
+   *
+   * @param paragraph        the paragraph
+   * @param path             the image file
+   * @param imageStrategy    the {@link ImageStrategy}
+   * @param targetDimensions the target dimensions to scale the image to
+   * @return the inserted image
+   */
+  public static XWPFPicture insertImage(XWPFParagraph paragraph, Path path, ImageStrategy imageStrategy, Dimension targetDimensions) {
     var dim = probeDimensions(path, imageStrategy)
-        .map(WordImageUtils::scaleToWordSize)
+        .map(pictureDimensions -> scaleToTargetDimensions(pictureDimensions, targetDimensions))
         .map(WordImageUtils::toEmu)
         .orElse(DEFAULT_DIM);
     var contentType = probeImageType(path);
@@ -62,9 +68,17 @@ public class WordImageUtils {
     }
   }
 
-  private static Optional<Dimension> probeDimensions(Path path, ImageStrategy imageStrategy) {
-    try (var image = imageStrategy.load(path)) {
-      return Optional.of(new Dimension(image.getWidth(), image.getHeight()));
+
+  /**
+   * Get the dimensions of the image at the provided path, if possible.
+   *
+   * @param path          The path to the image to get the dimensions from
+   * @param imageStrategy The image strategy to use for figuring out the dimensions
+   * @return An {@link Optional} containing the dimensions if they could be determined successfully, {@link Optional#empty()} if not
+   */
+  public static Optional<Dimension> probeDimensions(Path path, ImageStrategy imageStrategy) {
+    try {
+      return Optional.of(imageStrategy.getDimensions(path));
     } catch (Exception any) {
       logger.error("Could not probe image '%s' for dimensions.".formatted(path), any);
       return Optional.empty();
@@ -75,32 +89,62 @@ public class WordImageUtils {
     return new Dimension(Units.pixelToEMU(dim.width), Units.pixelToEMU(dim.height));
   }
 
-  private static boolean exceedsMaxWordSize(Dimension dimension) {
-    return dimension != null && (dimension.width > MAX_PICTURE_WIDTH || dimension.height > MAX_PICTURE_HEIGHT);
+  private static boolean exceedsTargetDimensions(Dimension imageDimensions, Dimension targetDimensions) {
+    return imageDimensions != null && (imageDimensions.width > targetDimensions.width || imageDimensions.height > targetDimensions.height);
   }
 
-  private static Dimension scaleToWordSize(Dimension dim) {
-    if (exceedsMaxWordSize(dim)) {
-      return scale(dim, MAX_PICTURE_HEIGHT, MAX_PICTURE_WIDTH);
+  private static Dimension scaleToTargetDimensions(Dimension pictureDimensions, Dimension targetDimension) {
+    if (exceedsTargetDimensions(pictureDimensions, targetDimension)) {
+      return scale(pictureDimensions, targetDimension.height, targetDimension.width);
     }
-    return dim;
+    return pictureDimensions;
   }
 
   private static Dimension scale(Dimension dim, int maxHeight, int maxWidth) {
     //Compares the scale down ratio of the width and height compared to the max size and saves the larger one
-    double scale = Math.max((double) dim.height / maxHeight, (double) dim.width / maxWidth);
-    int width = (int) (dim.width / scale);
-    int height = (int) (dim.height / scale);
+    double scale = Math.max(dim.getHeight() / maxHeight, dim.getWidth() / maxWidth);
+    int width = (int) Math.ceil(dim.getWidth() / scale);
+    int height = (int) Math.ceil(dim.getHeight() / scale);
     return new Dimension(width, height);
   }
 
-  private static int probeImageType(Path path) {
+  /**
+   * Get the XWPF integer representing the image type of the file at the provided {@link Path},
+   * returning `DEFAULT_XWPF_CONTENT_TYPE` if it can not be determined.
+   *
+   * @param path the path to the image file
+   * @return the {@link int} representing the image type in the xwpf system.
+   */
+  public static int probeImageType(Path path) {
     return probeContentTypeSafely(path)
-        .map(contentType -> XWPF_CONTENT_TYPE_MAPPING.getOrDefault(contentType, DEFAULT_XWPF_CONTENT_TYPE))
+        .map(WordImageUtils::toPoiType)
         .orElse(DEFAULT_XWPF_CONTENT_TYPE);
   }
 
-  private static Optional<String> probeContentTypeSafely(Path path) {
+  private static int toPoiType(String mimeType) {
+    return switch (mimeType) {
+      case "image/x-emf" -> Document.PICTURE_TYPE_EMF;
+      case "image/x-wmf" -> Document.PICTURE_TYPE_WMF;
+      case "image/pict" -> Document.PICTURE_TYPE_PICT;
+      case "image/jpeg", "image/jpg" -> Document.PICTURE_TYPE_JPEG;
+      case "image/png" -> Document.PICTURE_TYPE_PNG;
+      case "image/dib" -> Document.PICTURE_TYPE_DIB;
+      case "image/gif" -> Document.PICTURE_TYPE_GIF;
+      case "image/tiff" -> Document.PICTURE_TYPE_TIFF;
+      case "application/postscript" -> Document.PICTURE_TYPE_EPS;
+      case "image/bmp" -> Document.PICTURE_TYPE_BMP;
+      case "image/wpg" -> Document.PICTURE_TYPE_WPG;
+      default -> Document.PICTURE_TYPE_JPEG;
+    };
+  }
+
+  /**
+   * Get the mime type of the file at the provided {@link Path}.
+   *
+   * @param path the path to the file to examine
+   * @return an optional containing the mime type of the file if it can be determined, or {@link Optional#empty()} if not
+   */
+  public static Optional<String> probeContentTypeSafely(Path path) {
     try {
       return Optional.ofNullable(Files.probeContentType(path))
           .filter(contentType -> !contentType.isBlank());
