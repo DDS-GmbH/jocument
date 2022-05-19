@@ -177,9 +177,14 @@ public class SXSSFWriter implements ExcelWriter {
 
   @Override
   public void addCell(Cell templateCell, String newCellText) {
+    addCell(templateCell, newCellText, 0);
+  }
+
+  @Override
+  public void addCell(Cell templateCell, String newCellText, int columnOffset) {
     logger.debug("Creating new cell {} {} with text {}",
         templateCell.getColumnIndex(), templateCell.getRow().getRowNum(), newCellText);
-    var newCell = currentRow.createCell(templateCell.getColumnIndex(), templateCell.getCellType());
+    var newCell = currentRow.createCell(templateCell.getColumnIndex() + columnOffset, templateCell.getCellType());
     newCell.setCellComment(templateCell.getCellComment());
     newCell.setCellStyle(styleStyleMapping.computeIfAbsent(templateCell.getCellStyle(), this::copyCellStyle));
     newCell.setHyperlink(templateCell.getHyperlink());

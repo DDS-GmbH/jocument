@@ -1,28 +1,33 @@
 package com.docutools.jocument.impl.excel.implementations;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.closeTo;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.startsWith;
+
+import com.docutools.jocument.CustomPlaceholderRegistry;
 import com.docutools.jocument.Document;
 import com.docutools.jocument.PlaceholderResolver;
 import com.docutools.jocument.Template;
 import com.docutools.jocument.TestUtils;
+import com.docutools.jocument.impl.CustomPlaceholderRegistryImpl;
 import com.docutools.jocument.impl.ReflectionResolver;
 import com.docutools.jocument.sample.model.SampleModelData;
+import com.docutools.jocument.sample.placeholders.QuotesBlockPlaceholder;
 import com.docutools.poipath.PoiPath;
 import com.docutools.poipath.xssf.XSSFWorkbookWrapper;
+import java.io.IOException;
+import java.time.LocalDate;
+import java.time.Period;
+import java.time.format.DateTimeFormatter;
+import java.util.Locale;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-
-import java.io.IOException;
-import java.time.LocalDate;
-import java.time.Period;
-import java.time.format.DateTimeFormatter;
-import java.util.Locale;
-
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
 
 
 @DisplayName("Excel Generator Tests")
@@ -218,13 +223,33 @@ class ExcelGeneratorTest {
       Document document = template.startGeneration(resolver);
       document.blockUntilCompletion(60000L); // 1 minute
 
-      // Assert
-      assertThat(document.completed(), is(true));
-      var workbook = TestUtils.getXSSFWorkbookFromDocument(document);
-      var firstSheet = PoiPath.xssf(workbook).sheet(0);;
-      assertThat(firstSheet.row(0).cell(0).cell().getCellType(), equalTo(CellType.FORMULA));
-      assertThat(firstSheet.row(0).cell(0).cell().getCellFormula(),
-          equalTo("HYPERLINK(\"https://link.me/USS Enterprise\", \"USS Enterprise\")"));
-      assertThat(firstSheet.row(0).cell(0).stringValue(), equalTo("USS Enterprise"));
+        // Assert
+        assertThat(document.completed(), is(true));
+        var workbook = TestUtils.getXSSFWorkbookFromDocument(document);
+        var firstSheet = PoiPath.xssf(workbook).sheet(0);
+        assertThat(firstSheet.row(0).cell(0).cell().getCellType(), equalTo(CellType.FORMULA));
+        assertThat(firstSheet.row(0).cell(0).cell().getCellFormula(),
+            equalTo("HYPERLINK(\"https://link.me/USS Enterprise\", \"USS Enterprise\")"));
+        assertThat(firstSheet.row(0).cell(0).stringValue(), equalTo("USS Enterprise"));
+    }
+
+    @Test
+    void xlsxQuotesBlockPlaceholder() throws InterruptedException, IOException {
+        Template template = Template.fromClassPath("/templates/excel/QuotesBlockTemplate.xlsx")
+            .orElseThrow();
+        CustomPlaceholderRegistry customPlaceholderRegistry = new CustomPlaceholderRegistryImpl();
+        customPlaceholderRegistry.addHandler("quotes", QuotesBlockPlaceholder.class);
+        PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.PICARD, customPlaceholderRegistry);
+
+        // Act
+        Document document = template.startGeneration(resolver);
+        document.blockUntilCompletion(60000L); // 1 minute
+
+        // Assert
+        assertThat(document.completed(), is(true));
+        var workbook = TestUtils.getXSSFWorkbookFromDocument(document);
+        var firstSheet = PoiPath.xssf(workbook).sheet(0);
+        assertThat(firstSheet.row(0).cell(0).stringValue(), equalTo(QuotesBlockPlaceholder.quotes.get("marx")));
+        assertThat(firstSheet.row(0).cell(1).stringValue(), equalTo(QuotesBlockPlaceholder.quotes.get("engels")));
     }
 }

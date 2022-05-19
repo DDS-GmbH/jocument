@@ -8,7 +8,7 @@ plugins {
 }
 
 group 'com.docutools'
-version = '1.4.0-rc.10'
+version = '1.4.0-rc.11'
 
 sourceCompatibility = JavaVersion.VERSION_17
 targetCompatibility = JavaVersion.VERSION_17
