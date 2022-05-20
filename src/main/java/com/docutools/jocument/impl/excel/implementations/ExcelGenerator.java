@@ -1,5 +1,6 @@
 package com.docutools.jocument.impl.excel.implementations;
 
+import com.docutools.jocument.GenerationOptions;
 import com.docutools.jocument.PlaceholderData;
 import com.docutools.jocument.PlaceholderResolver;
 import com.docutools.jocument.PlaceholderType;
@@ -16,6 +17,7 @@ import org.apache.logging.log4j.Logger;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.util.LocaleUtil;
 
 
 /**
@@ -33,13 +35,16 @@ public class ExcelGenerator {
   private final PlaceholderResolver resolver;
   private final Iterator<Row> rowIterator;
   private final int nestedLoopDepth;
+  private final GenerationOptions options;
   private int alreadyProcessedLoopsSize = 0;
 
-  private ExcelGenerator(Iterator<Row> rowIterator, ExcelWriter excelWriter, PlaceholderResolver resolver, int nestedLoopDepth) {
+  private ExcelGenerator(Iterator<Row> rowIterator, ExcelWriter excelWriter, PlaceholderResolver resolver, int nestedLoopDepth,
+                         GenerationOptions options) {
     this.rowIterator = rowIterator;
     this.excelWriter = excelWriter;
     this.resolver = resolver;
     this.nestedLoopDepth = nestedLoopDepth;
+    this.options = options;
   }
 
   /**
@@ -48,21 +53,28 @@ public class ExcelGenerator {
    * @param resolver    The resolver to use for looking up placeholders
    * @param rowIterator An iterator over the template row which should be processed
    * @param excelWriter The writer to write the report out to.
+   * @param options     {@link GenerationOptions}
    */
-  static void apply(PlaceholderResolver resolver, Iterator<Row> rowIterator, ExcelWriter excelWriter) {
-    apply(resolver, rowIterator, excelWriter, 0);
+  static void apply(PlaceholderResolver resolver, Iterator<Row> rowIterator, ExcelWriter excelWriter, GenerationOptions options) {
+    apply(resolver, rowIterator, excelWriter, 0, options);
   }
 
-  private static void apply(PlaceholderResolver resolver, Iterator<Row> rowIterator, ExcelWriter excelWriter, int nestedLoopDepth) {
-    new ExcelGenerator(rowIterator, excelWriter, resolver, nestedLoopDepth).generate();
+  private static void apply(PlaceholderResolver resolver, Iterator<Row> rowIterator, ExcelWriter excelWriter, int nestedLoopDepth,
+                            GenerationOptions options) {
+    new ExcelGenerator(rowIterator, excelWriter, resolver, nestedLoopDepth, options).generate();
   }
 
   private void generate() {
     logger.debug("Starting generation by applying resolver {}", resolver);
     for (Iterator<Row> iterator = rowIterator; iterator.hasNext(); ) {
       Row row = iterator.next();
-
-      if (isLoopStart(row)) {
+      if (isCustomPlaceholder(row)) {
+        var cell = row.getCell(row.getFirstCellNum());
+        resolver.resolve(ParsingUtils.stripBrackets(
+                cell.getStringCellValue()
+            ))
+            .ifPresent(placeholderData -> placeholderData.transform(row, excelWriter, LocaleUtil.getUserLocale(), options));
+      } else if (isLoopStart(row)) {
         handleLoop(row, iterator);
       } else {
         excelWriter.newRow(row);
@@ -93,7 +105,7 @@ public class ExcelGenerator {
     placeholderData.stream()
         .forEach(placeholderResolver -> {
           excelWriter.addRowOffset(-1); //So we also fill the cell of the loop start placeholder
-          ExcelGenerator.apply(placeholderResolver, finalLoopBody.iterator(), excelWriter, nestedLoopDepth + 1);
+          ExcelGenerator.apply(placeholderResolver, finalLoopBody.iterator(), excelWriter, nestedLoopDepth + 1, options);
           excelWriter.addRowOffset(1); //To avoid subtracting the placeholder size multiple times
           excelWriter.addRowOffset(loopBodySize);
         });
@@ -160,6 +172,23 @@ public class ExcelGenerator {
             .map(type -> type == PlaceholderType.SET)
             .orElse(false);
       }
+    }
+    return false;
+  }
+
+  private boolean isCustomPlaceholder(Row row) {
+    var firstCell = row.getFirstCellNum();
+    if (firstCell < 0) {
+      return false;
+    }
+    var cell = row.getCell(firstCell);
+    if (cell.getCellType() == CellType.STRING) {
+      return resolver.resolve(
+              ParsingUtils.stripBrackets(
+                  cell.getStringCellValue()
+              )).map(PlaceholderData::getType)
+          .map(type -> type == PlaceholderType.CUSTOM)
+          .orElse(false);
     }
     return false;
   }

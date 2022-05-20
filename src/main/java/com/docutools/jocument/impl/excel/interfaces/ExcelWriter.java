@@ -34,13 +34,23 @@ public interface ExcelWriter {
   void addRowOffset(int size);
 
   /**
-   * Create a new cell from the templateCell with the specified cell text.
-   * This has to be done e.g. for template cells in loops which have to be used multiple times.
+   * Create a new cell from the templateCell with the specified cell text. This has to be done e.g. for template cells in loops which have to be used
+   * multiple times.
    *
    * @param templateCell The template cell to create the new cell from
    * @param newCellText  The text to insert into the cell
    */
   void addCell(Cell templateCell, String newCellText);
+
+  /**
+   * Create a new cell from the templateCell with the specified cell text and the specified offset. This has to be done e.g. for template cells in
+   * loops which have to be used multiple times.
+   *
+   * @param templateCell The template cell to create the new cell from
+   * @param newCellText  The text to insert into the cell
+   * @param columnOffset The column offset to apply to the new cell
+   */
+  void addCell(Cell templateCell, String newCellText, int columnOffset);
 
   void addCell(Cell cell);
 

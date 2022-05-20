@@ -59,7 +59,7 @@ public class ExcelDocumentImpl extends DocumentImpl {
         Sheet sheet = it.next();
         logger.info("Starting generation of sheet {}", sheet.getSheetName());
         excelWriter.newSheet(sheet);
-        ExcelGenerator.apply(resolver, sheet.rowIterator(), excelWriter);
+        ExcelGenerator.apply(resolver, sheet.rowIterator(), excelWriter, options);
       }
     } finally {
       excelWriter.recalculateFormulas();
