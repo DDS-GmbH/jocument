@@ -187,7 +187,7 @@ public class ReflectionResolver extends PlaceholderResolver {
   }
 
   private Optional<PlaceholderData> matchPattern(String placeholderName, Locale locale) {
-    return findMethod(placeholderName)
+    return findMethod(placeholderMapper.tryToMap(placeholderName))
         .flatMap(method -> {
           var returnType = method.getReturnType();
           if (returnType.equals(Optional.class)) {
