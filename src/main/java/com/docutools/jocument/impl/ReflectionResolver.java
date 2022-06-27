@@ -195,7 +195,10 @@ public class ReflectionResolver extends PlaceholderResolver {
               if (method.getParameterCount() == 1) {
                 return evaluateSingleParameterFunction(placeholderName, method);
               } else if (method.getParameterCount() == 2) {
-                return evaluateTwoParameterFunction(placeholderName, locale, method);
+                var additionalParamType = method.getParameterTypes()[1];
+                if(additionalParamType.isAssignableFrom(Locale.class))
+                  return evaluateTwoParameterFunction(placeholderName, locale, Locale.class, method);
+                return evaluateTwoParameterFunction(placeholderName, options, GenerationOptions.class, method);
               } else {
                 logger.error("@MatchPlaceholder-annotated method {} must take exactly one parameter (String) or two (String, Locale). It takes {}.",
                     method, method.getParameterCount());
@@ -237,7 +240,7 @@ public class ReflectionResolver extends PlaceholderResolver {
     }
   }
 
-  private Optional<String> evaluateTwoParameterFunction(String placeholderName, Locale locale, Method method)
+  private <T> Optional<String> evaluateTwoParameterFunction(String placeholderName, T additionalOption, Class<T> additionalOptionClass, Method method)
       throws IllegalAccessException, InvocationTargetException {
     var parameterTypes = method.getParameterTypes();
     if (!parameterTypes[0].equals(String.class)) {
@@ -245,12 +248,12 @@ public class ReflectionResolver extends PlaceholderResolver {
           parameterTypes[0]);
       return Optional.empty();
     }
-    if (!parameterTypes[1].equals(Locale.class)) {
-      logger.warn("@MatchPlaceholder-annotated method {} can only take a java.util.Locale as second parameter, but takes {}.", method,
-          parameterTypes[1]);
+    if (!parameterTypes[1].equals(additionalOptionClass)) {
+      logger.warn("@MatchPlaceholder-annotated method {} can only take a {} as second parameter, but takes {}.", method,
+          additionalOptionClass, parameterTypes[1]);
       return Optional.empty();
     }
-    var returnValue = method.invoke(bean, placeholderName, locale);
+    var returnValue = method.invoke(bean, placeholderName, additionalOption);
     if (returnValue instanceof Optional<?> optionalReturnValue) {
       return optionalReturnValue.map(Object::toString);
     } else {
