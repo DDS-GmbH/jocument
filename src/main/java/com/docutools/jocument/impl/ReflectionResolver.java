@@ -196,8 +196,9 @@ public class ReflectionResolver extends PlaceholderResolver {
                 return evaluateSingleParameterFunction(placeholderName, method);
               } else if (method.getParameterCount() == 2) {
                 var additionalParamType = method.getParameterTypes()[1];
-                if(additionalParamType.isAssignableFrom(Locale.class))
+                if (additionalParamType.isAssignableFrom(Locale.class)) {
                   return evaluateTwoParameterFunction(placeholderName, locale, Locale.class, method);
+                }
                 return evaluateTwoParameterFunction(placeholderName, options, GenerationOptions.class, method);
               } else {
                 logger.error("@MatchPlaceholder-annotated method {} must take exactly one parameter (String) or two (String, Locale). It takes {}.",
