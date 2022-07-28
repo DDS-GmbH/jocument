@@ -57,7 +57,7 @@ public class WordImageUtils {
         .map(pictureDimensions -> scaleToTargetDimensions(pictureDimensions, targetDimensions))
         .map(WordImageUtils::toEmu)
         .orElse(DEFAULT_DIM);
-    var contentType = probeImageType(path);
+    var contentType = probeImageType(path, imageStrategy);
 
     try (var in = Files.newInputStream(path, StandardOpenOption.READ)) {
       return paragraph.createRun()
@@ -109,16 +109,20 @@ public class WordImageUtils {
   }
 
   /**
-   * Get the XWPF integer representing the image type of the file at the provided {@link Path},
-   * returning `DEFAULT_XWPF_CONTENT_TYPE` if it can not be determined.
+   * Get the XWPF integer representing the image type of the file at the provided {@link Path}, returning `DEFAULT_XWPF_CONTENT_TYPE` if it can not be
+   * determined.
    *
-   * @param path the path to the image file
+   * @param path          the path to the image file
+   * @param imageStrategy the image strategy containing a file type resolving function
    * @return the {@link int} representing the image type in the xwpf system.
    */
-  public static int probeImageType(Path path) {
-    return probeContentTypeSafely(path)
-        .map(WordImageUtils::toPoiType)
-        .orElse(DEFAULT_XWPF_CONTENT_TYPE);
+  public static int probeImageType(Path path, ImageStrategy imageStrategy) {
+    try {
+      String mimeType = imageStrategy.getMimeType(path);
+      return WordImageUtils.toPoiType(mimeType);
+    } catch (IOException e) {
+      return DEFAULT_XWPF_CONTENT_TYPE;
+    }
   }
 
   private static int toPoiType(String mimeType) {
@@ -137,21 +141,4 @@ public class WordImageUtils {
       default -> Document.PICTURE_TYPE_JPEG;
     };
   }
-
-  /**
-   * Get the mime type of the file at the provided {@link Path}.
-   *
-   * @param path the path to the file to examine
-   * @return an optional containing the mime type of the file if it can be determined, or {@link Optional#empty()} if not
-   */
-  public static Optional<String> probeContentTypeSafely(Path path) {
-    try {
-      return Optional.ofNullable(Files.probeContentType(path))
-          .filter(contentType -> !contentType.isBlank());
-    } catch (Exception e) {
-      logger.warn("Failed to probe content type of path %s".formatted(path), e);
-      return Optional.empty();
-    }
-  }
-
 }

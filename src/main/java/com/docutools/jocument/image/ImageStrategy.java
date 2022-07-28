@@ -53,4 +53,5 @@ public interface ImageStrategy {
    */
   Dimension getDimensions(Path path) throws IOException;
 
+  String getMimeType(Path path) throws IOException;
 }
