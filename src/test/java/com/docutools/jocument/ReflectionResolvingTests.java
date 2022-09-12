@@ -9,6 +9,7 @@ import com.docutools.jocument.impl.ReflectionResolver;
 import com.docutools.jocument.sample.model.SampleModelData;
 import com.docutools.jocument.sample.model.Ship;
 import com.docutools.jocument.sample.model.Uniform;
+import com.docutools.jocument.sample.reflection.ValidMatchPlaceholderDataMatch;
 import com.docutools.jocument.sample.reflection.ValidSingleParameterMatch;
 import com.docutools.jocument.sample.reflection.ValidTwoParameterMatch;
 import com.docutools.jocument.sample.reflection.WrongParameterOneTwoParameters;
@@ -222,7 +223,7 @@ class ReflectionResolvingTests {
   }
 
   @ParameterizedTest(name = "Resolve falsy condition for {0} on empty ship")
-  @ValueSource(classes = {ValidSingleParameterMatch.class, ValidTwoParameterMatch.class})
+  @ValueSource(classes = {ValidSingleParameterMatch.class, ValidTwoParameterMatch.class, ValidMatchPlaceholderDataMatch.class})
   void shouldResolveValidMatchMethods(Object clazz)
       throws NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
     // Assemble

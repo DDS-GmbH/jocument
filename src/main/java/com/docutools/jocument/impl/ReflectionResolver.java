@@ -13,6 +13,7 @@ import com.docutools.jocument.annotations.Money;
 import com.docutools.jocument.annotations.Numeric;
 import com.docutools.jocument.annotations.Percentage;
 import com.docutools.jocument.annotations.Translatable;
+import com.docutools.jocument.impl.models.MatchPlaceholderData;
 import com.docutools.jocument.impl.word.placeholders.ImagePlaceholderData;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
@@ -193,15 +194,27 @@ public class ReflectionResolver extends PlaceholderResolver {
           if (returnType.equals(Optional.class)) {
             try {
               if (method.getParameterCount() == 1) {
-                return evaluateSingleParameterFunction(placeholderName, method);
+                if (method.getParameterTypes()[0].isAssignableFrom(String.class)) {
+                  logger.warn(
+                      "@MatchPlaceholder-annotated method {}: Using the (String), (String, Locale), and (String, GenerationOptions) match methods is deprecated, please migrate you code to using the MatchPlaceholderData record!",
+                      method.getName());
+                  return evaluateSingleParameterFunction(placeholderName, method);
+                } else if (method.getParameterTypes()[0].isAssignableFrom(MatchPlaceholderData.class)) {
+                  return evaluateMatchPlaceholderDataFunction(new MatchPlaceholderData(placeholderName, locale, options), method);
+                }
+                logger.error("@MatchPlaceholder-annotated method {} should take a MatchPlaceholderData argument", method.getName());
+                return Optional.empty();
               } else if (method.getParameterCount() == 2) {
+                logger.warn(
+                    "@MatchPlaceholder-annotated method {}: Using the (String), (String, Locale), and (String, GenerationOptions) match methods is deprecated, please migrate you code to using the MatchPlaceholderData record!",
+                    method.getName());
                 var additionalParamType = method.getParameterTypes()[1];
                 if (additionalParamType.isAssignableFrom(Locale.class)) {
                   return evaluateTwoParameterFunction(placeholderName, locale, Locale.class, method);
                 }
                 return evaluateTwoParameterFunction(placeholderName, options, GenerationOptions.class, method);
               } else {
-                logger.error("@MatchPlaceholder-annotated method {} must take exactly one parameter (String) or two (String, Locale). It takes {}.",
+                logger.error("@MatchPlaceholder-annotated method {} must take exactly one parameter (MatchPlaceholderData). It takes {}.",
                     method, method.getParameterCount());
                 return Optional.empty();
               }
@@ -259,6 +272,17 @@ public class ReflectionResolver extends PlaceholderResolver {
       return optionalReturnValue.map(Object::toString);
     } else {
       logger.warn("@MatchPlaceholder-annotated method {} must return `Optional<T>`, but returns {}.", method, returnValue.getClass());
+      return Optional.empty();
+    }
+  }
+
+  private Optional<String> evaluateMatchPlaceholderDataFunction(MatchPlaceholderData matchPlaceholderData, Method method)
+      throws InvocationTargetException, IllegalAccessException {
+    var returnValue = method.invoke(bean, matchPlaceholderData);
+    if (returnValue instanceof Optional<?> optionalReturnValue) {
+      return optionalReturnValue.map(Object::toString);
+    } else {
+      logger.warn("@MatchPlaceholder-annotated method {} does not return a java.util.Optional!", method);
       return Optional.empty();
     }
   }
