@@ -5,7 +5,7 @@ import java.util.Optional;
 
 public class WrongParameterSingleParameter {
   @MatchPlaceholder(pattern = "test")
-  Optional<String> testMethod(int number){
+  public Optional<String> testMethod(int number){
     return Optional.of("");
   }
 }

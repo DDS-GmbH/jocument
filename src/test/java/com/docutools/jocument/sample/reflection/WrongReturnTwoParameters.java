@@ -5,7 +5,7 @@ import java.util.Locale;
 
 public class WrongReturnTwoParameters {
   @MatchPlaceholder(pattern = "test")
-  String testMethod(String placeholder, Locale locale){
+  public String testMethod(String placeholder, Locale locale){
     return "";
   }
 }

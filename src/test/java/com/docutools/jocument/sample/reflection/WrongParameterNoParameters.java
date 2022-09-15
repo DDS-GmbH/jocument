@@ -3,9 +3,9 @@ package com.docutools.jocument.sample.reflection;
 import com.docutools.jocument.annotations.MatchPlaceholder;
 import java.util.Optional;
 
-public class WrongReturnSingleParameter {
+public class WrongParameterNoParameters {
   @MatchPlaceholder(pattern = "test")
-  public String testMethod(String placeholder){
-    return "";
+  public Optional<String> testMethod(){
+    return Optional.of("");
   }
 }
