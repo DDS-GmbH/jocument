@@ -15,6 +15,7 @@ import org.apache.logging.log4j.Logger;
 import org.apache.poi.util.LocaleUtil;
 import org.apache.poi.xwpf.usermodel.IBodyElement;
 import org.apache.poi.xwpf.usermodel.XWPFParagraph;
+import org.apache.poi.xwpf.usermodel.XWPFSDT;
 import org.apache.poi.xwpf.usermodel.XWPFTable;
 
 class WordGenerator {
@@ -39,7 +40,7 @@ class WordGenerator {
     for (int i = 0; i < elements.size(); i++) {
       var element = elements.get(i);
 
-      if (!WordUtilities.exists(element)) {
+      if (element instanceof XWPFSDT || !WordUtilities.exists(element)) {
         continue;
       }
 

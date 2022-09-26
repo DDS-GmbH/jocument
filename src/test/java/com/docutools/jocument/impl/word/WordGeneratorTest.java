@@ -343,4 +343,23 @@ class WordGeneratorTest {
         var documentWrapper = new XWPFDocumentWrapper(xwpfDocument);
         assertThat(documentWrapper.bodyElement(0).asParagraph().run(0).pictures(), hasSize(1));
     }
+
+    @Test
+    @DisplayName("Process Document With TOC")
+    void shouldProcessDocumentWithTOC() throws IOException, InterruptedException {
+        // Assemble
+        Template template = Template.fromClassPath("/templates/word/TOCTemplate.docx")
+            .orElseThrow();
+        PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.FUTURE_PICARD);
+
+        // Act
+        Document document = template.startGeneration(resolver);
+        document.blockUntilCompletion(60000L); // 1 minute
+
+        // Assert
+        assertThat(document.completed(), is(true));
+        xwpfDocument = TestUtils.getXWPFDocumentFromDocument(document);
+        var documentWrapper = new XWPFDocumentWrapper(xwpfDocument);
+        assertThat(documentWrapper.bodyElement(0).asParagraph().runs(), hasSize(1));
+    }
 }
