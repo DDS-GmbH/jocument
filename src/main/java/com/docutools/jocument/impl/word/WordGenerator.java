@@ -116,7 +116,7 @@ class WordGenerator {
     return remaining.stream()
         //Could be written nice with `takeUntil(element -> (element instanceof XP xp && eLM.equals(WU.toString(xp)))
         .takeWhile(element -> !(element instanceof XWPFParagraph xwpfParagraph
-            && endLoopMarkers.stream().anyMatch(endLoopMarker -> endLoopMarker.equals(WordUtilities.toString(xwpfParagraph)))))
+            && endLoopMarkers.stream().anyMatch(endLoopMarker -> endLoopMarker.equals(WordUtilities.toString(xwpfParagraph).strip()))))
         .toList();
   }
 
