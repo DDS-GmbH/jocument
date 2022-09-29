@@ -252,4 +252,20 @@ class ExcelGeneratorTest {
         assertThat(firstSheet.row(0).cell(0).stringValue(), equalTo(QuotesBlockPlaceholder.quotes.get("marx")));
         assertThat(firstSheet.row(0).cell(1).stringValue(), equalTo(QuotesBlockPlaceholder.quotes.get("engels")));
     }
+
+    @Test
+    void evaluatesLargeDocument() throws InterruptedException {
+        // Assemble
+        Template template = Template.fromClassPath("/templates/excel/LargeTemplate.xlsx")
+            .orElseThrow();
+        PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.PICARD_PERSON);
+
+        // Act
+        Document document = template.startGeneration(resolver);
+        document.blockUntilCompletion(60000L); // 1 minute
+
+        // Assert
+        assertThat(document.completed(), is(true));
+
+    }
 }
