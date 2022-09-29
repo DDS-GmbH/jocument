@@ -14,10 +14,10 @@ import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.CreationHelper;
-import org.apache.poi.ss.usermodel.FormulaEvaluator;
 import org.apache.poi.ss.usermodel.Hyperlink;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.xssf.streaming.SXSSFFormulaEvaluator;
 import org.apache.poi.xssf.streaming.SXSSFSheet;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.apache.poi.xssf.usermodel.XSSFClientAnchor;
@@ -42,7 +42,6 @@ public class SXSSFWriter implements ExcelWriter {
   private final Path path;
   private final SXSSFWorkbook workbook;
   private final CreationHelper creationHelper;
-  private final FormulaEvaluator formulaEvaluator;
   /**
    * Maps the {@link CellStyle} objects of the old workbook to the new ones.
    */
@@ -59,7 +58,6 @@ public class SXSSFWriter implements ExcelWriter {
   public SXSSFWriter(Path path) {
     workbook = new SXSSFWorkbook();
     this.creationHelper = workbook.getCreationHelper();
-    this.formulaEvaluator = creationHelper.createFormulaEvaluator();
     this.path = path;
   }
 
@@ -211,7 +209,7 @@ public class SXSSFWriter implements ExcelWriter {
 
   @Override
   public void recalculateFormulas() {
-    formulaEvaluator.evaluateAll();
+    SXSSFFormulaEvaluator.evaluateAllFormulaCells(workbook, true);
   }
 
   private CellStyle copyCellStyle(CellStyle cellStyle) {
