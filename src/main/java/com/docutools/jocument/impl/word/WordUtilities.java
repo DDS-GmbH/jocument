@@ -18,6 +18,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.poi.xwpf.usermodel.IBodyElement;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
+import org.apache.poi.xwpf.usermodel.XWPFFooter;
+import org.apache.poi.xwpf.usermodel.XWPFHeader;
 import org.apache.poi.xwpf.usermodel.XWPFParagraph;
 import org.apache.poi.xwpf.usermodel.XWPFRun;
 import org.apache.poi.xwpf.usermodel.XWPFTable;
@@ -78,7 +80,7 @@ public class WordUtilities {
    * @return {@code true} when exists
    */
   public static boolean exists(IBodyElement element) {
-    return findPos(element).orElse(-1) != -1;
+    return findPositionInBody(element).orElseGet(() -> findPositionInHeader(element).orElseGet(() -> findPositionInFooter(element).orElse(-1))) != -1;
   }
 
   /**
@@ -87,12 +89,22 @@ public class WordUtilities {
    * @param element the element
    * @return the index
    */
-  public static OptionalInt findPos(IBodyElement element) {
+  public static OptionalInt findPositionInBody(IBodyElement element) {
     var document = element.getBody().getXWPFDocument();
     if (element instanceof XWPFParagraph xwpfParagraph) {
-      return OptionalInt.of(document.getPosOfParagraph(xwpfParagraph));
+      var position = document.getPosOfParagraph(xwpfParagraph);
+      if (position >= 0) {
+        return OptionalInt.of(position);
+      } else {
+        return OptionalInt.empty();
+      }
     } else if (element instanceof XWPFTable xwpfTable) {
-      return OptionalInt.of(document.getPosOfTable(xwpfTable));
+      var position = document.getPosOfTable(xwpfTable);
+      if (position >= 0) {
+        return OptionalInt.of(position);
+      } else {
+        return OptionalInt.empty();
+      }
     }
     logger.warn("Failed to find position of element {}", element);
     return OptionalInt.empty();
@@ -108,7 +120,7 @@ public class WordUtilities {
   public static List<IBodyElement> copyBefore(List<IBodyElement> elements, IBodyElement destination) {
     return elements.stream()
         .map(element -> copyBefore(element, destination))
-        .collect(Collectors.toList());
+        .toList();
   }
 
   /**
@@ -138,8 +150,95 @@ public class WordUtilities {
    */
   public static void removeIfExists(IBodyElement element) {
     logger.debug("Removing element {}", element);
-    findPos(element)
-        .ifPresent(element.getBody().getXWPFDocument()::removeBodyElement);
+    var document = element.getBody().getXWPFDocument();
+    OptionalInt position = findPositionInBody(element);
+    if (position.isPresent()) {
+      document.removeBodyElement(position.getAsInt());
+    } else {
+      if (element instanceof XWPFParagraph xwpfParagraph) {
+        var positionInHeader = findPositionInHeader(xwpfParagraph, document.getHeaderList());
+        if (positionInHeader.isPresent()) {
+          document.getHeaderArray(positionInHeader.getAsInt()).removeParagraph(xwpfParagraph);
+        } else {
+          var positionInFooter = findPositionInFooter(xwpfParagraph, document.getFooterList());
+          positionInFooter.ifPresent(integer -> document.getHeaderArray(integer).removeParagraph(xwpfParagraph));
+        }
+      } else if (element instanceof XWPFTable xwpfTable) {
+        var positionInHeader = findPositionInHeader(xwpfTable, document.getHeaderList());
+        if (positionInHeader.isPresent()) {
+          document.getHeaderArray(positionInHeader.getAsInt()).removeTable(xwpfTable);
+        } else {
+          var positionInFooter = findPositionInFooter(xwpfTable, document.getFooterList());
+          positionInFooter.ifPresent(integer -> document.getHeaderArray(integer).removeTable(xwpfTable));
+        }
+      }
+    }
+  }
+
+  private static OptionalInt findPositionInHeader(IBodyElement element) {
+    if (element instanceof XWPFParagraph xwpfParagraph) {
+      return findPositionInHeader(xwpfParagraph, element.getBody().getXWPFDocument().getHeaderList());
+    } else if (element instanceof XWPFTable xwpfTable) {
+      return findPositionInHeader(xwpfTable, element.getBody().getXWPFDocument().getHeaderList());
+    }
+    return OptionalInt.empty();
+  }
+
+  private static OptionalInt findPositionInHeader(XWPFParagraph xwpfParagraph, List<XWPFHeader> headerList) {
+    var i = 0;
+    for (XWPFHeader xwpfHeader : headerList) {
+      for (XWPFParagraph paragraph : xwpfHeader.getParagraphs()) {
+        if (xwpfParagraph.equals(paragraph)) {
+          return OptionalInt.of(i);
+        }
+      }
+    }
+    return OptionalInt.empty();
+  }
+
+  private static OptionalInt findPositionInHeader(XWPFTable xwpfTable, List<XWPFHeader> headerList) {
+    var i = 0;
+    for (XWPFHeader xwpfHeader : headerList) {
+      for (XWPFTable table : xwpfHeader.getTables()) {
+        if (xwpfTable.equals(table)) {
+          return OptionalInt.of(i);
+        }
+      }
+    }
+    return OptionalInt.empty();
+  }
+
+  private static OptionalInt findPositionInFooter(IBodyElement element) {
+    if (element instanceof XWPFParagraph xwpfParagraph) {
+      return findPositionInFooter(xwpfParagraph, element.getBody().getXWPFDocument().getFooterList());
+    } else if (element instanceof XWPFTable xwpfTable) {
+      return findPositionInFooter(xwpfTable, element.getBody().getXWPFDocument().getFooterList());
+    }
+    return OptionalInt.empty();
+  }
+
+  private static OptionalInt findPositionInFooter(XWPFParagraph xwpfParagraph, List<XWPFFooter> footerList) {
+    var i = 0;
+    for (XWPFFooter xwpfFooter : footerList) {
+      for (XWPFParagraph paragraph : xwpfFooter.getParagraphs()) {
+        if (xwpfParagraph.equals(paragraph)) {
+          return OptionalInt.of(i);
+        }
+      }
+    }
+    return OptionalInt.empty();
+  }
+
+  private static OptionalInt findPositionInFooter(XWPFTable xwpfTable, List<XWPFFooter> footerList) {
+    var i = 0;
+    for (XWPFFooter xwpfFooter : footerList) {
+      for (XWPFTable table : xwpfFooter.getTables()) {
+        if (xwpfTable.equals(table)) {
+          return OptionalInt.of(i);
+        }
+      }
+    }
+    return OptionalInt.empty();
   }
 
   /**
@@ -231,7 +330,7 @@ public class WordUtilities {
         .distinct()
         .map(Locale::forLanguageTag)
         .filter(WordUtilities::isValid)
-        .collect(Collectors.toList());
+        .toList();
   }
 
   /**
@@ -325,7 +424,7 @@ public class WordUtilities {
               ctTcPr = ctTc.addNewTcPr();
             }
             ctTcPr.set(cell.getCTTc().getTcPr());
-            if (newCell.getParagraphs().size() > 0) {
+            if (!newCell.getParagraphs().isEmpty()) {
               // The new cell might be created with empty paragraphs which we do not need, so we remove them here
               IntStream.range(0, newCell.getParagraphs().size()).forEach(value -> newCell.removeParagraph(0));
             }

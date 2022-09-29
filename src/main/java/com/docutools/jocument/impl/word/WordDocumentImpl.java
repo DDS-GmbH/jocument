@@ -33,8 +33,10 @@ public class WordDocumentImpl extends DocumentImpl {
       LocaleUtil.setUserLocale(locale);
       logger.info("Set user locale to {}", locale);
 
-      List<IBodyElement> bodyElements = new ArrayList<>(document.getBodyElements().size());
+      List<IBodyElement> bodyElements = new ArrayList<>(document.getBodyElements().size() + document.getHeaderList().size());
       bodyElements.addAll(document.getBodyElements());
+      bodyElements.addAll(document.getHeaderList().stream().flatMap(xwpfHeader -> xwpfHeader.getBodyElements().stream()).toList());
+      bodyElements.addAll(document.getFooterList().stream().flatMap(xwpfFooter -> xwpfFooter.getBodyElements().stream()).toList());
 
       logger.debug("Retrieved all body elements, starting WordGenerator");
       WordGenerator.apply(resolver, bodyElements, options);

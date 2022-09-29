@@ -1,6 +1,7 @@
 package com.docutools.jocument.impl.word;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
@@ -361,5 +362,45 @@ class WordGeneratorTest {
         xwpfDocument = TestUtils.getXWPFDocumentFromDocument(document);
         var documentWrapper = new XWPFDocumentWrapper(xwpfDocument);
         assertThat(documentWrapper.bodyElement(0).asParagraph().runs(), hasSize(1));
+    }
+
+    @Test
+    @DisplayName("Placeholder in Header")
+    void shouldReplacePlaceholderInHeader() throws IOException, InterruptedException {
+        // Assemble
+        Template template = Template.fromClassPath("/templates/word/HeaderTemplate.docx")
+            .orElseThrow();
+        PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.PICARD_PERSON);
+
+        // Act
+        Document document = template.startGeneration(resolver);
+        document.blockUntilCompletion(60000L); // 1 minute
+
+        // Assert
+        assertThat(document.completed(), is(true));
+        xwpfDocument = TestUtils.getXWPFDocumentFromDocument(document);
+        var headerList = xwpfDocument.getHeaderList();
+        assertThat(headerList.get(0).getText(), containsString("Jean-Luc Picard"));
+        assertThat(headerList.get(0).getText(), containsString("23.09.1948"));
+    }
+
+    @Test
+    @DisplayName("Placeholder in Footer")
+    void shouldReplacePlaceholderInFooter() throws IOException, InterruptedException {
+        // Assemble
+        Template template = Template.fromClassPath("/templates/word/FooterTemplate.docx")
+            .orElseThrow();
+        PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.PICARD_PERSON);
+
+        // Act
+        Document document = template.startGeneration(resolver);
+        document.blockUntilCompletion(60000L); // 1 minute
+
+        // Assert
+        assertThat(document.completed(), is(true));
+        xwpfDocument = TestUtils.getXWPFDocumentFromDocument(document);
+        var footerList = xwpfDocument.getFooterList();
+        assertThat(footerList.get(0).getText(), containsString("Jean-Luc Picard"));
+        assertThat(footerList.get(0).getText(), containsString("23.09.1948"));
     }
 }
