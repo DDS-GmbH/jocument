@@ -28,7 +28,7 @@ public class PlaceholderMapperImpl implements PlaceholderMapper {
     if (placeholderMappings == null) {
       return Optional.empty();
     }
-    return Optional.ofNullable(placeholderMappings.get(placeholder));
+    return Optional.ofNullable(placeholderMappings.get(placeholder.toLowerCase()));
   }
 
   @Override
@@ -47,7 +47,7 @@ public class PlaceholderMapperImpl implements PlaceholderMapper {
               .filter(line -> !line.isEmpty())
               .filter(line -> !line.startsWith("//"))
               .map(line -> line.split(":"))
-              .collect(Collectors.toMap(strings -> strings[0], strings -> strings[1]));
+              .collect(Collectors.toMap(strings -> strings[0].toLowerCase(), strings -> strings[1]));
           logger.info("Parsed mappings");
         } catch (IOException e) {
           logger.error(e);
