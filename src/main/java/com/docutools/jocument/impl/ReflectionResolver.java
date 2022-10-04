@@ -392,6 +392,8 @@ public class ReflectionResolver extends PlaceholderResolver {
       } else {
         return Optional.of(new ScalarPlaceholderData<>(enumProperty));
       }
+    } else if (isFieldAnnotatedWith(bean.getClass(), placeholderName, Translatable.class)) {
+      return getObjectTranslation(placeholderName, locale, options);
     } else if (property instanceof Enum || property instanceof String || ReflectionUtils.isWrapperType(property.getClass())) {
       return Optional.of(new ScalarPlaceholderData<>(property));
     } else if (property instanceof Temporal temporal) {
@@ -402,6 +404,23 @@ public class ReflectionResolver extends PlaceholderResolver {
     } else {
       return Optional.empty();
     }
+  }
+
+  private Optional<PlaceholderData> getObjectTranslation(String placeholderName, Locale locale, GenerationOptions options) {
+    var translatable = ReflectionUtils.findFieldAnnotation(bean.getClass(), placeholderName, Translatable.class);
+    if (translatable.isPresent()) {
+      try {
+        Optional<Object> beanProperty = getBeanProperty(placeholderName);
+        if (beanProperty.isPresent()) {
+          String toStringMethod = translatable.get().toStringMethod();
+          String propertyString = (String) beanProperty.get().getClass().getMethod(toStringMethod).invoke(beanProperty.get());
+          return Optional.of(new ScalarPlaceholderData<>(options.translate(propertyString, locale).orElse(propertyString)));
+        }
+      } catch (InvocationTargetException | IllegalAccessException | NoSuchMethodException e) {
+        logger.error("Could not invoke custom 'toString' method", e);
+      }
+    }
+    return Optional.empty();
   }
 
   private Optional<Object> getBeanProperty(String placeholderName) throws InvocationTargetException, IllegalAccessException, NoSuchMethodException {
