@@ -250,10 +250,10 @@ public class WordUtilities {
   public static Optional<XmlCursor> openCursor(IBodyElement element) {
     if (element instanceof XWPFParagraph xwpfParagraph) {
       logger.debug("Opening cursor to paragraph {}", xwpfParagraph);
-      return Optional.of((xwpfParagraph).getCTP().newCursor());
+      return Optional.of(xwpfParagraph.getCTP().newCursor());
     } else if (element instanceof XWPFTable xwpfTable) {
       logger.debug("Opening cursor to table {}", xwpfTable);
-      return Optional.of((xwpfTable).getCTTbl().newCursor());
+      return Optional.of(xwpfTable.getCTTbl().newCursor());
     } else {
       logger.warn("Failed to open cursor to element {}", element);
       return Optional.empty();

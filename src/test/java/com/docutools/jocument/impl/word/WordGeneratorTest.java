@@ -198,6 +198,28 @@ class WordGeneratorTest {
     }
 
     @Test
+    @DisplayName("Apply custom word placeholder wrapped in table.")
+    void shouldApplyCustomPlaceholderInTable() throws InterruptedException, IOException {
+        // Arrange
+        Template template = Template.fromClassPath("/templates/word/CustomPlaceholderInTableTemplate.docx")
+            .orElseThrow();
+        CustomPlaceholderRegistry customPlaceholderRegistry = new CustomPlaceholderRegistryImpl();
+        customPlaceholderRegistry.addHandler("quote", QuotePlaceholder.class);
+        PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.PICARD, customPlaceholderRegistry);
+
+        // Act
+        Document document = template.startGeneration(resolver);
+        document.blockUntilCompletion(60000L); // 1 minute
+
+        // Assert
+        assertThat(document.completed(), is(true));
+        xwpfDocument = TestUtils.getXWPFDocumentFromDocument(document);
+        var documentWrapper = new XWPFDocumentWrapper(xwpfDocument);
+        assertThat(documentWrapper.bodyElement(0).asTable().row(0).cell(0).text(),
+            equalTo("Live your life not celebrating victories, but overcoming defeats."));
+    }
+
+    @Test
     @DisplayName("Resolve legacy placeholder")
     void shouldResolveLegacy() throws IOException, InterruptedException {
         // Assemble

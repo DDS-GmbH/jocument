@@ -62,19 +62,19 @@ class WordGenerator {
     } else if (element instanceof XWPFParagraph xwpfParagraph) {
       transform(xwpfParagraph);
     } else if (element instanceof XWPFTable xwpfTable) {
-      transform(xwpfTable);
+      transform(xwpfTable, remaining);
     } else {
       logger.info("Failed to transform element {}", element);
     }
   }
 
-  private void transform(XWPFTable table) {
+  private void transform(XWPFTable table, List<IBodyElement> remaining) {
     table.getRows()
         .stream()
         .flatMap(xwpfTableRow -> xwpfTableRow.getTableCells().stream())
         .flatMap(xwpfTableCell -> xwpfTableCell.getParagraphs().stream())
         .filter(xwpfParagraph -> !xwpfParagraph.isEmpty())
-        .forEach(this::transform);
+        .forEach(xwpfParagraph -> this.transform(xwpfParagraph, remaining));
     logger.debug("Transformed table {}", table);
   }
 
