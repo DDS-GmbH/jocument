@@ -8,6 +8,8 @@ import static org.hamcrest.Matchers.is;
 
 import com.docutools.jocument.CustomPlaceholderRegistry;
 import com.docutools.jocument.Document;
+import com.docutools.jocument.GenerationOptions;
+import com.docutools.jocument.GenerationOptionsBuilder;
 import com.docutools.jocument.PlaceholderResolver;
 import com.docutools.jocument.Template;
 import com.docutools.jocument.TestUtils;
@@ -17,6 +19,7 @@ import com.docutools.jocument.sample.model.SampleModelData;
 import com.docutools.jocument.sample.placeholders.QuotePlaceholder;
 import com.docutools.poipath.xwpf.XWPFDocumentWrapper;
 import java.io.IOException;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.Period;
 import java.time.format.DateTimeFormatter;
@@ -402,5 +405,28 @@ class WordGeneratorTest {
         var footerList = xwpfDocument.getFooterList();
         assertThat(footerList.get(0).getText(), containsString("Jean-Luc Picard"));
         assertThat(footerList.get(0).getText(), containsString("23.09.1948"));
+    }
+
+    @Test
+    @DisplayName("Formats Instant with Generation Options")
+    void shouldFormatInstant() throws IOException, InterruptedException {
+        // Assemble
+        Template template = Template.fromClassPath("/templates/word/InstantTemplate.docx")
+            .orElseThrow();
+        PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.PICARD_PERSON);
+        GenerationOptions generationOptions = new GenerationOptionsBuilder()
+            .format(Instant.class, (locale, instant) -> instant.toString())
+            .build();
+        resolver.setOptions(generationOptions);
+
+        // Act
+        Document document = template.startGeneration(resolver);
+        document.blockUntilCompletion(60000L); // 1 minute
+
+        // Assert
+        assertThat(document.completed(), is(true));
+        xwpfDocument = TestUtils.getXWPFDocumentFromDocument(document);
+        var documentWrapper = new XWPFDocumentWrapper(xwpfDocument);
+        assertThat(documentWrapper.bodyElement(0).asParagraph().text(), containsString(SampleModelData.PICARD_PERSON.getEntryDate().toString()));
     }
 }

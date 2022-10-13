@@ -199,7 +199,7 @@ public interface Template {
    * @return the {@link Document}
    */
   default Document startGeneration(PlaceholderResolver resolver) {
-    return startGeneration(resolver, GenerationOptionsBuilder.buildDefaultOptions());
+    return startGeneration(resolver, resolver.options);
   }
 
   /**

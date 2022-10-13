@@ -432,6 +432,8 @@ public class ReflectionResolver extends PlaceholderResolver {
     if (isFieldAnnotatedWith(bean.getClass(), placeholderName, Format.class)) {
       formatter = ReflectionUtils.findFieldAnnotation(bean.getClass(), placeholderName, Format.class)
           .map(ReflectionResolver::toDateTimeFormatter);
+    } else if (options.tryToFormat(locale, time).isPresent()) {
+      return Optional.of(new ScalarPlaceholderData<>(options.tryToFormat(locale, time).get()));
     } else {
       if (time instanceof LocalDate) {
         formatter = Optional.of(DateTimeFormatter.ofLocalizedDate(FormatStyle.SHORT));
