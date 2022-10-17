@@ -32,4 +32,7 @@ public record Ship(String name, Captain captain, int crew, List<Service> service
     return Optional.of(String.valueOf(services.size()));
   }
 
+  public String shipName() {
+    return this.name;
+  }
 }

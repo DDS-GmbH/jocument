@@ -1,6 +1,7 @@
 package com.docutools.jocument.sample.model;
 
 import com.docutools.jocument.annotations.Format;
+import com.docutools.jocument.annotations.Translatable;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.Period;
@@ -13,6 +14,8 @@ public class Person {
   @Format(value = "dd.MM.yyyy")
   private final LocalDate birthDate;
   private final Instant entryDate;
+  @Translatable(toStringMethod = "shipName")
+  private Ship favouriteShip;
 
   public Person(String firstName, String lastName, LocalDate birthDate) {
     this.firstName = firstName;
@@ -43,5 +46,13 @@ public class Person {
 
   public Instant getEntryDate() {
     return entryDate;
+  }
+
+  public void setFavouriteShip(Ship favouriteShip) {
+    this.favouriteShip = favouriteShip;
+  }
+
+  public Ship getFavouriteShip() {
+    return favouriteShip;
   }
 }

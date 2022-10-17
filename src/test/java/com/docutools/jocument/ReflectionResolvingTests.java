@@ -5,7 +5,9 @@ import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 
+import com.docutools.jocument.impl.CustomPlaceholderRegistryImpl;
 import com.docutools.jocument.impl.ReflectionResolver;
+import com.docutools.jocument.sample.model.Person;
 import com.docutools.jocument.sample.model.SampleModelData;
 import com.docutools.jocument.sample.model.Ship;
 import com.docutools.jocument.sample.model.Uniform;
@@ -252,5 +254,24 @@ class ReflectionResolvingTests {
 
     // Assert
     assertThat(position.isEmpty(), equalTo(true));
+  }
+
+  @Test
+  void shouldTranslateShipName() {
+    Person picardPerson = SampleModelData.PICARD_PERSON;
+    picardPerson.setFavouriteShip(SampleModelData.ENTERPRISE);
+    GenerationOptions generationOptions = new GenerationOptionsBuilder()
+        .withTranslation((s, locale) -> {
+          if (s.equals("USS Enterprise")) {
+            return Optional.of("VSS Unternehmung");
+          } else {
+            return Optional.empty();
+          }
+        }).build();
+    var resolver = new ReflectionResolver(picardPerson, new CustomPlaceholderRegistryImpl(), generationOptions);
+
+    var shipName = resolver.resolve("favouriteShip");
+
+    assertThat(shipName.get().toString(), equalTo("VSS Unternehmung"));
   }
 }
