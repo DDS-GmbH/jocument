@@ -274,4 +274,14 @@ class ReflectionResolvingTests {
 
     assertThat(shipName.get().toString(), equalTo("VSS Unternehmung"));
   }
+
+  @Test
+  void shouldResolveUUIDtoString() {
+    Person picardPerson = SampleModelData.PICARD_PERSON;
+    var resolver = new ReflectionResolver(picardPerson);
+
+    var id = resolver.resolve("id");
+
+    assertThat(id.get().toString(), equalTo(picardPerson.getId().toString()));
+  }
 }
