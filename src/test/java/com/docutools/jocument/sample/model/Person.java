@@ -6,8 +6,10 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.Period;
 import java.time.ZoneOffset;
+import java.util.UUID;
 
 public class Person {
+  private final UUID id = UUID.randomUUID();
 
   private final String firstName;
   private final String lastName;
@@ -54,5 +56,9 @@ public class Person {
 
   public Ship getFavouriteShip() {
     return favouriteShip;
+  }
+
+  public UUID getId() {
+    return id;
   }
 }

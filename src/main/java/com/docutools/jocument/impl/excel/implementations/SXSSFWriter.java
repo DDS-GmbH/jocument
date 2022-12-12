@@ -45,10 +45,13 @@ public class SXSSFWriter implements ExcelWriter {
   /**
    * Maps the {@link CellStyle} objects of the old workbook to the new ones.
    */
-  private final Map<CellStyle, CellStyle> styleStyleMapping = new HashMap<>();
+  private final Map<Integer, CellStyle> cellStyleMap = new HashMap<>();
   private Sheet currentSheet;
+  private Sheet templateSheet;
   private Row currentRow;
   private int rowOffset = 0;
+  private int leftMostColumn = -1;
+  private int rightMostColumn = -1;
 
   /**
    * Creates a new SXSSFWriter.
@@ -102,6 +105,7 @@ public class SXSSFWriter implements ExcelWriter {
   @Override
   public void newSheet(Sheet sheet) {
     logger.info("Creating new sheet of {}", sheet.getSheetName());
+    templateSheet = sheet;
     currentSheet = workbook.createSheet(sheet.getSheetName());
     currentSheet.setActiveCell(sheet.getActiveCell());
     currentSheet.setAutobreaks(sheet.getAutobreaks());
@@ -139,19 +143,64 @@ public class SXSSFWriter implements ExcelWriter {
     logger.debug("Creating new row {}", row.getRowNum());
     currentRow = currentSheet.createRow(row.getRowNum() + rowOffset);
     currentRow.setHeight(row.getHeight());
-    currentRow.setRowStyle(row.getRowStyle());
+    if (row.isFormatted()) {
+      currentRow.setRowStyle(cellStyleMap.computeIfAbsent((int) row.getRowStyle().getIndex(), i -> copyCellStyle(row.getRowStyle())));
+    }
     currentRow.setZeroHeight(row.getZeroHeight());
+    updateColumnStyles(row);
+  }
+
+  /**
+   * Set the style of the columns accessed in this row.
+   *
+   * <p>Since apache POI does not have a global `leftMostColumn` and `rightMostColumn`, it is not possible to copy the default styles of each column
+   * at the start of the report generation. Due to this, on each new row we check whether it accesses columns for which the default column style has
+   * not been set yet, and copies the style to the new document.
+   *
+   * @param row The row to check for border column accesses
+   */
+  private void updateColumnStyles(Row row) {
+    if (rightMostColumn == -1 || leftMostColumn == -1) {
+      setup(row);
+    }
+    if (row.getLastCellNum() > rightMostColumn) {
+      for (; rightMostColumn < row.getLastCellNum(); rightMostColumn++) {
+        copyColumnStyle(rightMostColumn);
+      }
+      logger.debug("Rightmost column: {}", rightMostColumn);
+    }
+    if (row.getFirstCellNum() < leftMostColumn) {
+      for (; leftMostColumn > row.getLastCellNum(); leftMostColumn--) {
+        copyColumnStyle(leftMostColumn);
+      }
+      logger.debug("Leftmost column: {}", leftMostColumn);
+    }
+  }
+
+  private void setup(Row row) {
+    leftMostColumn = row.getFirstCellNum();
+    rightMostColumn = row.getLastCellNum();
+    logger.debug("Rightmost column: {}", rightMostColumn);
+    logger.debug("Leftmost column: {}", leftMostColumn);
+    for (int i = leftMostColumn; i < rightMostColumn; i++) {
+      copyColumnStyle(i);
+    }
+  }
+
+  private void copyColumnStyle(int rightMostColumn) {
+    CellStyle columnStyle = templateSheet.getColumnStyle(rightMostColumn);
+    if (columnStyle != null) {
+      currentSheet.setDefaultColumnStyle(rightMostColumn,
+          cellStyleMap.computeIfAbsent((int) columnStyle.getIndex(), i -> copyCellStyle(columnStyle)));
+    }
   }
 
   @Override
   public void addCell(Cell cell) {
-    logger.debug("Creating new cell {} {}", cell.getColumnIndex(), cell.getRow().getRowNum());
+    logger.trace("Creating new cell {} {}", cell.getColumnIndex(), cell.getRow().getRowNum());
     var newCell = currentRow.createCell(cell.getColumnIndex(), cell.getCellType());
-    if (workbook.getCellStyleAt(cell.getCellStyle().getIndex()) == null) {
-      copyCellStyle(cell.getCellStyle());
-    }
     newCell.setCellComment(cell.getCellComment());
-    newCell.setCellStyle(cell.getCellStyle());
+    newCell.setCellStyle(cellStyleMap.computeIfAbsent((int) cell.getCellStyle().getIndex(), i -> copyCellStyle(cell.getCellStyle())));
     newCell.setHyperlink(cell.getHyperlink());
     currentSheet.setColumnWidth(cell.getColumnIndex(), cell.getSheet().getColumnWidth(cell.getColumnIndex()));
     switch (cell.getCellType()) {
@@ -162,6 +211,7 @@ public class SXSSFWriter implements ExcelWriter {
       case BOOLEAN -> newCell.setCellValue(cell.getBooleanCellValue());
       case ERROR -> newCell.setCellErrorValue(cell.getErrorCellValue());
       default -> {
+        // do nothing
       }
     }
     if (cell.getHyperlink() != null) {
@@ -180,11 +230,11 @@ public class SXSSFWriter implements ExcelWriter {
 
   @Override
   public void addCell(Cell templateCell, String newCellText, int columnOffset) {
-    logger.debug("Creating new cell {} {} with text {}",
+    logger.trace("Creating new cell {} {} with text {}",
         templateCell.getColumnIndex(), templateCell.getRow().getRowNum(), newCellText);
     var newCell = currentRow.createCell(templateCell.getColumnIndex() + columnOffset, templateCell.getCellType());
     newCell.setCellComment(templateCell.getCellComment());
-    newCell.setCellStyle(styleStyleMapping.computeIfAbsent(templateCell.getCellStyle(), this::copyCellStyle));
+    newCell.setCellStyle(cellStyleMap.computeIfAbsent((int) templateCell.getCellStyle().getIndex(), i -> copyCellStyle(templateCell.getCellStyle())));
     newCell.setHyperlink(templateCell.getHyperlink());
     currentSheet.setColumnWidth(templateCell.getColumnIndex(), templateCell.getSheet().getColumnWidth(templateCell.getColumnIndex()));
     if (templateCell.getCellType() == CellType.FORMULA) {

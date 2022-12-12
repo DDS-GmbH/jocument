@@ -130,7 +130,25 @@ public class ExcelDocuments {
   void inherti() throws InterruptedException, IOException {
     // Arrange
     Template template = Template.fromClassPath("/templates/excel/Formatting.xlsx")
-            .orElseThrow();
+        .orElseThrow();
+    PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.PICARD);
+
+    // Act
+    Document document = template.startGeneration(resolver);
+    document.blockUntilCompletion(60000L); // 1 minute
+
+    // Assert
+    assertThat(document.completed(), is(true));
+
+    Desktop.getDesktop().open(document.getPath().toFile());
+  }
+
+  @Test
+  @DisplayName("Inherit style from source excel.")
+  void inheritStylePerCell() throws InterruptedException, IOException {
+    // Arrange
+    Template template = Template.fromClassPath("/templates/excel/ComplexFormatting.xlsx")
+        .orElseThrow();
     PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.PICARD);
 
     // Act
