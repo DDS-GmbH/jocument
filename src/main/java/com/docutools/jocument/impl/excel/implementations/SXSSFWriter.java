@@ -150,6 +150,15 @@ public class SXSSFWriter implements ExcelWriter {
     updateColumnStyles(row);
   }
 
+  /**
+   * Set the style of the columns accessed in this row.
+   *
+   * <p>Since apache POI does not have a global `leftMostColumn` and `rightMostColumn`, it is not possible to copy the default styles of each column
+   * at the start of the report generation. Due to this, on each new row we check whether it accesses columns for which the default column style has
+   * not been set yet, and copies the style to the new document.
+   *
+   * @param row The row to check for border column accesses
+   */
   private void updateColumnStyles(Row row) {
     if (rightMostColumn == -1 || leftMostColumn == -1) {
       setup(row);
