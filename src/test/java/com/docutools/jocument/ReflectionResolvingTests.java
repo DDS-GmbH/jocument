@@ -284,4 +284,15 @@ class ReflectionResolvingTests {
 
     assertThat(id.get().toString(), equalTo(picardPerson.getId().toString()));
   }
+
+  @Test
+  void shouldResolveNullToEmptyString() {
+    Person picardPerson = SampleModelData.PICARD_NULL;
+    var resolver = new ReflectionResolver(picardPerson);
+
+    var name = resolver.resolve("firstName");
+
+    assertThat(name.get().toString(), equalTo(""));
+  }
+
 }

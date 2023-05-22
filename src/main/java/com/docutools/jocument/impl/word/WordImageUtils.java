@@ -60,6 +60,7 @@ public class WordImageUtils {
     var contentType = probeImageType(path);
 
     try (var in = Files.newInputStream(path, StandardOpenOption.READ)) {
+      logger.debug("Adding picture from path {} with content type {} and dimensions {} {}", path, contentType, dim.width, dim.height);
       return paragraph.createRun()
           .addPicture(in, contentType, path.getFileName().toString(), dim.width, dim.height);
     } catch (InvalidFormatException | IOException e) {
