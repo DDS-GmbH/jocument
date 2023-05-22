@@ -13,6 +13,7 @@ public class SampleModelData {
   public static final Captain PICARD;
   public static final FutureCaptain FUTURE_PICARD;
   public static final Person PICARD_PERSON = new Person("Jean-Luc", "Picard", LocalDate.of(1948, 9, 23));
+  public static final Person PICARD_NULL = new Person(null, "Picard", LocalDate.of(1948, 9, 23));
   public static final List<Captain> CAPTAINS;
   public static final Ship ENTERPRISE;
   public static final Ship ENTERPRISE_WITHOUT_SERVICES;

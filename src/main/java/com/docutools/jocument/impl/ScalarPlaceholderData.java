@@ -13,7 +13,7 @@ public class ScalarPlaceholderData<T> implements PlaceholderData {
   private final Function<T, String> stringifier;
 
   public ScalarPlaceholderData(T value) {
-    this(value, Objects::toString);
+    this(value, v -> Objects.toString(v, ""));
   }
 
   public ScalarPlaceholderData(T value, Function<T, String> stringifier) {

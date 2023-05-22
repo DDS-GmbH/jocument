@@ -333,8 +333,7 @@ public class ReflectionResolver extends PlaceholderResolver {
       }
       var wrappedProperty = getBeanProperty(placeholderName);
       if (wrappedProperty.isEmpty()) {
-        logger.debug("Placeholder {} could not be translated into a property", placeholderName);
-        return Optional.empty();
+        return Optional.of(new ScalarPlaceholderData<>(null));
       }
       var property = resolveNonFinalValue(wrappedProperty.get(), placeholderName);
       var simplePlaceholder = resolveSimplePlaceholder(property, placeholderName, locale, options);
