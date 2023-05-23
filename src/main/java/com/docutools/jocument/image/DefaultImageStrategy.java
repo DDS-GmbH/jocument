@@ -15,7 +15,7 @@ import javax.imageio.stream.ImageInputStream;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public final class DefaultImageStrategy implements ImageStrategy {
+public class DefaultImageStrategy implements ImageStrategy {
 
   private static final Logger log = LogManager.getLogger(DefaultImageStrategy.class);
 
