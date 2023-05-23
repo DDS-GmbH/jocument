@@ -1,11 +1,11 @@
 package com.docutools.jocument.image;
 
-import com.docutools.jocument.impl.word.WordImageUtils;
 import java.awt.Dimension;
 import java.awt.geom.AffineTransform;
 import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Iterator;
 import javax.imageio.ImageIO;
@@ -15,22 +15,22 @@ import javax.imageio.stream.ImageInputStream;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public final class DefaultImageStrategy implements ImageStrategy {
+public class DefaultImageStrategy implements ImageStrategy {
 
   private static final Logger log = LogManager.getLogger(DefaultImageStrategy.class);
 
   private static final Object MUTEX = new Object();
 
   //https://stackoverflow.com/a/7855774/4786733
-  private static volatile ImageStrategy INSTANCE;
+  private static volatile DefaultImageStrategy INSTANCE;
 
   /**
    * Gets the singleton instance of the defualt {@link ImageStrategy} prefered by jocument.
    *
    * @return the default {@link ImageStrategy}
    */
-  public static ImageStrategy instance() {
-    ImageStrategy localRef = INSTANCE;
+  public static DefaultImageStrategy instance() {
+    DefaultImageStrategy localRef = INSTANCE;
     if (localRef == null) {
       synchronized (MUTEX) {
         localRef = INSTANCE;
@@ -73,7 +73,7 @@ public final class DefaultImageStrategy implements ImageStrategy {
   // https://stackoverflow.com/a/12164026/4786733
   public Dimension getDimensions(Path path) throws IOException {
     log.trace("Getting image dimensions of '{}'", path);
-    var mimeType = WordImageUtils.probeContentTypeSafely(path).orElseThrow(() -> new IOException("Could not determine File Type"));
+    var mimeType = getMimeType(path);
     Iterator<ImageReader> iter = ImageIO.getImageReadersByMIMEType(mimeType);
     while (iter.hasNext()) {
       ImageReader reader = iter.next();
@@ -89,5 +89,10 @@ public final class DefaultImageStrategy implements ImageStrategy {
       }
     }
     throw new IOException("Not a known image file: " + path.toAbsolutePath());
+  }
+
+  @Override
+  public String getMimeType(Path path) throws IOException {
+    return Files.probeContentType(path);
   }
 }
