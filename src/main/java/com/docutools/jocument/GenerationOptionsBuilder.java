@@ -44,7 +44,7 @@ public final class GenerationOptionsBuilder {
   }
 
   public <T> GenerationOptionsBuilder format(Class<T> filter, LocalisedPlaceholderDataFormatter<T> formatter) {
-    formattingOptions.add(new PlaceholderDataFormattingOption<>(obj -> obj.getClass().isAssignableFrom(filter), formatter));
+    formattingOptions.add(new PlaceholderDataFormattingOption<>(obj -> obj != null && obj.getClass().isAssignableFrom(filter), formatter));
     return this;
   }
 
