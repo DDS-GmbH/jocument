@@ -380,7 +380,9 @@ public class ReflectionResolver extends PlaceholderResolver {
   }
 
   private Optional<PlaceholderData> resolveSimplePlaceholder(Object property, String placeholderName, Locale locale, GenerationOptions options) {
-    if (property instanceof Number number) {
+    if (property == null) {
+      return Optional.empty();
+    } else if (property instanceof Number number) {
       var numberFormat = findNumberFormat(placeholderName, locale);
       return Optional.of(new ScalarPlaceholderData<>(number, numberFormat::format));
     } else if (property instanceof String propertyString && isFieldAnnotatedWith(bean.getClass(), placeholderName, Translatable.class)) {
