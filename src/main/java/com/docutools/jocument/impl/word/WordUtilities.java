@@ -1,6 +1,7 @@
 package com.docutools.jocument.impl.word;
 
 import com.docutools.jocument.impl.ParsingUtils;
+import java.io.IOException;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
@@ -16,6 +17,7 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.poi.xwpf.usermodel.IBody;
 import org.apache.poi.xwpf.usermodel.IBodyElement;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.apache.poi.xwpf.usermodel.XWPFFooter;
@@ -26,6 +28,9 @@ import org.apache.poi.xwpf.usermodel.XWPFTable;
 import org.apache.poi.xwpf.usermodel.XWPFTableCell;
 import org.apache.poi.xwpf.usermodel.XWPFTableRow;
 import org.apache.xmlbeans.XmlCursor;
+import org.apache.xmlbeans.XmlObject;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTDocument1;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTHdrFtr;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTPPr;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTRPr;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTRow;
@@ -80,7 +85,7 @@ public class WordUtilities {
    * @return {@code true} when exists
    */
   public static boolean exists(IBodyElement element) {
-    return findPositionInBody(element).orElseGet(() -> findPositionInHeader(element).orElseGet(() -> findPositionInFooter(element).orElse(-1))) != -1;
+    return findPositionInBody(element).isPresent() || findInHeader(element) || findInFooter(element) || findNestedInTable(element);
   }
 
   /**
@@ -89,25 +94,9 @@ public class WordUtilities {
    * @param element the element
    * @return the index
    */
-  public static OptionalInt findPositionInBody(IBodyElement element) {
-    var document = element.getBody().getXWPFDocument();
-    if (element instanceof XWPFParagraph xwpfParagraph) {
-      var position = document.getPosOfParagraph(xwpfParagraph);
-      if (position >= 0) {
-        return OptionalInt.of(position);
-      } else {
-        return OptionalInt.empty();
-      }
-    } else if (element instanceof XWPFTable xwpfTable) {
-      var position = document.getPosOfTable(xwpfTable);
-      if (position >= 0) {
-        return OptionalInt.of(position);
-      } else {
-        return OptionalInt.empty();
-      }
-    }
-    logger.warn("Failed to find position of element {}", element);
-    return OptionalInt.empty();
+  public static Optional<Integer> findPositionInBody(IBodyElement element) {
+    int index = element.getBody().getXWPFDocument().getBodyElements().indexOf(element);
+    return index == -1 ? Optional.empty() : Optional.of(index);
   }
 
   /**
@@ -149,96 +138,148 @@ public class WordUtilities {
    * @param element the element to be removed
    */
   public static void removeIfExists(IBodyElement element) {
-    logger.debug("Removing element {}", element);
-    var document = element.getBody().getXWPFDocument();
-    OptionalInt position = findPositionInBody(element);
-    if (position.isPresent()) {
-      document.removeBodyElement(position.getAsInt());
-    } else {
-      if (element instanceof XWPFParagraph xwpfParagraph) {
-        var positionInHeader = findPositionInHeader(xwpfParagraph, document.getHeaderList());
-        if (positionInHeader.isPresent()) {
-          document.getHeaderArray(positionInHeader.getAsInt()).removeParagraph(xwpfParagraph);
-        } else {
-          var positionInFooter = findPositionInFooter(xwpfParagraph, document.getFooterList());
-          positionInFooter.ifPresent(integer -> document.getHeaderArray(integer).removeParagraph(xwpfParagraph));
-        }
-      } else if (element instanceof XWPFTable xwpfTable) {
-        var positionInHeader = findPositionInHeader(xwpfTable, document.getHeaderList());
-        if (positionInHeader.isPresent()) {
-          document.getHeaderArray(positionInHeader.getAsInt()).removeTable(xwpfTable);
-        } else {
-          var positionInFooter = findPositionInFooter(xwpfTable, document.getFooterList());
-          positionInFooter.ifPresent(integer -> document.getHeaderArray(integer).removeTable(xwpfTable));
-        }
-      }
-    }
-  }
-
-  private static OptionalInt findPositionInHeader(IBodyElement element) {
+    IBody body = element.getBody();
+    CTDocument1 document = body.getXWPFDocument().getDocument();
     if (element instanceof XWPFParagraph xwpfParagraph) {
-      return findPositionInHeader(xwpfParagraph, element.getBody().getXWPFDocument().getHeaderList());
+      try (XmlCursor xmlCursor = xwpfParagraph.getCTP().newCursor()) {
+        XmlObject object = getParentObject(xmlCursor);
+        if (object.equals(document.getBody())) {
+          findPositionInBody(element).ifPresent(pos -> body.getXWPFDocument().removeBodyElement(pos));
+        } else if (object instanceof CTTc ctTc) {
+          removeElementFromTable(element, ctTc, xmlCursor, body);
+        } else if (object instanceof CTHdrFtr ctHdrFtr) {
+          xmlCursor.toParent();
+          new XWPFFooter(body.getXWPFDocument(), ctHdrFtr).removeParagraph(xwpfParagraph);
+        }
+      } catch (IOException e) {
+        throw new ElementRemovalException(e);
+      }
     } else if (element instanceof XWPFTable xwpfTable) {
-      return findPositionInHeader(xwpfTable, element.getBody().getXWPFDocument().getHeaderList());
-    }
-    return OptionalInt.empty();
-  }
-
-  private static OptionalInt findPositionInHeader(XWPFParagraph xwpfParagraph, List<XWPFHeader> headerList) {
-    var i = 0;
-    for (XWPFHeader xwpfHeader : headerList) {
-      for (XWPFParagraph paragraph : xwpfHeader.getParagraphs()) {
-        if (xwpfParagraph.equals(paragraph)) {
-          return OptionalInt.of(i);
+      try (XmlCursor xmlCursor = xwpfTable.getCTTbl().newCursor()) {
+        XmlObject object = getParentObject(xmlCursor);
+        if (object.equals(document.getBody())) {
+          findPositionInBody(element).ifPresent(pos -> body.getXWPFDocument().removeBodyElement(pos));
+        } else if (object instanceof CTTc ctTc) {
+          removeElementFromTable(element, ctTc, xmlCursor, body);
+        } else if (object instanceof CTHdrFtr ctHdrFtr) {
+          xmlCursor.toParent();
+          new XWPFFooter(body.getXWPFDocument(), ctHdrFtr).removeTable(xwpfTable);
         }
+      } catch (IOException e) {
+        throw new ElementRemovalException(e);
       }
     }
-    return OptionalInt.empty();
   }
 
-  private static OptionalInt findPositionInHeader(XWPFTable xwpfTable, List<XWPFHeader> headerList) {
-    var i = 0;
-    for (XWPFHeader xwpfHeader : headerList) {
-      for (XWPFTable table : xwpfHeader.getTables()) {
-        if (xwpfTable.equals(table)) {
-          return OptionalInt.of(i);
+  private static XmlObject getParentObject(XmlCursor xmlCursor) {
+    xmlCursor.toParent();
+    return xmlCursor.getObject();
+  }
+
+  private static void removeElementFromTable(IBodyElement element, CTTc ctTc, XmlCursor xmlCursor, IBody body) {
+    XmlObject rowObject = getParentObject(xmlCursor);
+    XmlObject tableObject = getParentObject(xmlCursor);
+    XWPFTableCell cell = new XWPFTableCell(ctTc, new XWPFTableRow((CTRow) rowObject, new XWPFTable((CTTbl) tableObject, body)), body);
+    findPositionInParagraphs(element, cell.getParagraphs()).ifPresent(cell::removeParagraph);
+  }
+
+  private static boolean findInHeader(IBodyElement element) {
+    return findInHeader(element, element.getBody().getXWPFDocument().getHeaderList());
+  }
+
+  private static boolean findInHeader(IBodyElement element, List<XWPFHeader> headers) {
+    for (XWPFHeader header : headers) {
+      for (IBodyElement bodyElement : header.getBodyElements()) {
+        if (element.equals(bodyElement)) {
+          return true;
         }
       }
-    }
-    return OptionalInt.empty();
-  }
-
-  private static OptionalInt findPositionInFooter(IBodyElement element) {
-    if (element instanceof XWPFParagraph xwpfParagraph) {
-      return findPositionInFooter(xwpfParagraph, element.getBody().getXWPFDocument().getFooterList());
-    } else if (element instanceof XWPFTable xwpfTable) {
-      return findPositionInFooter(xwpfTable, element.getBody().getXWPFDocument().getFooterList());
-    }
-    return OptionalInt.empty();
-  }
-
-  private static OptionalInt findPositionInFooter(XWPFParagraph xwpfParagraph, List<XWPFFooter> footerList) {
-    var i = 0;
-    for (XWPFFooter xwpfFooter : footerList) {
-      for (XWPFParagraph paragraph : xwpfFooter.getParagraphs()) {
-        if (xwpfParagraph.equals(paragraph)) {
-          return OptionalInt.of(i);
-        }
+      if (findInTables(element, header.getTables())) {
+        return true;
       }
     }
+    return false;
+  }
+
+  private static boolean findInFooter(IBodyElement element) {
+    return findInFooter(element, element.getBody().getXWPFDocument().getFooterList());
+  }
+
+  private static boolean findInFooter(IBodyElement element, List<XWPFFooter> footers) {
+    for (XWPFFooter footer : footers) {
+      for (IBodyElement bodyElement : footer.getBodyElements()) {
+        if (element.equals(bodyElement)) {
+          return true;
+        }
+      }
+      if (findInTables(element, footer.getTables())) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private static boolean findNestedInTable(IBodyElement element) {
+    for (XWPFTable table : element.getBody().getXWPFDocument().getTables()) {
+      if (findInTable(element, table)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private static boolean findInTable(IBodyElement element, XWPFTable table) {
+    for (XWPFTableRow row : table.getRows()) {
+      if (findInRow(element, row)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private static boolean findInRow(IBodyElement element, XWPFTableRow row) {
+    for (XWPFTableCell cell : row.getTableCells()) {
+      if (findInCell(element, cell)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private static boolean findInCell(IBodyElement element, XWPFTableCell cell) {
+    if (element instanceof XWPFParagraph && findInParagraphs(element, cell.getParagraphs())) {
+      return true;
+    }
+    return findInTables(element, cell.getTables());
+  }
+
+  private static boolean findInParagraphs(IBodyElement element, List<XWPFParagraph> paragraphs) {
+    for (XWPFParagraph paragraph : paragraphs) {
+      if (element.equals(paragraph)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private static OptionalInt findPositionInParagraphs(IBodyElement element, List<XWPFParagraph> paragraphs) {
+    var position = 0;
+    for (XWPFParagraph paragraph : paragraphs) {
+      if (element.equals(paragraph)) {
+        return OptionalInt.of(position);
+      }
+      position++;
+    }
     return OptionalInt.empty();
   }
 
-  private static OptionalInt findPositionInFooter(XWPFTable xwpfTable, List<XWPFFooter> footerList) {
-    var i = 0;
-    for (XWPFFooter xwpfFooter : footerList) {
-      for (XWPFTable table : xwpfFooter.getTables()) {
-        if (xwpfTable.equals(table)) {
-          return OptionalInt.of(i);
-        }
+  private static boolean findInTables(IBodyElement element, List<XWPFTable> tables) {
+    for (XWPFTable nestedTable : tables) {
+      if ((element instanceof XWPFTable && element.equals(nestedTable)) || findInTable(element, nestedTable)) {
+        return true;
       }
     }
-    return OptionalInt.empty();
+    return false;
   }
 
   /**
@@ -250,10 +291,10 @@ public class WordUtilities {
   public static Optional<XmlCursor> openCursor(IBodyElement element) {
     if (element instanceof XWPFParagraph xwpfParagraph) {
       logger.debug("Opening cursor to paragraph {}", xwpfParagraph);
-      return Optional.of((xwpfParagraph).getCTP().newCursor());
+      return Optional.of(xwpfParagraph.getCTP().newCursor());
     } else if (element instanceof XWPFTable xwpfTable) {
       logger.debug("Opening cursor to table {}", xwpfTable);
-      return Optional.of((xwpfTable).getCTTbl().newCursor());
+      return Optional.of(xwpfTable.getCTTbl().newCursor());
     } else {
       logger.warn("Failed to open cursor to element {}", element);
       return Optional.empty();

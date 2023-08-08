@@ -17,6 +17,7 @@ import org.apache.poi.xwpf.usermodel.IBodyElement;
 import org.apache.poi.xwpf.usermodel.XWPFParagraph;
 import org.apache.poi.xwpf.usermodel.XWPFSDT;
 import org.apache.poi.xwpf.usermodel.XWPFTable;
+import org.apache.poi.xwpf.usermodel.XWPFTableCell;
 
 class WordGenerator {
   private static final Logger logger = LogManager.getLogger();
@@ -72,9 +73,8 @@ class WordGenerator {
     table.getRows()
         .stream()
         .flatMap(xwpfTableRow -> xwpfTableRow.getTableCells().stream())
-        .flatMap(xwpfTableCell -> xwpfTableCell.getParagraphs().stream())
-        .filter(xwpfParagraph -> !xwpfParagraph.isEmpty())
-        .forEach(this::transform);
+        .map(XWPFTableCell::getBodyElements)
+        .forEachOrdered(bodyElements -> new WordGenerator(this.resolver, bodyElements, options).generate());
     logger.debug("Transformed table {}", table);
   }
 
