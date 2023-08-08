@@ -26,6 +26,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -124,6 +125,27 @@ class WordGeneratorTest {
         assertThat(table.row(1).cell(1).bodyElement(0).asParagraph().text(), equalTo("Jean-Luc Picard"));
         assertThat(table.row(2).cell(0).bodyElement(0).asParagraph().text(), equalTo("Birthdate"));
         assertThat(table.row(2).cell(1).bodyElement(0).asParagraph().text(), equalTo(birthdate));
+    }
+
+    @Test
+    @Disabled("Pending apache poi 5.2.4 release")
+    @DisplayName("Replace custom placeholders in tables.")
+    void shouldReplaceCustomPlaceholderInTable() throws InterruptedException, IOException {
+        // Arrange
+        Template template = Template.fromClassPath("/templates/word/CustomPlaceholderInTableTemplate.docx")
+            .orElseThrow();
+        PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.PICARD);
+
+        // Act
+        Document document = template.startGeneration(resolver);
+        document.blockUntilCompletion(60000L); // 1 minute
+
+        // Assert
+        assertThat(document.completed(), is(true));
+        xwpfDocument = TestUtils.getXWPFDocumentFromDocument(document);
+        var documentWrapper = new XWPFDocumentWrapper(xwpfDocument);
+        var table = documentWrapper.bodyElement(0).asTable();
+        assertThat(table.row(0).cell(1).bodyElement(0).asParagraph().run(0).pictures().size(), equalTo(1));
     }
 
     @Test
