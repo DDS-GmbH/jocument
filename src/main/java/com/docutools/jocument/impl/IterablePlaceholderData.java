@@ -5,6 +5,7 @@ import com.docutools.jocument.PlaceholderResolver;
 import com.docutools.jocument.PlaceholderType;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -45,4 +46,10 @@ public class IterablePlaceholderData implements PlaceholderData {
     return count;
   }
 
+  @Override
+  public String toString() {
+    return StreamSupport.stream(iterable.spliterator(), false)
+        .map(Object::toString)
+        .collect(Collectors.joining(", "));
+  }
 }
