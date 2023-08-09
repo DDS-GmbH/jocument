@@ -58,7 +58,7 @@ class WordGenerator {
     if (isCustomPlaceholder(element)) {
       resolver.resolve(WordUtilities.extractPlaceholderName((XWPFParagraph) element))
           .ifPresent(placeholderData -> placeholderData.transform(element, locale, options));
-    } else if (isLoopStart(element)) {
+    } else if (isLoopStart(element, remaining)) {
       unrollLoop((XWPFParagraph) element, remaining);
     } else if (element instanceof XWPFParagraph xwpfParagraph) {
       transform(xwpfParagraph);
@@ -121,14 +121,23 @@ class WordGenerator {
         .toList();
   }
 
-  private boolean isLoopStart(IBodyElement element) {
-    return element instanceof XWPFParagraph xwpfParagraph
-        && resolver.resolve(
-        ParsingUtils.stripBrackets(
-            WordUtilities.toString(xwpfParagraph)
-        )).map(PlaceholderData::getType)
-        .map(type -> type == PlaceholderType.SET)
-        .orElse(false);
+  private boolean isLoopStart(IBodyElement element, List<IBodyElement> remaining) {
+    if (element instanceof XWPFParagraph xwpfParagraph) {
+      var placeholderName = ParsingUtils.stripBrackets(
+          WordUtilities.toString(xwpfParagraph)
+      );
+      return resolver.resolve(placeholderName)
+          .filter(placeholderData -> placeholderData.getType() == PlaceholderType.SET)
+          .map(placeholderData -> {
+            var endLoopMarkers = ParsingUtils.getMatchingLoopEnds(placeholderName);
+            return remaining.stream()
+                .filter(bodyElement -> bodyElement instanceof XWPFParagraph)
+                .map(bodyElement -> (XWPFParagraph)bodyElement)
+                .map(XWPFParagraph::getText)
+                .anyMatch(text -> endLoopMarkers.contains(text.strip()));
+          }).orElse(false);
+    }
+    return false;
   }
 
   private boolean isCustomPlaceholder(IBodyElement element) {

@@ -56,4 +56,13 @@ public abstract class PlaceholderResolver {
 
   protected abstract Optional<PlaceholderData> doResolve(String placeholderName, Locale locale);
 
+  /**
+   * Overwrite of the {@link Object#toString()} method, forcing any subclass to implement it,
+   * since its required for resolving {@link com.docutools.jocument.impl.IterablePlaceholderData}
+   * when no loop-end is present
+   *
+   * @return a {@link String}
+   */
+  @Override
+  public abstract String toString();
 }

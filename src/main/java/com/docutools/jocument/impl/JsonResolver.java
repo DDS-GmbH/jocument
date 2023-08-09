@@ -79,6 +79,11 @@ public class JsonResolver extends PlaceholderResolver {
     return Optional.empty();
   }
 
+  @Override
+  public String toString() {
+    return jsonElement.getAsString();
+  }
+
   private Optional<PlaceholderData> fromObject(String placeholderName, JsonObject jsonObject) {
     if (!jsonObject.has(placeholderName)) {
       logger.info("Did not find placeholder {} in JSON Object {}", placeholderName, jsonObject);

@@ -451,4 +451,23 @@ class WordGeneratorTest {
         var documentWrapper = new XWPFDocumentWrapper(xwpfDocument);
         assertThat(documentWrapper.bodyElement(0).asParagraph().text(), containsString(SampleModelData.PICARD_PERSON.getEntryDate().toString()));
     }
+
+    @Test
+    @DisplayName("Resolve IterablePlaceholder with toString when there's no closing placeholder.")
+    void shouldResolveIPWithToStringWhenNoLoop() throws InterruptedException, IOException {
+        // Assemble
+        Template template = Template.fromClassPath("/templates/word/IterablePlaceholderWithoutLoop.docx")
+            .orElseThrow();
+         var resolver = new ReflectionResolver(SampleModelData.PICARD);
+
+        // Act
+        Document document = template.startGeneration(resolver);
+        document.blockUntilCompletion(60000L); // 1 minute
+
+        // Assert
+        assertThat(document.completed(), is(true));
+        xwpfDocument = TestUtils.getXWPFDocumentFromDocument(document);
+        var documentWrapper = new XWPFDocumentWrapper(xwpfDocument);
+        assertThat(documentWrapper.bodyElement(0).asParagraph().text(), containsString(SampleModelData.PICARD.getOfficer().toString()));
+    }
 }

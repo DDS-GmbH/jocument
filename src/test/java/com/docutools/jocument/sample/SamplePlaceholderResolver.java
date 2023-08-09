@@ -7,6 +7,7 @@ import com.docutools.jocument.impl.ScalarPlaceholderData;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 public class SamplePlaceholderResolver extends PlaceholderResolver {
 
@@ -24,6 +25,11 @@ public class SamplePlaceholderResolver extends PlaceholderResolver {
       default:
         return Optional.empty();
     }
+  }
+
+  @Override
+  public String toString() {
+    return services.stream().map(PlaceholderResolver::toString).collect(Collectors.joining(", "));
   }
 
 }
