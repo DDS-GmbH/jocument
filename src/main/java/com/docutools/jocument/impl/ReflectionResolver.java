@@ -510,6 +510,6 @@ public class ReflectionResolver extends PlaceholderResolver {
 
   @Override
   public String toString() {
-    return bean.toString();
+    return bean != null? bean.toString() : "";
   }
 }
