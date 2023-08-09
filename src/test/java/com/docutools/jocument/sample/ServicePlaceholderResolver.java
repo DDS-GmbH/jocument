@@ -24,4 +24,9 @@ public class ServicePlaceholderResolver extends PlaceholderResolver {
     }
   }
 
+  @Override
+  public String toString() {
+    return name;
+  }
+
 }

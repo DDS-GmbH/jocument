@@ -507,4 +507,9 @@ public class ReflectionResolver extends PlaceholderResolver {
     }
     return resolvedProperty;
   }
+
+  @Override
+  public String toString() {
+    return bean.toString();
+  }
 }

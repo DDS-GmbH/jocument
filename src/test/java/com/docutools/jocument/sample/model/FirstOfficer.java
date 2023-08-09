@@ -23,4 +23,9 @@ public class FirstOfficer {
   public Uniform getUniform() {
     return uniform;
   }
+
+  @Override
+  public String toString() {
+    return name;
+  }
 }

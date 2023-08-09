@@ -7,17 +7,20 @@ import com.docutools.jocument.PlaceholderType;
 import com.docutools.jocument.impl.ParsingUtils;
 import com.docutools.jocument.impl.excel.interfaces.ExcelWriter;
 import com.docutools.jocument.impl.excel.util.ExcelUtils;
+import com.docutools.jocument.impl.word.WordUtilities;
 import com.google.common.collect.Lists;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.StreamSupport;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.util.LocaleUtil;
+import org.apache.poi.xwpf.usermodel.XWPFParagraph;
 
 
 /**
@@ -165,12 +168,27 @@ public class ExcelGenerator {
     if (ExcelUtils.getNumberOfNonEmptyCells(row) == 1) {
       var cell = row.getCell(row.getFirstCellNum());
       if (cell.getCellType() == CellType.STRING) {
-        return resolver.resolve(
-                ParsingUtils.stripBrackets(
-                    cell.getStringCellValue()
-                )).map(PlaceholderData::getType)
-            .map(type -> type == PlaceholderType.SET)
-            .orElse(false);
+        var placeholderName = ParsingUtils.stripBrackets(
+            cell.getStringCellValue()
+        );
+        return resolver.resolve(placeholderName)
+            .filter(placeholderData -> placeholderData.getType() == PlaceholderType.SET)
+            .map(placeholderData -> {
+              var endLoopMarkers = ParsingUtils.getMatchingLoopEnds(placeholderName);
+              // Since ExcelGenerator only takes an Iterator of the remaining elements, we can't
+              // do a lookahead from that. So we access the sheet from the current row and create
+              // a new iterator dropping everything before the current row.
+              return StreamSupport.stream(row.getSheet().spliterator(), false)
+                  // since we only get the physical row index we need to manually probe till we
+                  // reach the current iterator state
+                  .dropWhile(nextRow -> !nextRow.equals(row))
+                  .skip(1)
+                  .filter(nextRow -> ExcelUtils.getNumberOfNonEmptyCells(nextRow) == 1)
+                  .map(nextRow -> nextRow.getCell(nextRow.getFirstCellNum()))
+                  .filter(nextCell -> nextCell.getCellType() == CellType.STRING)
+                  .map(Cell::getStringCellValue)
+                  .anyMatch(text -> endLoopMarkers.contains(text.strip()));
+            }).orElse(false);
       }
     }
     return false;

@@ -2,6 +2,7 @@ package com.docutools.jocument.impl.excel.implementations;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.closeTo;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.startsWith;
@@ -17,6 +18,7 @@ import com.docutools.jocument.sample.model.SampleModelData;
 import com.docutools.jocument.sample.placeholders.QuotesBlockPlaceholder;
 import com.docutools.poipath.PoiPath;
 import com.docutools.poipath.xssf.XSSFWorkbookWrapper;
+import com.docutools.poipath.xwpf.XWPFDocumentWrapper;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.Period;
@@ -267,5 +269,24 @@ class ExcelGeneratorTest {
         // Assert
         assertThat(document.completed(), is(true));
 
+    }
+
+    @Test
+    @DisplayName("Resolve IterablePlaceholder with toString when there's no closing placeholder.")
+    void shouldResolveIPWithToStringWhenNoLoop() throws InterruptedException, IOException {
+        // Assemble
+        Template template = Template.fromClassPath("/templates/excel/IterablePlaceholderWithoutLoop.xlsx")
+            .orElseThrow();
+        var resolver = new ReflectionResolver(SampleModelData.PICARD);
+
+        // Act
+        Document document = template.startGeneration(resolver);
+        document.blockUntilCompletion(60000L); // 1 minute
+
+        // Assert
+        assertThat(document.completed(), is(true));
+        workbook = TestUtils.getXSSFWorkbookFromDocument(document);
+        var documentWrapper = new XSSFWorkbookWrapper(workbook);
+        assertThat(documentWrapper.sheet(0).row(0).cell(0).text(), containsString(SampleModelData.PICARD.getOfficer().toString()));
     }
 }
