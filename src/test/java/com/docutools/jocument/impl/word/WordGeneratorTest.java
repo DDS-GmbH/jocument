@@ -470,4 +470,26 @@ class WordGeneratorTest {
         var documentWrapper = new XWPFDocumentWrapper(xwpfDocument);
         assertThat(documentWrapper.bodyElement(0).asParagraph().text(), containsString(SampleModelData.PICARD.getOfficer().toString()));
     }
+
+    @Test
+    @DisplayName("Resolve custom placeholder in custom placeholderdata")
+    void shouldResolveCustomPlaceholderInCustomPlaceholderData() throws InterruptedException, IOException {
+        // assemble
+        Template template = Template.fromClassPath("/templates/word/CustomPlaceholderInCustomData.docx")
+            .orElseThrow();
+        CustomPlaceholderRegistry customPlaceholderRegistry = new CustomPlaceholderRegistryImpl();
+        customPlaceholderRegistry.addHandler("quote", QuotePlaceholder.class);
+        PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.PLANET, customPlaceholderRegistry);
+
+        // act
+        Document document = template.startGeneration(resolver);
+        document.blockUntilCompletion(60000L); // 1 minute
+
+        // assert
+        assertThat(document.completed(), is(true));
+        xwpfDocument = TestUtils.getXWPFDocumentFromDocument(document);
+        var documentWrapper = new XWPFDocumentWrapper(xwpfDocument);
+        assertThat(documentWrapper.bodyElement(0).asParagraph().run(0).text(),
+            equalTo("Live your life not celebrating victories, but overcoming defeats."));
+    }
 }

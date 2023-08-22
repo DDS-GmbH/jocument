@@ -13,6 +13,7 @@ import com.docutools.jocument.annotations.Money;
 import com.docutools.jocument.annotations.Numeric;
 import com.docutools.jocument.annotations.Percentage;
 import com.docutools.jocument.annotations.Translatable;
+import com.docutools.jocument.impl.excel.util.PlaceholderDataFactory;
 import com.docutools.jocument.impl.models.MatchPlaceholderData;
 import com.docutools.jocument.impl.word.placeholders.ImagePlaceholderData;
 import java.lang.annotation.Annotation;
@@ -347,6 +348,10 @@ public class ReflectionResolver extends PlaceholderResolver {
             .map(object -> (PlaceholderResolver) new ReflectionResolver(object, customPlaceholderRegistry, options, this))
             .toList();
         return Optional.of(new IterablePlaceholderData(list, list.size()));
+      } else if (property instanceof PlaceholderData placeholderData) {
+        return Optional.of(placeholderData);
+      } else if (property instanceof PlaceholderDataFactory placeholderDataFactory) {
+        return Optional.of(placeholderDataFactory.create(customPlaceholderRegistry, options, this));
       } else if (bean.equals(property)) {
         logger.debug("Placeholder {} resolved to self", placeholderName);
         return Optional.of(new IterablePlaceholderData(List.of(new ReflectionResolver(bean, customPlaceholderRegistry, options, this)), 1));
@@ -394,8 +399,6 @@ public class ReflectionResolver extends PlaceholderResolver {
       } else {
         return Optional.of(new ScalarPlaceholderData<>(enumProperty));
       }
-    } else if (property instanceof PlaceholderData placeholderData) {
-      return Optional.of(placeholderData);
     } else if (isFieldAnnotatedWith(bean.getClass(), placeholderName, Translatable.class)) {
       return getObjectTranslation(placeholderName, locale, options);
     } else if (property instanceof Enum || property instanceof String || ReflectionUtils.isWrapperType(property.getClass())) {
