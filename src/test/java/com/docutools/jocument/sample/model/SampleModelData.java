@@ -1,5 +1,12 @@
 package com.docutools.jocument.sample.model;
 
+import com.docutools.jocument.CustomPlaceholderRegistry;
+import com.docutools.jocument.GenerationOptions;
+import com.docutools.jocument.PlaceholderData;
+import com.docutools.jocument.PlaceholderResolver;
+import com.docutools.jocument.impl.IterablePlaceholderData;
+import com.docutools.jocument.impl.ReflectionResolver;
+import com.docutools.jocument.impl.excel.util.PlaceholderDataFactory;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.time.LocalDate;
@@ -17,6 +24,7 @@ public class SampleModelData {
   public static final List<Captain> CAPTAINS;
   public static final Ship ENTERPRISE;
   public static final Ship ENTERPRISE_WITHOUT_SERVICES;
+  public static final Planet PLANET;
 
   static {
     try {
@@ -41,6 +49,12 @@ public class SampleModelData {
           CompletableFuture.completedFuture(services),
           CompletableFuture.completedFuture(Path.of(SampleModelData.class.getResource("/images/picardProfileLarge.jpg").toURI())));
       ENTERPRISE_WITHOUT_SERVICES = new Ship("USS Enterprise", PICARD, 5, Collections.emptyList(), LocalDate.now(), Optional.empty());
+      PLANET = new Planet(new PlaceholderDataFactory() {
+        @Override
+        public PlaceholderData create(CustomPlaceholderRegistry customPlaceholderRegistry, GenerationOptions options, PlaceholderResolver parent) {
+          return new IterablePlaceholderData(new ReflectionResolver(PICARD, customPlaceholderRegistry, options, parent));
+        }
+      });
     } catch (URISyntaxException e) {
       throw new RuntimeException(e);
     }
