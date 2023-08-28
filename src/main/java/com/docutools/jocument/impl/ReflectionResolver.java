@@ -329,7 +329,7 @@ public class ReflectionResolver extends PlaceholderResolver {
             .map(IterablePlaceholderData::of);
       }
       if (customPlaceholderRegistry.governs(placeholderName, bean)) {
-        logger.info("Placeholder {} handled by custom registry", placeholderName);
+        logger.debug("Placeholder {} handled by custom registry", placeholderName);
         return customPlaceholderRegistry.resolve(placeholderName, bean);
       }
       var wrappedProperty = getBeanProperty(placeholderName);

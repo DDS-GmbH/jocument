@@ -425,7 +425,7 @@ public class WordUtilities {
     if (rawText != null && !rawText.isBlank()) {
       return Optional.of(rawText);
     }
-    logger.info("Failed to get text from paragraph {}", paragraph);
+    logger.debug("Paragraph {} did not contain any text", paragraph);
     return Optional.empty();
   }
 
