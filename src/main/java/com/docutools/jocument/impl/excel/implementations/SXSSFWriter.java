@@ -17,6 +17,7 @@ import org.apache.poi.ss.usermodel.CreationHelper;
 import org.apache.poi.ss.usermodel.Hyperlink;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.streaming.SXSSFFormulaEvaluator;
 import org.apache.poi.xssf.streaming.SXSSFSheet;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
@@ -25,6 +26,7 @@ import org.apache.poi.xssf.usermodel.XSSFDrawing;
 import org.apache.poi.xssf.usermodel.XSSFPicture;
 import org.apache.poi.xssf.usermodel.XSSFPictureData;
 import org.apache.poi.xssf.usermodel.XSSFShape;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
 
 /**
  * This is a streamed implementation of the {@link com.docutools.jocument.impl.excel.interfaces.ExcelWriter} interface. The streaming is done so
@@ -129,6 +131,16 @@ public class SXSSFWriter implements ExcelWriter {
     currentSheet.setRowSumsRight(sheet.getRowSumsRight());
     currentSheet.setSelected(sheet.isSelected());
     currentSheet.setVerticallyCenter(sheet.getVerticallyCenter());
+
+    // copy auto filters to new sheet
+    if(sheet instanceof XSSFSheet xssfSheet) {
+      var autoFilter = xssfSheet.getCTWorksheet().getAutoFilter();
+      if(autoFilter != null) {
+        var ref = autoFilter.getRef();
+        var range = CellRangeAddress.valueOf(ref);
+        currentSheet.setAutoFilter(range);
+      }
+    }
 
     var drawing = (XSSFDrawing) sheet.createDrawingPatriarch();
     for (var shape : drawing.getShapes()) {

@@ -160,4 +160,21 @@ public class ExcelDocuments {
 
     Desktop.getDesktop().open(document.getPath().toFile());
   }
+
+  @Test
+  @DisplayName("Keep Auto Filter")
+  void keepAutoFilters() throws InterruptedException, IOException {
+    // Arrange
+    Template template = Template.fromClassPath("/templates/excel/AutoFilters.xlsx")
+        .orElseThrow();
+    PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.PICARD);
+
+    // Act
+    Document document = template.startGeneration(resolver);
+    document.blockUntilCompletion(5_000L); // 5 seconds
+
+    // Assert
+    assertThat(document.completed(), is(true));
+    Desktop.getDesktop().open(document.getPath().toFile());
+  }
 }
