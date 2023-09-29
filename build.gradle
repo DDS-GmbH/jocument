@@ -27,7 +27,7 @@ repositories {
     }
 }
 
-def apachePOIVersion = '5.2.3'
+def apachePOIVersion = '5.2.4'
 def log4jVersion = '2.20.0'
 
 dependencies {
