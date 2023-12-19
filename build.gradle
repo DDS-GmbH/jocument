@@ -44,7 +44,7 @@ dependencies {
     implementation("org.apache.logging.log4j:log4j-api:$log4jVersion")
 
     implementation 'com.codepoetics:protonpack:1.16'
-    implementation("com.google.guava:guava:32.1.2-jre")
+    implementation("com.google.guava:guava:33.0.0-jre")
 
     testImplementation('org.junit.jupiter:junit-jupiter:5.10.0')
     testImplementation("org.hamcrest:hamcrest:2.2")
