@@ -144,7 +144,7 @@ public class ReflectionResolver extends PlaceholderResolver {
     if (numeric.minIntDigits() != -1) {
       format.setMinimumIntegerDigits(numeric.minIntDigits());
     }
-    if (!numeric.currencyCode().equals("")) {
+    if (!numeric.currencyCode().isEmpty()) {
       format.setCurrency(Currency.getInstance(numeric.currencyCode()));
     }
     format.setGroupingUsed(numeric.groupingUsed());
@@ -381,6 +381,9 @@ public class ReflectionResolver extends PlaceholderResolver {
     } catch (EmptyOptionalException e) {
       logger.warn("Placeholder {} property is an empty optional", e.getMessage());
       return Optional.empty();
+    } catch (ClassCastException e) {
+      logger.warn("ClassCastException when resolving custom placeholder %s".formatted(placeholderName), e);
+      return Optional.empty();
     }
   }
 
@@ -486,7 +489,7 @@ public class ReflectionResolver extends PlaceholderResolver {
         .or(() -> ReflectionUtils.findFieldAnnotation(bean.getClass(), fieldName, Numeric.class)
             .map(numeric -> toNumberFormat(numeric, locale)))
         .orElseGet(() -> {
-          logger.info("Did not find formatting directive for {}, formatting according to locale {}", fieldName, locale);
+          logger.debug("Did not find formatting directive for {}, formatting according to locale {}", fieldName, locale);
           return NumberFormat.getInstance(locale);
         });
   }
@@ -515,6 +518,6 @@ public class ReflectionResolver extends PlaceholderResolver {
 
   @Override
   public String toString() {
-    return bean != null? bean.toString() : "";
+    return bean != null ? bean.toString() : "";
   }
 }
