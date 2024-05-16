@@ -57,7 +57,7 @@ tasks.withType(Checkstyle) {
     ignoreFailures = false
     maxWarnings = 0 // Maximum number of warnings allowed
     reports {
-        html.destination rootProject.file("build/reports/checkstyle.html")
+        html.outputLocation = rootProject.file("build/reports/checkstyle.html")
     }
 }
 
