@@ -1,9 +1,11 @@
 package com.docutools.jocument.impl.excel.util;
 
+import com.docutools.jocument.PlaceholderData;
 import com.docutools.jocument.PlaceholderResolver;
 import com.docutools.jocument.impl.DocumentImpl;
 import com.docutools.jocument.impl.ParsingUtils;
 import com.docutools.jocument.impl.ScalarPlaceholderData;
+import io.jbock.util.Either;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.Spliterator;
@@ -26,13 +28,30 @@ public class ExcelUtils {
    * @param resolver  {@link PlaceholderResolver} used to resolve the placeholders found in value.
    * @return          String with replaced placeholders.
    */
-  public static String replacePlaceholders(Cell cell, PlaceholderResolver resolver) {
+  public static Either<String, Double> replacePlaceholders(Cell cell, PlaceholderResolver resolver) {
     String cellValue = getCellContentAsString(cell);
+    Optional<PlaceholderData> firstPlaceholderData = resolveCell(cellValue, resolver);
+    if (firstPlaceholderData.isPresent()
+        && firstPlaceholderData.get() instanceof ScalarPlaceholderData<?> scalarPlaceholderData
+        && scalarPlaceholderData.getRawValue() instanceof Number number) {
+      return Either.right(number.doubleValue());
+    }
     var matcher = ParsingUtils.matchPlaceholders(cellValue);
-    return matcher.replaceAll(matchResult -> resolver.resolve(matchResult.group(1))
+    return Either.left(matcher.replaceAll(matchResult -> resolver.resolve(matchResult.group(1))
         .orElse(new ScalarPlaceholderData<>("-"))
-        .toString()
+        .toString())
     );
+  }
+
+  private static Optional<PlaceholderData> resolveCell(String cellValue, PlaceholderResolver resolver) {
+    if (cellValue == null || !cellValue.startsWith("{{") && !cellValue.endsWith("}}")) {
+      return Optional.empty();
+    }
+    var matchingResults = ParsingUtils.matchPlaceholders(cellValue).results().toList();
+    if (matchingResults.size() != 1) {
+      return Optional.empty();
+    }
+    return resolver.resolve(matchingResults.get(0).group(1));
   }
 
   public static String getPlaceholder(Cell cell) {

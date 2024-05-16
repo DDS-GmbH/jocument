@@ -7,7 +7,6 @@ import com.docutools.jocument.PlaceholderType;
 import com.docutools.jocument.impl.ParsingUtils;
 import com.docutools.jocument.impl.excel.interfaces.ExcelWriter;
 import com.docutools.jocument.impl.excel.util.ExcelUtils;
-import com.docutools.jocument.impl.word.WordUtilities;
 import com.google.common.collect.Lists;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -20,7 +19,6 @@ import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.util.LocaleUtil;
-import org.apache.poi.xwpf.usermodel.XWPFParagraph;
 
 
 /**
@@ -83,8 +81,8 @@ public class ExcelGenerator {
         excelWriter.newRow(row);
         for (Cell cell : row) {
           if (ExcelUtils.containsPlaceholder(cell)) {
-            var newCellText = ExcelUtils.replacePlaceholders(cell, resolver);
-            excelWriter.addCell(cell, newCellText);
+            var newCellValue = ExcelUtils.replacePlaceholders(cell, resolver);
+            newCellValue.ifLeftOrElse(stringValue -> excelWriter.addCell(cell, stringValue), doubleValue -> excelWriter.addCell(cell, doubleValue));
           } else if (ExcelUtils.isSimpleCell(cell)) {
             excelWriter.addCell(cell);
           }

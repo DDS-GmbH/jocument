@@ -66,4 +66,23 @@ class AutomatedXlsxTests {
     assertThat(rangeAddress.isInRange(sheet.row(0).cell(0).cell()), is(true));
   }
 
+  @Test
+  void insertNumericValue() throws InterruptedException, IOException {
+    // Arrange
+    Template template = Template.fromClassPath("/templates/excel/NumericValues.xlsx")
+        .orElseThrow();
+    PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.ENTERPRISE);
+
+    // Act
+    Document document = template.startGeneration(resolver);
+    document.blockUntilCompletion(5_000L); // 5 seconds
+
+    // Assert
+    assertThat(document.completed(), is(true));
+    var xssfWorkbook = TestUtils.getXSSFWorkbookFromDocument(document);
+    var xssf = new XSSFWorkbookWrapper(xssfWorkbook);
+    var sheet = xssf.sheet(0);
+    assertThat(sheet.row(0).cell(0).doubleValue(), is(5.0));
+  }
+
 }

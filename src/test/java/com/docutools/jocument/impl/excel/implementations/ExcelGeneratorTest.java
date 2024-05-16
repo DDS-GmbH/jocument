@@ -18,7 +18,6 @@ import com.docutools.jocument.sample.model.SampleModelData;
 import com.docutools.jocument.sample.placeholders.QuotesBlockPlaceholder;
 import com.docutools.poipath.PoiPath;
 import com.docutools.poipath.xssf.XSSFWorkbookWrapper;
-import com.docutools.poipath.xwpf.XWPFDocumentWrapper;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.Period;
@@ -139,7 +138,7 @@ class ExcelGeneratorTest {
         assertThat(firstSheet.row(3).cell(0).stringValue(), equalTo("Last Name"));
         assertThat(firstSheet.row(3).cell(1).stringValue(), equalTo("Picard"));
         assertThat(firstSheet.row(4).cell(0).stringValue(), equalTo("Age"));
-        assertThat(firstSheet.row(4).cell(1).stringValue(), equalTo(String.valueOf(Period.between(LocalDate.of(1948, 9, 23), LocalDate.now()).getYears())));
+        assertThat(firstSheet.row(4).cell(1).doubleValue(), equalTo((double) Period.between(LocalDate.of(1948, 9, 23), LocalDate.now()).getYears()));
         assertThat(firstSheet.row(4).cell(2).stringValue(), equalTo(DateTimeFormatter.ofPattern("dd.MM.yyyy", Locale.US).format(LocalDate.of(1948, 9, 23))));
     }
 

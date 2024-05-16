@@ -46,6 +46,8 @@ dependencies {
     implementation 'com.codepoetics:protonpack:1.16'
     implementation("com.google.guava:guava:32.1.2-jre")
 
+    implementation 'io.github.jbock-java:either:1.5.2'
+
     testImplementation('org.junit.jupiter:junit-jupiter:5.10.0')
     testImplementation("org.hamcrest:hamcrest:2.2")
     testImplementation("com.docutools:poipath:2.0.0")

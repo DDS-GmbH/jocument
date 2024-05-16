@@ -59,7 +59,7 @@ public abstract class PlaceholderResolver {
   /**
    * Overwrite of the {@link Object#toString()} method, forcing any subclass to implement it,
    * since its required for resolving {@link com.docutools.jocument.impl.IterablePlaceholderData}
-   * when no loop-end is present
+   * when no loop-end is present.
    *
    * @return a {@link String}
    */
