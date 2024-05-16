@@ -18,7 +18,15 @@ import java.util.function.BiFunction;
 public record GenerationOptions(ImageStrategy imageStrategy,
                                 Duration maximumWaitTime,
                                 List<PlaceholderDataFormattingOption> formattingOptions,
-                                BiFunction<String, Locale, Optional<String>> translationFunction) {
+                                BiFunction<String, Locale, Optional<String>> translationFunction,
+                                Optional<MimeType> documentMimeType) {
+
+  public GenerationOptions(ImageStrategy imageStrategy,
+                           Duration maximumWaitTime,
+                           List<PlaceholderDataFormattingOption> formattingOptions,
+                           BiFunction<String, Locale, Optional<String>> translationFunction) {
+    this(imageStrategy, maximumWaitTime, formattingOptions, translationFunction, Optional.empty());
+  }
 
   /**
    * Try to format a {@link PlaceholderData} with the given {@link Locale}.

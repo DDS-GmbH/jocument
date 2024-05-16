@@ -1,6 +1,7 @@
 package com.docutools.jocument.impl;
 
 import com.docutools.jocument.CustomPlaceholderRegistry;
+import com.docutools.jocument.MimeType;
 import com.docutools.jocument.PlaceholderData;
 import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
@@ -28,5 +29,14 @@ public class CustomPlaceholderRegistryImpl implements CustomPlaceholderRegistry 
   @Override
   public boolean governs(String placeholderName, Object unused) {
     return customWordPlaceholderDataMap.containsKey(placeholderName);
+  }
+
+  @Override
+  public boolean governs(String placeholderName, Object bean, Optional<MimeType> mimeType) {
+    if (placeholderName.equals("crew") && mimeType.isPresent()) {
+      return mimeType.get().equals(MimeType.XLSX);
+    } else {
+      return governs(placeholderName, bean);
+    }
   }
 }

@@ -29,6 +29,7 @@ public final class GenerationOptionsBuilder {
   private final List<PlaceholderDataFormattingOption> formattingOptions = new ArrayList<>();
   private BiFunction<String, Locale, Optional<String>> translationFunction = null;
   private Duration waitTime = Duration.ofSeconds(30);
+  private MimeType mimeType;
 
   public GenerationOptionsBuilder() {
     this.imageStrategy = DefaultImageStrategy.instance();
@@ -58,8 +59,13 @@ public final class GenerationOptionsBuilder {
     return this;
   }
 
+  public GenerationOptionsBuilder withMimeType(MimeType mimeType) {
+    this.mimeType = mimeType;
+    return this;
+  }
+
   public GenerationOptions build() {
-    return new GenerationOptions(imageStrategy, waitTime, formattingOptions, translationFunction);
+    return new GenerationOptions(imageStrategy, waitTime, formattingOptions, translationFunction, Optional.ofNullable(mimeType));
   }
 
 }

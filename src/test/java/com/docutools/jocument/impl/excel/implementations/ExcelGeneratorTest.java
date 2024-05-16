@@ -9,16 +9,19 @@ import static org.hamcrest.Matchers.startsWith;
 
 import com.docutools.jocument.CustomPlaceholderRegistry;
 import com.docutools.jocument.Document;
+import com.docutools.jocument.GenerationOptions;
+import com.docutools.jocument.GenerationOptionsBuilder;
+import com.docutools.jocument.MimeType;
 import com.docutools.jocument.PlaceholderResolver;
 import com.docutools.jocument.Template;
 import com.docutools.jocument.TestUtils;
 import com.docutools.jocument.impl.CustomPlaceholderRegistryImpl;
 import com.docutools.jocument.impl.ReflectionResolver;
 import com.docutools.jocument.sample.model.SampleModelData;
+import com.docutools.jocument.sample.placeholders.CrewPlaceholder;
 import com.docutools.jocument.sample.placeholders.QuotesBlockPlaceholder;
 import com.docutools.poipath.PoiPath;
 import com.docutools.poipath.xssf.XSSFWorkbookWrapper;
-import com.docutools.poipath.xwpf.XWPFDocumentWrapper;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.Period;
@@ -139,7 +142,7 @@ class ExcelGeneratorTest {
         assertThat(firstSheet.row(3).cell(0).stringValue(), equalTo("Last Name"));
         assertThat(firstSheet.row(3).cell(1).stringValue(), equalTo("Picard"));
         assertThat(firstSheet.row(4).cell(0).stringValue(), equalTo("Age"));
-        assertThat(firstSheet.row(4).cell(1).stringValue(), equalTo(String.valueOf(Period.between(LocalDate.of(1948, 9, 23), LocalDate.now()).getYears())));
+        assertThat(firstSheet.row(4).cell(1).doubleValue(), equalTo((double) Period.between(LocalDate.of(1948, 9, 23), LocalDate.now()).getYears()));
         assertThat(firstSheet.row(4).cell(2).stringValue(), equalTo(DateTimeFormatter.ofPattern("dd.MM.yyyy", Locale.US).format(LocalDate.of(1948, 9, 23))));
     }
 
@@ -288,5 +291,48 @@ class ExcelGeneratorTest {
         workbook = TestUtils.getXSSFWorkbookFromDocument(document);
         var documentWrapper = new XSSFWorkbookWrapper(workbook);
         assertThat(documentWrapper.sheet(0).row(0).cell(0).text(), containsString(SampleModelData.PICARD.getOfficer().toString()));
+    }
+
+
+    @Test
+    void insertNumericValue() throws InterruptedException, IOException {
+        // Arrange
+        Template template = Template.fromClassPath("/templates/excel/NumericValues.xlsx")
+            .orElseThrow();
+        PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.ENTERPRISE);
+
+        // Act
+        Document document = template.startGeneration(resolver);
+        document.blockUntilCompletion(5_000L); // 5 seconds
+
+        // Assert
+        assertThat(document.completed(), is(true));
+        var xssfWorkbook = TestUtils.getXSSFWorkbookFromDocument(document);
+        var xssf = new XSSFWorkbookWrapper(xssfWorkbook);
+        var sheet = xssf.sheet(0);
+        assertThat(sheet.row(0).cell(0).doubleValue(), is(5.0));
+    }
+
+
+    @Test
+    void insertNumericValueFromCustomPlaceholder() throws InterruptedException, IOException {
+        // Arrange
+        Template template = Template.fromClassPath("/templates/excel/NumericValues.xlsx")
+            .orElseThrow();
+        CustomPlaceholderRegistry customPlaceholderRegistry = new CustomPlaceholderRegistryImpl();
+        customPlaceholderRegistry.addHandler("crew", CrewPlaceholder.class);
+        GenerationOptions generationOptions = new GenerationOptionsBuilder().withMimeType(MimeType.XLSX).build();
+        PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.ENTERPRISE, customPlaceholderRegistry, generationOptions);
+
+        // Act
+        Document document = template.startGeneration(resolver);
+        document.blockUntilCompletion(5_000L); // 5 seconds
+
+        // Assert
+        assertThat(document.completed(), is(true));
+        var xssfWorkbook = TestUtils.getXSSFWorkbookFromDocument(document);
+        var xssf = new XSSFWorkbookWrapper(xssfWorkbook);
+        var sheet = xssf.sheet(0);
+        assertThat(sheet.row(0).cell(0).doubleValue(), is(5.0));
     }
 }

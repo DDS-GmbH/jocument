@@ -328,7 +328,7 @@ public class ReflectionResolver extends PlaceholderResolver {
             .ofNullable(parent)
             .map(IterablePlaceholderData::of);
       }
-      if (customPlaceholderRegistry.governs(placeholderName, bean)) {
+      if (customPlaceholderRegistry.governs(placeholderName, bean, options.documentMimeType())) {
         logger.debug("Placeholder {} handled by custom registry", placeholderName);
         return customPlaceholderRegistry.resolve(placeholderName, bean);
       }

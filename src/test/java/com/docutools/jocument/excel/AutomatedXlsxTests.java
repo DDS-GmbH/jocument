@@ -65,5 +65,4 @@ class AutomatedXlsxTests {
     var rangeAddress = CellRangeAddress.valueOf(autoFilterRef);
     assertThat(rangeAddress.isInRange(sheet.row(0).cell(0).cell()), is(true));
   }
-
 }

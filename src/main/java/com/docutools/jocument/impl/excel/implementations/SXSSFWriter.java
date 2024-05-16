@@ -133,9 +133,9 @@ public class SXSSFWriter implements ExcelWriter {
     currentSheet.setVerticallyCenter(sheet.getVerticallyCenter());
 
     // copy auto filters to new sheet
-    if(sheet instanceof XSSFSheet xssfSheet) {
+    if (sheet instanceof XSSFSheet xssfSheet) {
       var autoFilter = xssfSheet.getCTWorksheet().getAutoFilter();
-      if(autoFilter != null) {
+      if (autoFilter != null) {
         var ref = autoFilter.getRef();
         var range = CellRangeAddress.valueOf(ref);
         currentSheet.setAutoFilter(range);
@@ -238,6 +238,19 @@ public class SXSSFWriter implements ExcelWriter {
   @Override
   public void addCell(Cell templateCell, String newCellText) {
     addCell(templateCell, newCellText, 0);
+  }
+
+  @Override
+  public void addCell(Cell templateCell, double newCellValue) {
+    //todo merge with addCell(Cell, String, int)
+    logger.trace("Creating new cell {} {} with text {}",
+        templateCell.getColumnIndex(), templateCell.getRow().getRowNum(), newCellValue);
+    var newCell = currentRow.createCell(templateCell.getColumnIndex(), templateCell.getCellType());
+    newCell.setCellComment(templateCell.getCellComment());
+    newCell.setCellStyle(cellStyleMap.computeIfAbsent((int) templateCell.getCellStyle().getIndex(), i -> copyCellStyle(templateCell.getCellStyle())));
+    newCell.setHyperlink(templateCell.getHyperlink());
+    currentSheet.setColumnWidth(templateCell.getColumnIndex(), templateCell.getSheet().getColumnWidth(templateCell.getColumnIndex()));
+    newCell.setCellValue(newCellValue);
   }
 
   @Override
