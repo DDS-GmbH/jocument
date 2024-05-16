@@ -210,11 +210,7 @@ public class SXSSFWriter implements ExcelWriter {
   @Override
   public void addCell(Cell cell) {
     logger.trace("Creating new cell {} {}", cell.getColumnIndex(), cell.getRow().getRowNum());
-    var newCell = currentRow.createCell(cell.getColumnIndex(), cell.getCellType());
-    newCell.setCellComment(cell.getCellComment());
-    newCell.setCellStyle(cellStyleMap.computeIfAbsent((int) cell.getCellStyle().getIndex(), i -> copyCellStyle(cell.getCellStyle())));
-    newCell.setHyperlink(cell.getHyperlink());
-    currentSheet.setColumnWidth(cell.getColumnIndex(), cell.getSheet().getColumnWidth(cell.getColumnIndex()));
+    var newCell = createNewCell(cell, 0);
     switch (cell.getCellType()) {
       case NUMERIC -> newCell.setCellValue(cell.getNumericCellValue());
       case STRING -> newCell.setCellValue(cell.getStringCellValue());
@@ -242,14 +238,9 @@ public class SXSSFWriter implements ExcelWriter {
 
   @Override
   public void addCell(Cell templateCell, double newCellValue) {
-    //todo merge with addCell(Cell, String, int)
-    logger.trace("Creating new cell {} {} with text {}",
+    logger.trace("Creating new cell {} {} with double value {}",
         templateCell.getColumnIndex(), templateCell.getRow().getRowNum(), newCellValue);
-    var newCell = currentRow.createCell(templateCell.getColumnIndex(), templateCell.getCellType());
-    newCell.setCellComment(templateCell.getCellComment());
-    newCell.setCellStyle(cellStyleMap.computeIfAbsent((int) templateCell.getCellStyle().getIndex(), i -> copyCellStyle(templateCell.getCellStyle())));
-    newCell.setHyperlink(templateCell.getHyperlink());
-    currentSheet.setColumnWidth(templateCell.getColumnIndex(), templateCell.getSheet().getColumnWidth(templateCell.getColumnIndex()));
+    var newCell = createNewCell(templateCell, 0);
     newCell.setCellValue(newCellValue);
   }
 
@@ -257,16 +248,21 @@ public class SXSSFWriter implements ExcelWriter {
   public void addCell(Cell templateCell, String newCellText, int columnOffset) {
     logger.trace("Creating new cell {} {} with text {}",
         templateCell.getColumnIndex(), templateCell.getRow().getRowNum(), newCellText);
-    var newCell = currentRow.createCell(templateCell.getColumnIndex() + columnOffset, templateCell.getCellType());
-    newCell.setCellComment(templateCell.getCellComment());
-    newCell.setCellStyle(cellStyleMap.computeIfAbsent((int) templateCell.getCellStyle().getIndex(), i -> copyCellStyle(templateCell.getCellStyle())));
-    newCell.setHyperlink(templateCell.getHyperlink());
-    currentSheet.setColumnWidth(templateCell.getColumnIndex(), templateCell.getSheet().getColumnWidth(templateCell.getColumnIndex()));
+    var newCell = createNewCell(templateCell, columnOffset);
     if (templateCell.getCellType() == CellType.FORMULA) {
       newCell.setCellFormula(newCellText);
     } else {
       newCell.setCellValue(newCellText);
     }
+  }
+
+  private Cell createNewCell(Cell templateCell, int columnOffset) {
+    var newCell = currentRow.createCell(templateCell.getColumnIndex() + columnOffset, templateCell.getCellType());
+    newCell.setCellComment(templateCell.getCellComment());
+    newCell.setCellStyle(cellStyleMap.computeIfAbsent((int) templateCell.getCellStyle().getIndex(), i -> copyCellStyle(templateCell.getCellStyle())));
+    newCell.setHyperlink(templateCell.getHyperlink());
+    currentSheet.setColumnWidth(templateCell.getColumnIndex(), templateCell.getSheet().getColumnWidth(templateCell.getColumnIndex()));
+    return newCell;
   }
 
   @Override
