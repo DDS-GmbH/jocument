@@ -10,4 +10,8 @@ public interface CustomPlaceholderRegistry {
       throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException, ClassCastException;
 
   boolean governs(String placeholderName, Object object);
+
+  default boolean governs(String placeholderName, Object bean, Optional<MimeType> mimeType) {
+    return governs(placeholderName, bean);
+  }
 }
