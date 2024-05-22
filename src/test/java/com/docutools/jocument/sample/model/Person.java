@@ -1,11 +1,14 @@
 package com.docutools.jocument.sample.model;
 
+import com.docutools.jocument.annotations.DynamicAccessPlaceholder;
 import com.docutools.jocument.annotations.Format;
 import com.docutools.jocument.annotations.Translatable;
+import com.docutools.jocument.impl.models.MatchPlaceholderData;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.Period;
 import java.time.ZoneOffset;
+import java.util.Optional;
 import java.util.UUID;
 
 public class Person {
@@ -60,5 +63,10 @@ public class Person {
 
   public UUID getId() {
     return id;
+  }
+
+  @DynamicAccessPlaceholder(pattern = "last-used-ship")
+  public Optional<Ship> getLastUsedShip(MatchPlaceholderData matchPlaceholderData) {
+    return Optional.ofNullable(this.favouriteShip);
   }
 }
