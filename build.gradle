@@ -8,7 +8,7 @@ plugins {
 }
 
 group 'com.docutools'
-version = '1.7.0'
+version = '1.8.0'
 
 java {
     toolchain {
@@ -80,10 +80,12 @@ test {
     useJUnitPlatform()
 }
 
-task automatedTests(type: Test) {
+tasks.register('automatedTests', Test) {
+    testClassesDirs = testing.suites.test.sources.output.classesDirs
+    classpath = testing.suites.test.sources.runtimeClasspath
     environment 'DT_JT_RR_PLACEHOLDER_MAPPINGS', 'src/test/resources/mappings.txt'
-    useJUnitPlatform{
-        includeTags "automated"
+    useJUnitPlatform {
+        includeTags 'automated'
     }
 }
 

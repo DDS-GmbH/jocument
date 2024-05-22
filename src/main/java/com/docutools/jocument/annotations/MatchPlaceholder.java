@@ -1,5 +1,6 @@
 package com.docutools.jocument.annotations;
 
+import com.docutools.jocument.impl.models.MatchPlaceholderData;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.Locale;
@@ -11,8 +12,7 @@ import java.util.Locale;
  *
  * <p>{@link MatchPlaceholder}-annotated methods precede any other properties.
  *
- * <p>Can be applied to a public method taking a {@link String} and an optional {@link java.util.Locale} as second parameter, returning an {@link
- * java.util.Optional} of {@link String}.
+ * <p>Can be applied to a public method taking a {@link MatchPlaceholderData}, returning an {@link java.util.Optional} of {@link String}.
  *
  * @author amp
  * @since 2022-03-01

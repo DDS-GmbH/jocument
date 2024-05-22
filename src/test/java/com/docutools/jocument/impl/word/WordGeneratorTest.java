@@ -492,4 +492,24 @@ class WordGeneratorTest {
         assertThat(documentWrapper.bodyElement(0).asParagraph().run(0).text(),
             equalTo("Live your life not celebrating victories, but overcoming defeats."));
     }
+
+    @Test
+    void dynamicAccess() throws InterruptedException, IOException {
+        // assemble
+        Template template = Template.fromClassPath("/templates/word/DynamicAccess.docx")
+            .orElseThrow();
+        SampleModelData.PICARD_PERSON.setFavouriteShip(SampleModelData.ENTERPRISE);
+        PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.PICARD_PERSON);
+
+        // act
+        Document document = template.startGeneration(resolver);
+        document.blockUntilCompletion(60000L); // 1 minute
+
+        // assert
+        assertThat(document.completed(), is(true));
+        xwpfDocument = TestUtils.getXWPFDocumentFromDocument(document);
+        var documentWrapper = new XWPFDocumentWrapper(xwpfDocument);
+        assertThat(documentWrapper.bodyElement(0).asParagraph().run(0).text(), equalTo(SampleModelData.ENTERPRISE.name()));
+    }
+
 }

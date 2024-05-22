@@ -3,9 +3,11 @@ package com.docutools.jocument;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
 
 import com.docutools.jocument.impl.CustomPlaceholderRegistryImpl;
+import com.docutools.jocument.impl.IterablePlaceholderData;
 import com.docutools.jocument.impl.ReflectionResolver;
 import com.docutools.jocument.sample.model.Person;
 import com.docutools.jocument.sample.model.SampleModelData;
@@ -295,4 +297,23 @@ class ReflectionResolvingTests {
     assertThat(name.get().toString(), equalTo(""));
   }
 
+  @Test
+  void resolvesDynamicAccessPlaceholder() {
+    Person picardPerson = SampleModelData.PICARD_NULL;
+    picardPerson.setFavouriteShip(SampleModelData.ENTERPRISE);
+    var resolver = new ReflectionResolver(picardPerson);
+
+    var returnObject = resolver.resolve("last-used-ship");
+
+    assertThat(returnObject, instanceOf(Optional.class));
+    var shipOptional = (Optional<?>) returnObject;
+    assertThat(shipOptional.isPresent(), is(true));
+    assertThat(shipOptional.get(), instanceOf(IterablePlaceholderData.class));
+    var shipPlaceholderData = ((IterablePlaceholderData) shipOptional.get());
+    var first = shipPlaceholderData.stream().findFirst();
+    assertThat(first.isPresent(), is(true));
+    Optional<PlaceholderData> nameOptionalPlaceholder = first.get().resolve("name");
+    assertThat(nameOptionalPlaceholder.isPresent(), is(true));
+    assertThat(nameOptionalPlaceholder.get().toString(), is(SampleModelData.ENTERPRISE.name()));
+  }
 }

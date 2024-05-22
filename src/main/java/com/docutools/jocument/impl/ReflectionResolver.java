@@ -6,6 +6,7 @@ import com.docutools.jocument.GenerationOptionsBuilder;
 import com.docutools.jocument.PlaceholderData;
 import com.docutools.jocument.PlaceholderMapper;
 import com.docutools.jocument.PlaceholderResolver;
+import com.docutools.jocument.annotations.DynamicAccessPlaceholder;
 import com.docutools.jocument.annotations.Format;
 import com.docutools.jocument.annotations.Image;
 import com.docutools.jocument.annotations.MatchPlaceholder;
@@ -107,8 +108,11 @@ public class ReflectionResolver extends PlaceholderResolver {
     try {
       return clazz.getDeclaredField(fieldName)
           .getDeclaredAnnotation(annotation) != null;
-    } catch (Exception e) {
-      logger.debug("Class %s not annotated with %s".formatted(clazz, fieldName), e);
+    } catch (NoSuchFieldException e) {
+      logger.debug("Class %s does not have field %s".formatted(clazz, fieldName));
+      return false;
+    } catch (SecurityException e) {
+      logger.warn(e);
       return false;
     }
   }
@@ -183,14 +187,32 @@ public class ReflectionResolver extends PlaceholderResolver {
     return placeholder.substring(0, placeholder.length() - 1);
   }
 
+  private static boolean validateDynamicAccessMethod(Method method) {
+    var returnType = method.getReturnType();
+    if (!returnType.equals(Optional.class)) {
+      if (method.getParameterCount() != 1) {
+        if (!method.getParameterTypes()[0].isAssignableFrom(MatchPlaceholderData.class)) {
+          logger.warn("@DynamicAccessPlaceholder: parameter should be assignable to MatchPlaceholderData");
+          return false;
+        }
+        logger.warn("@DynamicAccessPlaceholder: method should only expect one MatchPlaceholderData");
+        return false;
+      }
+      logger.warn("@DynamicAccessPlaceholder: method {} must return a java.util.Optional but returns {}.", method, returnType);
+      return false;
+    }
+    return true;
+  }
+
   private Optional<PlaceholderData> resolveStripped(Locale locale, String placeholder) {
     return matchPattern(placeholder, locale)
+        .or(() -> dynamicAccess(placeholder, locale))
         .or(() -> resolveFieldAccessor(placeholder, locale))
         .or(() -> tryResolveInParent(placeholder, locale));
   }
 
   private Optional<PlaceholderData> matchPattern(String placeholderName, Locale locale) {
-    return findMethod(placeholderMapper.tryToMap(placeholderName))
+    return findMatchPlaceholderMethod(placeholderMapper.tryToMap(placeholderName))
         .flatMap(method -> {
           var returnType = method.getReturnType();
           if (returnType.equals(Optional.class)) {
@@ -234,12 +256,44 @@ public class ReflectionResolver extends PlaceholderResolver {
         .map(ScalarPlaceholderData::new);
   }
 
-  private Optional<Method> findMethod(String placeholderName) {
+  private Optional<Method> findMatchPlaceholderMethod(String placeholderName) {
     var beanClass = bean.getClass();
     return Arrays.stream(beanClass.getMethods()).filter(
         method -> Optional.ofNullable(method.getAnnotation(MatchPlaceholder.class)).map(MatchPlaceholder::pattern).filter(placeholderName::matches)
             .isPresent()).findFirst();
   }
+
+  private Optional<PlaceholderData> dynamicAccess(String placeholderName, Locale locale) {
+    return findDynamicAccessMethod(placeholderMapper.tryToMap(placeholderName))
+        .filter(ReflectionResolver::validateDynamicAccessMethod)
+        .flatMap(method -> {
+          try {
+            var returnValue = method.invoke(bean, new MatchPlaceholderData(placeholderName, locale, options));
+            if (returnValue instanceof Optional<?> returnOptional) {
+              if (returnOptional.isPresent()) {
+                return toPlaceholderData(placeholderName, locale, returnOptional.get());
+              } else {
+                return Optional.empty();
+              }
+            } else {
+              logger.warn("@DynamicAccessPlaceholder: method {} does not return a java.util.Optional!", method);
+              return Optional.empty();
+            }
+          } catch (InvocationTargetException | IllegalAccessException e) {
+            logger.warn(e);
+            return Optional.empty();
+          }
+        });
+  }
+
+  private Optional<Method> findDynamicAccessMethod(String placeholderName) {
+    var beanClass = bean.getClass();
+    return Arrays.stream(beanClass.getMethods()).filter(
+        method -> Optional.ofNullable(method.getAnnotation(DynamicAccessPlaceholder.class)).map(DynamicAccessPlaceholder::pattern)
+            .filter(placeholderName::matches)
+            .isPresent()).findFirst();
+  }
+
 
   private Optional<String> evaluateSingleParameterFunction(String placeholderName, Method method)
       throws IllegalAccessException, InvocationTargetException {
@@ -336,7 +390,25 @@ public class ReflectionResolver extends PlaceholderResolver {
       if (wrappedProperty.isEmpty()) {
         return Optional.of(new ScalarPlaceholderData<>(null));
       }
-      var property = resolveNonFinalValue(wrappedProperty.get(), placeholderName);
+      return toPlaceholderData(placeholderName, locale, wrappedProperty.get());
+    } catch (NoSuchMethodException | IllegalArgumentException e) {
+      logger.debug("Did not find placeholder {}, {}", placeholderName, e.getMessage());
+      return Optional.empty();
+    } catch (IllegalAccessException | InvocationTargetException e) {
+      logger.error("Could not call method of placeholder %s".formatted(placeholderName), e);
+      return Optional.empty();
+    } catch (InstantiationException e) {
+      logger.warn("InstantiationException when resolving custom placeholder %s".formatted(placeholderName), e);
+      return Optional.empty();
+    } catch (ClassCastException e) {
+      logger.warn("ClassCastException when resolving custom placeholder %s".formatted(placeholderName), e);
+      return Optional.empty();
+    }
+  }
+
+  private Optional<PlaceholderData> toPlaceholderData(String placeholderName, Locale locale, Object wrappedProperty) {
+    try {
+      var property = resolveNonFinalValue(wrappedProperty, placeholderName);
       var simplePlaceholder = resolveSimplePlaceholder(property, placeholderName, locale, options);
       if (simplePlaceholder.isPresent()) {
         logger.debug("Placeholder {} resolved to simple placeholder", placeholderName);
@@ -357,17 +429,7 @@ public class ReflectionResolver extends PlaceholderResolver {
         return Optional.of(new IterablePlaceholderData(List.of(new ReflectionResolver(bean, customPlaceholderRegistry, options, this)), 1));
       } else {
         return Optional.of(new IterablePlaceholderData(List.of(new ReflectionResolver(property, customPlaceholderRegistry, options, this)), 1));
-
       }
-    } catch (NoSuchMethodException | IllegalArgumentException e) {
-      logger.debug("Did not find placeholder {}, {}", placeholderName, e.getMessage());
-      return Optional.empty();
-    } catch (IllegalAccessException | InvocationTargetException e) {
-      logger.error("Could not call method of placeholder %s".formatted(placeholderName), e);
-      return Optional.empty();
-    } catch (InstantiationException e) {
-      logger.warn("InstantiationException when resolving custom placeholder %s".formatted(placeholderName), e);
-      return Optional.empty();
     } catch (InterruptedException e) {
       logger.warn("InterruptedException when waiting for Future placeholder %s".formatted(placeholderName), e);
       Thread.currentThread().interrupt();
@@ -381,10 +443,8 @@ public class ReflectionResolver extends PlaceholderResolver {
     } catch (EmptyOptionalException e) {
       logger.warn("Placeholder {} property is an empty optional", e.getMessage());
       return Optional.empty();
-    } catch (ClassCastException e) {
-      logger.warn("ClassCastException when resolving custom placeholder %s".formatted(placeholderName), e);
-      return Optional.empty();
     }
+
   }
 
   private Optional<PlaceholderData> resolveSimplePlaceholder(Object property, String placeholderName, Locale locale, GenerationOptions options) {
