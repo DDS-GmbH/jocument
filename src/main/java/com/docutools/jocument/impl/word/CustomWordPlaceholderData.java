@@ -6,8 +6,8 @@ import com.docutools.jocument.PlaceholderType;
 import java.util.Locale;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.poi.xwpf.usermodel.IBody;
 import org.apache.poi.xwpf.usermodel.IBodyElement;
-import org.apache.poi.xwpf.usermodel.XWPFDocument;
 
 public abstract class CustomWordPlaceholderData implements PlaceholderData {
   private static final Logger logger = LogManager.getLogger();
@@ -19,16 +19,18 @@ public abstract class CustomWordPlaceholderData implements PlaceholderData {
 
   @Override
   public void transform(Object placeholder, Locale locale, GenerationOptions options) {
-    if (!(placeholder instanceof IBodyElement element)) {
+    if (placeholder instanceof IBodyElement element) {
+      if (element.getPart() instanceof IBody bodyPart) {
+        transform(element, bodyPart, locale, options);
+      } else {
+        logger.error("Parent of {} is not an instance of IBody", placeholder);
+        throw new IllegalArgumentException("Only children of IBody objects accepted.");
+      }
+    } else {
       logger.error("{} is not an instance of IBodyElement", placeholder);
       throw new IllegalArgumentException("Only IBodyElements accepted.");
     }
-
-    var document = element.getBody().getXWPFDocument();
-
-    transform(element, document, locale, options);
   }
 
-  protected abstract void transform(IBodyElement placeholder, XWPFDocument document, Locale locale, GenerationOptions options);
-
+  protected abstract void transform(IBodyElement placeholder, IBody part, Locale locale, GenerationOptions options);
 }

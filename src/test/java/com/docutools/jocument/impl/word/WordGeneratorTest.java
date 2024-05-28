@@ -512,4 +512,20 @@ class WordGeneratorTest {
         assertThat(documentWrapper.bodyElement(0).asParagraph().run(0).text(), equalTo(SampleModelData.ENTERPRISE.name()));
     }
 
+    @Test
+    void pictureInHeader() throws InterruptedException, IOException {
+        // Arrange
+        Template template = Template.fromClassPath("/templates/word/PictureInHeader.docx")
+            .orElseThrow();
+        PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.PICARD);
+
+        // Act
+        Document document = template.startGeneration(resolver);
+        document.blockUntilCompletion(60000L); // 1 minute
+
+        // Assert
+        assertThat(document.completed(), is(true));
+        xwpfDocument = TestUtils.getXWPFDocumentFromDocument(document);
+        assertThat(xwpfDocument.getHeaderArray(0).getAllPictures(), hasSize(1));
+    }
 }
