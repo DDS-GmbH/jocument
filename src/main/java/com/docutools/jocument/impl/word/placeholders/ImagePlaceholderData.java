@@ -10,8 +10,8 @@ import java.nio.file.Path;
 import java.util.Locale;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.poi.xwpf.usermodel.IBody;
 import org.apache.poi.xwpf.usermodel.IBodyElement;
-import org.apache.poi.xwpf.usermodel.XWPFDocument;
 
 public class ImagePlaceholderData extends CustomWordPlaceholderData {
   private static final Logger logger = LogManager.getLogger();
@@ -31,10 +31,10 @@ public class ImagePlaceholderData extends CustomWordPlaceholderData {
   }
 
   @Override
-  protected void transform(IBodyElement placeholder, XWPFDocument document, Locale locale, GenerationOptions options) {
+  protected void transform(IBodyElement placeholder, IBody part, Locale locale, GenerationOptions options) {
     Path path = applyOptions(options);
     try {
-      var paragraph = document.insertNewParagraph(WordUtilities.openCursor(placeholder).orElseThrow());
+      var paragraph = part.insertNewParagraph(WordUtilities.openCursor(placeholder).orElseThrow());
       WordImageUtils.insertImage(paragraph, path, options.imageStrategy());
       WordUtilities.removeIfExists(placeholder);
     } finally {

@@ -15,6 +15,7 @@ import com.docutools.jocument.impl.word.WordUtilities;
 import com.docutools.jocument.sample.model.SampleModelData;
 import java.util.Locale;
 import java.util.Optional;
+import org.apache.poi.xwpf.usermodel.IBody;
 import org.apache.poi.xwpf.usermodel.IBodyElement;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.apache.poi.xwpf.usermodel.XWPFParagraph;
@@ -103,7 +104,7 @@ class CustomTranslationsTests {
     }
 
     @Override
-    protected void transform(IBodyElement placeholder, XWPFDocument document, Locale locale, GenerationOptions options) {
+    protected void transform(IBodyElement placeholder, IBody part, Locale locale, GenerationOptions options) {
       if (placeholder instanceof XWPFParagraph paragraph) {
         var translatedText = options.translate(paragraph.getText(), locale).orElse("");
         WordUtilities.replaceText(paragraph, translatedText);
