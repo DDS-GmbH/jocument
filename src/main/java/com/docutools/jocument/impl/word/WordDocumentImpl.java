@@ -41,6 +41,8 @@ public class WordDocumentImpl extends DocumentImpl {
       logger.debug("Retrieved all body elements, starting WordGenerator");
       WordGenerator.apply(resolver, bodyElements, options);
 
+      document.enforceUpdateFields();
+
       try (OutputStream os = Files.newOutputStream(file)) {
         logger.info("Writing document to {}", os);
         document.write(os);
