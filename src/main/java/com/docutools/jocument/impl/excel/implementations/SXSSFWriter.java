@@ -280,7 +280,12 @@ public class SXSSFWriter implements ExcelWriter {
 
   @Override
   public void recalculateFormulas() {
-    SXSSFFormulaEvaluator.evaluateAllFormulaCells(workbook, true);
+    try {
+      SXSSFFormulaEvaluator.evaluateAllFormulaCells(workbook, true);
+    } catch (Exception e) {
+      workbook.setForceFormulaRecalculation(true);
+      logger.error(e);
+    }
   }
 
   private CellStyle copyCellStyle(CellStyle cellStyle) {
