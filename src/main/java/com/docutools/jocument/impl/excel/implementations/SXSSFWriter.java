@@ -8,6 +8,7 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.poi.ss.usermodel.Cell;
@@ -109,7 +110,7 @@ public class SXSSFWriter implements ExcelWriter {
     logger.info("Creating new sheet of {}", sheet.getSheetName());
     templateSheet = sheet;
     currentSheet = workbook.createSheet(sheet.getSheetName());
-    currentSheet.setActiveCell(sheet.getActiveCell());
+    Optional.ofNullable(sheet.getActiveCell()).ifPresent(activeCell -> currentSheet.setActiveCell(activeCell));
     currentSheet.setAutobreaks(sheet.getAutobreaks());
     Arrays.stream(sheet.getColumnBreaks()).forEach(column -> currentSheet.setColumnBreak(column));
     currentSheet.setDefaultColumnWidth(sheet.getDefaultColumnWidth());
