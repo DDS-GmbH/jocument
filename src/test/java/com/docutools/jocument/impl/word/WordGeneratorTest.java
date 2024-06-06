@@ -1,6 +1,7 @@
 package com.docutools.jocument.impl.word;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
@@ -17,6 +18,7 @@ import com.docutools.jocument.impl.CustomPlaceholderRegistryImpl;
 import com.docutools.jocument.impl.ReflectionResolver;
 import com.docutools.jocument.sample.model.SampleModelData;
 import com.docutools.jocument.sample.placeholders.QuotePlaceholder;
+import com.docutools.jocument.sample.placeholders.TextPlaceholder;
 import com.docutools.poipath.xwpf.XWPFDocumentWrapper;
 import java.io.IOException;
 import java.time.Instant;
@@ -24,7 +26,10 @@ import java.time.LocalDate;
 import java.time.Period;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
+import org.apache.poi.xwpf.usermodel.BodyElementType;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
+import org.apache.poi.xwpf.usermodel.XWPFRun;
+import org.apache.xmlbeans.XmlAnySimpleType;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
@@ -386,7 +391,7 @@ class WordGeneratorTest {
         assertThat(document.completed(), is(true));
         xwpfDocument = TestUtils.getXWPFDocumentFromDocument(document);
         var documentWrapper = new XWPFDocumentWrapper(xwpfDocument);
-        assertThat(documentWrapper.bodyElement(0).asParagraph().runs(), hasSize(1));
+        assertThat(documentWrapper.bodyElement(2).bodyElement().getElementType(), equalTo(BodyElementType.CONTENTCONTROL));
     }
 
     @Test
@@ -527,5 +532,34 @@ class WordGeneratorTest {
         assertThat(document.completed(), is(true));
         xwpfDocument = TestUtils.getXWPFDocumentFromDocument(document);
         assertThat(xwpfDocument.getHeaderArray(0).getAllPictures(), hasSize(1));
+    }
+
+    @Test
+    void keepsPageNumbering() throws InterruptedException, IOException {
+        // Arrange
+        Template template = Template.fromClassPath("/templates/word/PageNumberTemplate.docx")
+            .orElseThrow();
+        CustomPlaceholderRegistry customPlaceholderRegistry = new CustomPlaceholderRegistryImpl();
+        customPlaceholderRegistry.addHandler("text", TextPlaceholder.class);
+        PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.PICARD, customPlaceholderRegistry);
+
+        // Act
+        Document document = template.startGeneration(resolver);
+        document.blockUntilCompletion(60000L); // 1 minute
+
+        // Assert
+        assertThat(document.completed(), is(true));
+        xwpfDocument = TestUtils.getXWPFDocumentFromDocument(document);
+        var instructions = xwpfDocument.getFooterArray(1)
+            .getListParagraph()
+            .stream()
+            .flatMap(xwpfParagraph -> xwpfParagraph.getRuns().stream())
+            .map(XWPFRun::getCTR)
+            .flatMap(ctr -> ctr.getInstrTextList().stream())
+            .map(XmlAnySimpleType::getStringValue)
+            .map(String::strip)
+            .toList();
+        assertThat(instructions, contains("PAGE", "NUMPAGES"));
+
     }
 }

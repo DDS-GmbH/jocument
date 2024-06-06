@@ -10,6 +10,7 @@ import com.docutools.jocument.impl.ParsingUtils;
 import java.util.List;
 import java.util.Locale;
 import java.util.regex.MatchResult;
+import java.util.regex.Matcher;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.poi.util.LocaleUtil;
@@ -81,12 +82,10 @@ class WordGenerator {
   private void transform(XWPFParagraph paragraph) {
     Locale locale = WordUtilities.detectMostCommonLocale(paragraph)
         .orElse(LocaleUtil.getUserLocale());
-    WordUtilities.replaceText(
-        paragraph,
-        TAG_PATTERN
-            .matcher(WordUtilities.toString(paragraph))
-            .replaceAll(matchResult -> fillPlaceholder(matchResult, locale))
-    );
+    Matcher matcher = TAG_PATTERN.matcher(WordUtilities.toString(paragraph));
+    if (matcher.find()) {
+      WordUtilities.replaceText(paragraph, matcher.replaceAll(matchResult -> fillPlaceholder(matchResult, locale)));
+    }
     logger.debug("Transformed paragraph {}", paragraph);
   }
 
@@ -131,8 +130,8 @@ class WordGenerator {
           .map(placeholderData -> {
             var endLoopMarkers = ParsingUtils.getMatchingLoopEnds(placeholderName);
             return remaining.stream()
-                .filter(bodyElement -> bodyElement instanceof XWPFParagraph)
-                .map(bodyElement -> (XWPFParagraph)bodyElement)
+                .filter(XWPFParagraph.class::isInstance)
+                .map(XWPFParagraph.class::cast)
                 .map(XWPFParagraph::getText)
                 .anyMatch(text -> endLoopMarkers.contains(text.strip()));
           }).orElse(false);
