@@ -239,10 +239,7 @@ public class SXSSFWriter implements ExcelWriter {
 
   @Override
   public void addCell(Cell templateCell, double newCellValue) {
-    logger.trace("Creating new cell {} {} with double value {}",
-        templateCell.getColumnIndex(), templateCell.getRow().getRowNum(), newCellValue);
-    var newCell = createNewCell(templateCell, 0);
-    newCell.setCellValue(newCellValue);
+    addCell(templateCell, newCellValue, 0);
   }
 
   @Override
@@ -255,6 +252,14 @@ public class SXSSFWriter implements ExcelWriter {
     } else {
       newCell.setCellValue(newCellText);
     }
+  }
+
+  @Override
+  public void addCell(Cell templateCell, double newCellValue, int columnOffset) {
+    logger.trace("Creating new cell {} {} with double value {} and offset {}",
+        templateCell.getColumnIndex(), templateCell.getRow().getRowNum(), newCellValue, columnOffset);
+    var newCell = createNewCell(templateCell, columnOffset);
+    newCell.setCellValue(newCellValue);
   }
 
   private Cell createNewCell(Cell templateCell, int columnOffset) {
