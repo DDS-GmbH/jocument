@@ -10,7 +10,6 @@ import java.util.Map;
 import java.util.MissingResourceException;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.OptionalInt;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -145,8 +144,8 @@ public class WordUtilities {
         XmlObject object = getParentObject(xmlCursor);
         if (object.equals(document.getBody())) {
           findPositionInBody(element).ifPresent(pos -> body.getXWPFDocument().removeBodyElement(pos));
-        } else if (object instanceof CTTc ctTc) {
-          removeElementFromTable(element, ctTc, xmlCursor, body);
+        } else if (object instanceof CTTc) {
+          removeElementFromTable(xwpfParagraph);
         } else if (object instanceof CTHdrFtr ctHdrFtr) {
           xmlCursor.toParent();
           new XWPFFooter(body.getXWPFDocument(), ctHdrFtr).removeParagraph(xwpfParagraph);
@@ -159,8 +158,8 @@ public class WordUtilities {
         XmlObject object = getParentObject(xmlCursor);
         if (object.equals(document.getBody())) {
           findPositionInBody(element).ifPresent(pos -> body.getXWPFDocument().removeBodyElement(pos));
-        } else if (object instanceof CTTc ctTc) {
-          removeElementFromTable(element, ctTc, xmlCursor, body);
+        } else if (object instanceof CTTc) {
+          removeElementFromTable(xwpfTable);
         } else if (object instanceof CTHdrFtr ctHdrFtr) {
           xmlCursor.toParent();
           new XWPFFooter(body.getXWPFDocument(), ctHdrFtr).removeTable(xwpfTable);
@@ -176,11 +175,16 @@ public class WordUtilities {
     return xmlCursor.getObject();
   }
 
-  private static void removeElementFromTable(IBodyElement element, CTTc ctTc, XmlCursor xmlCursor, IBody body) {
-    XmlObject rowObject = getParentObject(xmlCursor);
-    XmlObject tableObject = getParentObject(xmlCursor);
-    XWPFTableCell cell = new XWPFTableCell(ctTc, new XWPFTableRow((CTRow) rowObject, new XWPFTable((CTTbl) tableObject, body)), body);
-    findPositionInParagraphs(element, cell.getParagraphs()).ifPresent(cell::removeParagraph);
+  private static void removeElementFromTable(XWPFParagraph xwpfParagraph) {
+    while (!xwpfParagraph.runsIsEmpty()) {
+      xwpfParagraph.removeRun(0);
+    }
+  }
+
+  private static void removeElementFromTable(XWPFTable xwpfTable) {
+    for (int i = 0; i < xwpfTable.getNumberOfRows(); i++) {
+      xwpfTable.removeRow(0);
+    }
   }
 
   private static boolean findInHeader(IBodyElement element) {
@@ -260,17 +264,6 @@ public class WordUtilities {
       }
     }
     return false;
-  }
-
-  private static OptionalInt findPositionInParagraphs(IBodyElement element, List<XWPFParagraph> paragraphs) {
-    var position = 0;
-    for (XWPFParagraph paragraph : paragraphs) {
-      if (element.equals(paragraph)) {
-        return OptionalInt.of(position);
-      }
-      position++;
-    }
-    return OptionalInt.empty();
   }
 
   private static boolean findInTables(IBodyElement element, List<XWPFTable> tables) {
@@ -375,7 +368,7 @@ public class WordUtilities {
   }
 
   /**
-   * Get all of the paragraphs which are embedded in a table.
+   * Get all the paragraphs which are embedded in a table.
    * This is done recursively, so paragraphs in tables in a table cell will also be found.
    *
    * @param table The table to check for embedded paragraphs
@@ -386,8 +379,8 @@ public class WordUtilities {
     for (XWPFTableRow row : table.getRows()) {
       for (XWPFTableCell cell : row.getTableCells()) {
         paragraphs.addAll(cell.getParagraphs());
-        for (XWPFTable subtable : cell.getTables()) {
-          paragraphs.addAll(getTableEmbeddedParagraphs(subtable));
+        for (XWPFTable subTable : cell.getTables()) {
+          paragraphs.addAll(getTableEmbeddedParagraphs(subTable));
         }
       }
     }

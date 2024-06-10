@@ -31,7 +31,6 @@ import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.apache.poi.xwpf.usermodel.XWPFRun;
 import org.apache.xmlbeans.XmlAnySimpleType;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -133,7 +132,6 @@ class WordGeneratorTest {
     }
 
     @Test
-    @Disabled("Pending apache poi 5.2.4 release")
     @DisplayName("Replace custom placeholders in tables.")
     void shouldReplaceCustomPlaceholderInTable() throws InterruptedException, IOException {
         // Arrange
