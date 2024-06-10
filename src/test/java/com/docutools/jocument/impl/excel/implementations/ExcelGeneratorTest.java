@@ -27,6 +27,7 @@ import java.time.LocalDate;
 import java.time.Period;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
+import java.util.Optional;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.AfterEach;
@@ -319,7 +320,16 @@ class ExcelGeneratorTest {
         // Arrange
         Template template = Template.fromClassPath("/templates/excel/NumericValues.xlsx")
             .orElseThrow();
-        CustomPlaceholderRegistry customPlaceholderRegistry = new CustomPlaceholderRegistryImpl();
+        CustomPlaceholderRegistry customPlaceholderRegistry = new CustomPlaceholderRegistryImpl() {
+            @Override
+            public boolean governs(String placeholderName, Object bean, Optional<MimeType> mimeType) {
+                if (placeholderName.equals("crew") && mimeType.isPresent()) {
+                    return mimeType.get().equals(MimeType.XLSX);
+                } else {
+                    return governs(placeholderName, bean);
+                }
+            }
+        };
         customPlaceholderRegistry.addHandler("crew", CrewPlaceholder.class);
         GenerationOptions generationOptions = new GenerationOptionsBuilder().withMimeType(MimeType.XLSX).build();
         PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.ENTERPRISE, customPlaceholderRegistry, generationOptions);
@@ -334,5 +344,27 @@ class ExcelGeneratorTest {
         var xssf = new XSSFWorkbookWrapper(xssfWorkbook);
         var sheet = xssf.sheet(0);
         assertThat(sheet.row(0).cell(0).doubleValue(), is(5.0));
+    }
+
+    @Test
+    void multiplePlaceholdersPerRow() throws InterruptedException, IOException {
+        // Arrange
+        Template template = Template.fromClassPath("/templates/excel/MultiplePlaceholdersPerRow.xlsx").orElseThrow();
+        CustomPlaceholderRegistry customPlaceholderRegistry = new CustomPlaceholderRegistryImpl();
+        customPlaceholderRegistry.addHandler("crew", CrewPlaceholder.class);
+        GenerationOptions generationOptions = new GenerationOptionsBuilder().withMimeType(MimeType.XLSX).build();
+        PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.ENTERPRISE, customPlaceholderRegistry, generationOptions);
+
+        // Act
+        Document document = template.startGeneration(resolver);
+        document.blockUntilCompletion(5_000L); // 5 seconds
+
+        // Assert
+        assertThat(document.completed(), is(true));
+        var xssfWorkbook = TestUtils.getXSSFWorkbookFromDocument(document);
+        var xssf = new XSSFWorkbookWrapper(xssfWorkbook);
+        var sheet = xssf.sheet(0);
+        assertThat(sheet.row(0).cell(0).stringValue(), is(SampleModelData.ENTERPRISE.name()));
+        assertThat(sheet.row(0).cell(1).cell().toString(), is("5.0"));
     }
 }

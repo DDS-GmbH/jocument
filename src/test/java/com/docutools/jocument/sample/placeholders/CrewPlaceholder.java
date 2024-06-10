@@ -1,16 +1,13 @@
 package com.docutools.jocument.sample.placeholders;
 
 import com.docutools.jocument.GenerationOptions;
-import com.docutools.jocument.PlaceholderData;
 import com.docutools.jocument.PlaceholderType;
+import com.docutools.jocument.impl.excel.interfaces.CellPlaceholderData;
 import com.docutools.jocument.impl.excel.interfaces.ExcelWriter;
 import java.util.Locale;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Cell;
 
-public class CrewPlaceholder implements PlaceholderData {
-  private static final Logger logger = LogManager.getLogger();
+public class CrewPlaceholder implements CellPlaceholderData {
 
   @Override
   public PlaceholderType getType() {
@@ -18,16 +15,11 @@ public class CrewPlaceholder implements PlaceholderData {
   }
 
   @Override
-  public void transform(Object placeholder, ExcelWriter excelWriter, Locale locale, GenerationOptions options) {
-    if (!(placeholder instanceof Row row)) {
-      logger.error("{} is not an instance of Row", placeholder);
-      throw new IllegalArgumentException("Only Row accepted.");
-    }
-    transform(row, excelWriter);
+  public void transform(Cell cell, ExcelWriter excelWriter, Locale locale, GenerationOptions options) {
+    transform(cell, excelWriter);
   }
 
-  private void transform(Row row, ExcelWriter excelWriter) {
-    excelWriter.newRow(row);
-    excelWriter.addCell(row.getCell(0), 5.0);
+  private void transform(Cell cell, ExcelWriter excelWriter) {
+    excelWriter.addCell(cell, 5.0);
   }
 }

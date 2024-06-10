@@ -1,6 +1,5 @@
 package com.docutools.jocument;
 
-import com.docutools.jocument.impl.excel.interfaces.ExcelWriter;
 import java.util.Locale;
 import java.util.stream.Stream;
 
@@ -55,19 +54,6 @@ public interface PlaceholderData {
    * @param options the {@link GenerationOptions}
    */
   default void transform(Object placeholder, Locale locale, GenerationOptions options) {
-    throw new UnsupportedOperationException();
-  }
-
-  /**
-   * Transformation method for {@link PlaceholderData} needing to insert into excel. Since xlsx generation generates the document newly, as opposed to
-   * working on a copy (like word generation) we need the possibility to write to the document for some custom placeholders.
-   *
-   * @param placeholder the placeholder
-   * @param excelWriter The {@link ExcelWriter} to write to the excel document
-   * @param locale      the {@link Locale}
-   * @param options     the {@link GenerationOptions}
-   */
-  default void transform(Object placeholder, ExcelWriter excelWriter, Locale locale, GenerationOptions options) {
     throw new UnsupportedOperationException();
   }
 

@@ -5,7 +5,10 @@ import com.docutools.jocument.PlaceholderData;
 import com.docutools.jocument.PlaceholderResolver;
 import com.docutools.jocument.PlaceholderType;
 import com.docutools.jocument.impl.ParsingUtils;
+import com.docutools.jocument.impl.ScalarPlaceholderData;
+import com.docutools.jocument.impl.excel.interfaces.CellPlaceholderData;
 import com.docutools.jocument.impl.excel.interfaces.ExcelWriter;
+import com.docutools.jocument.impl.excel.interfaces.RowPlaceholderData;
 import com.docutools.jocument.impl.excel.util.ExcelUtils;
 import com.google.common.collect.Lists;
 import java.util.Iterator;
@@ -69,20 +72,20 @@ public class ExcelGenerator {
     logger.debug("Starting generation by applying resolver {}", resolver);
     for (Iterator<Row> iterator = rowIterator; iterator.hasNext(); ) {
       Row row = iterator.next();
-      if (isCustomPlaceholder(row)) {
+      if (isCustomRowPlaceholder(row)) {
         var cell = row.getCell(row.getFirstCellNum());
         resolver.resolve(ParsingUtils.stripBrackets(
                 cell.getStringCellValue()
             ))
-            .ifPresent(placeholderData -> placeholderData.transform(row, excelWriter, LocaleUtil.getUserLocale(), options));
+            .filter(RowPlaceholderData.class::isInstance)
+            .ifPresent(placeholderData -> ((RowPlaceholderData) placeholderData).transform(row, excelWriter, LocaleUtil.getUserLocale(), options));
       } else if (isLoopStart(row)) {
         handleLoop(row, iterator);
       } else {
         excelWriter.newRow(row);
         for (Cell cell : row) {
           if (ExcelUtils.containsPlaceholder(cell)) {
-            var newCellValue = ExcelUtils.replacePlaceholders(cell, resolver);
-            newCellValue.ifLeftOrElse(stringValue -> excelWriter.addCell(cell, stringValue), doubleValue -> excelWriter.addCell(cell, doubleValue));
+            replacePlaceholder(cell);
           } else if (ExcelUtils.isSimpleCell(cell)) {
             excelWriter.addCell(cell);
           }
@@ -94,6 +97,28 @@ public class ExcelGenerator {
       excelWriter.addRowOffset(alreadyProcessedLoopsSize); //we are in nested loop, readd the offset to prevent subtracting it multiple times
     }
     logger.debug("Finished generation of elements by resolver {}", resolver);
+  }
+
+  private void replacePlaceholder(Cell cell) {
+    String cellValue = ExcelUtils.getCellContentAsString(cell);
+    Optional<PlaceholderData> placeholderDataOptional = ExcelUtils.resolveCell(cellValue, resolver);
+    if (placeholderDataOptional.isPresent()) {
+      PlaceholderData placeholderData = placeholderDataOptional.get();
+      if (placeholderData instanceof ScalarPlaceholderData<?> scalarPlaceholderData
+          && scalarPlaceholderData.getRawValue() instanceof Number number) {
+        excelWriter.addCell(cell, number.doubleValue());
+        return;
+      } else if (placeholderData.getType().equals(PlaceholderType.CUSTOM) && placeholderData instanceof CellPlaceholderData cellPlaceholderData) {
+        cellPlaceholderData.transform(cell, excelWriter, LocaleUtil.getUserLocale(), options);
+        return;
+      }
+    }
+    // to resolve cell content such as "{{name}} {{crew}}", we match against the full string and resolve per match
+    var matcher = ParsingUtils.matchPlaceholders(cellValue);
+    excelWriter.addCell(cell, matcher.replaceAll(matchResult -> resolver.resolve(matchResult.group(1))
+        .orElse(new ScalarPlaceholderData<>("-"))
+        .toString()));
+
   }
 
   private void handleLoop(Row row, Iterator<Row> iterator) {
@@ -192,19 +217,14 @@ public class ExcelGenerator {
     return false;
   }
 
-  private boolean isCustomPlaceholder(Row row) {
+  private boolean isCustomRowPlaceholder(Row row) {
     var firstCell = row.getFirstCellNum();
     if (firstCell < 0) {
       return false;
     }
     var cell = row.getCell(firstCell);
     if (cell.getCellType() == CellType.STRING) {
-      return resolver.resolve(
-              ParsingUtils.stripBrackets(
-                  cell.getStringCellValue()
-              )).map(PlaceholderData::getType)
-          .map(type -> type == PlaceholderType.CUSTOM)
-          .orElse(false);
+      return resolver.resolve(ParsingUtils.stripBrackets(cell.getStringCellValue())).stream().anyMatch(RowPlaceholderData.class::isInstance);
     }
     return false;
   }
