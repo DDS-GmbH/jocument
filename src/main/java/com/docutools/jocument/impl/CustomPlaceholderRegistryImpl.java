@@ -33,10 +33,6 @@ public class CustomPlaceholderRegistryImpl implements CustomPlaceholderRegistry 
 
   @Override
   public boolean governs(String placeholderName, Object bean, Optional<MimeType> mimeType) {
-    if (placeholderName.equals("crew") && mimeType.isPresent()) {
-      return mimeType.get().equals(MimeType.XLSX);
-    } else {
-      return governs(placeholderName, bean);
-    }
+    return governs(placeholderName, bean);
   }
 }

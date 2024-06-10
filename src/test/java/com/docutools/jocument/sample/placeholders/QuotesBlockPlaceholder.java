@@ -1,20 +1,19 @@
 package com.docutools.jocument.sample.placeholders;
 
 import com.docutools.jocument.GenerationOptions;
-import com.docutools.jocument.PlaceholderData;
 import com.docutools.jocument.PlaceholderType;
+import com.docutools.jocument.impl.excel.interfaces.ExcelPlaceholderData;
 import com.docutools.jocument.impl.excel.interfaces.ExcelWriter;
+import com.docutools.jocument.impl.excel.util.ModificationInformation;
 import java.util.Locale;
 import java.util.Map;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import java.util.Optional;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 
-public class QuotesBlockPlaceholder implements PlaceholderData {
+public class QuotesBlockPlaceholder implements ExcelPlaceholderData {
   public static final Map<String, String> quotes = Map.of("marx", "From each according to his abilities, to each according to his needs.",
       "engels", "An ounce of action is worth a ton of theory.", "lenin", "A lie told often enough becomes the truth.");
-  private static final Logger logger = LogManager.getLogger();
 
   @Override
   public PlaceholderType getType() {
@@ -22,16 +21,11 @@ public class QuotesBlockPlaceholder implements PlaceholderData {
   }
 
   @Override
-  public void transform(Object placeholder, ExcelWriter excelWriter, Locale locale, GenerationOptions options) {
-    if (!(placeholder instanceof Row row)) {
-      logger.error("{} is not an instance of Row", placeholder);
-      throw new IllegalArgumentException("Only Row accepted.");
-    }
-    var workbook = row.getSheet().getWorkbook();
-    transform(row, excelWriter);
+  public ModificationInformation transform(Cell cell, ExcelWriter excelWriter, int offset, Locale locale, GenerationOptions options) {
+    return transform(cell.getRow(), excelWriter);
   }
 
-  private void transform(Row row, ExcelWriter excelWriter) {
+  private ModificationInformation transform(Row row, ExcelWriter excelWriter) {
     int cellPointer = getPlaceholderStart(row);
     excelWriter.newRow(row);
     while (!row.getCell(cellPointer).getStringCellValue().equals("{{/quotes}}")) {
@@ -43,6 +37,7 @@ public class QuotesBlockPlaceholder implements PlaceholderData {
         throw new RuntimeException("Row %s did not contain {{/quotes}} placeholder".formatted(row.getRowNum()));
       }
     }
+    return new ModificationInformation(Optional.of(cellPointer), -2);
   }
 
   private int getPlaceholderStart(Row row) {

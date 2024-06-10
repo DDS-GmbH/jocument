@@ -5,8 +5,11 @@ import com.docutools.jocument.PlaceholderData;
 import com.docutools.jocument.PlaceholderResolver;
 import com.docutools.jocument.PlaceholderType;
 import com.docutools.jocument.impl.ParsingUtils;
+import com.docutools.jocument.impl.ScalarPlaceholderData;
+import com.docutools.jocument.impl.excel.interfaces.ExcelPlaceholderData;
 import com.docutools.jocument.impl.excel.interfaces.ExcelWriter;
 import com.docutools.jocument.impl.excel.util.ExcelUtils;
+import com.docutools.jocument.impl.excel.util.ModificationInformation;
 import com.google.common.collect.Lists;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -69,24 +72,10 @@ public class ExcelGenerator {
     logger.debug("Starting generation by applying resolver {}", resolver);
     for (Iterator<Row> iterator = rowIterator; iterator.hasNext(); ) {
       Row row = iterator.next();
-      if (isCustomPlaceholder(row)) {
-        var cell = row.getCell(row.getFirstCellNum());
-        resolver.resolve(ParsingUtils.stripBrackets(
-                cell.getStringCellValue()
-            ))
-            .ifPresent(placeholderData -> placeholderData.transform(row, excelWriter, LocaleUtil.getUserLocale(), options));
-      } else if (isLoopStart(row)) {
+      if (isLoopStart(row)) {
         handleLoop(row, iterator);
       } else {
-        excelWriter.newRow(row);
-        for (Cell cell : row) {
-          if (ExcelUtils.containsPlaceholder(cell)) {
-            var newCellValue = ExcelUtils.replacePlaceholders(cell, resolver);
-            newCellValue.ifLeftOrElse(stringValue -> excelWriter.addCell(cell, stringValue), doubleValue -> excelWriter.addCell(cell, doubleValue));
-          } else if (ExcelUtils.isSimpleCell(cell)) {
-            excelWriter.addCell(cell);
-          }
-        }
+        handleRow(row);
       }
     }
     if (nestedLoopDepth != 0) { //here for clarity, could be removed since generation finishes if nestedLoopDepth == 0
@@ -94,6 +83,43 @@ public class ExcelGenerator {
       excelWriter.addRowOffset(alreadyProcessedLoopsSize); //we are in nested loop, readd the offset to prevent subtracting it multiple times
     }
     logger.debug("Finished generation of elements by resolver {}", resolver);
+  }
+
+  private void handleRow(Row row) {
+    excelWriter.newRow(row);
+    ModificationInformation modificationInformation = new ModificationInformation(Optional.empty(), 0);
+    for (Cell cell : row) {
+      Optional<Integer> skipUntil = modificationInformation.skipUntil();
+      if (skipUntil.isEmpty() || cell.getColumnIndex() > skipUntil.get()) {
+        if (ExcelUtils.containsPlaceholder(cell)) {
+          var newModificationInformation = replacePlaceholder(cell, modificationInformation.offset());
+          modificationInformation = modificationInformation.merge(newModificationInformation);
+        } else if (ExcelUtils.isSimpleCell(cell)) {
+          excelWriter.addCell(cell);
+        }
+      }
+    }
+  }
+
+  private ModificationInformation replacePlaceholder(Cell cell, int offset) {
+    String cellValue = ExcelUtils.getCellContentAsString(cell);
+    Optional<PlaceholderData> placeholderDataOptional = ExcelUtils.resolveCell(cellValue, resolver);
+    if (placeholderDataOptional.isPresent()) {
+      PlaceholderData placeholderData = placeholderDataOptional.get();
+      if (placeholderData instanceof ScalarPlaceholderData<?> scalarPlaceholderData
+          && scalarPlaceholderData.getRawValue() instanceof Number number) {
+        excelWriter.addCell(cell, number.doubleValue());
+        return ModificationInformation.empty();
+      } else if (placeholderData.getType().equals(PlaceholderType.CUSTOM) && placeholderData instanceof ExcelPlaceholderData excelPlaceholderData) {
+        return excelPlaceholderData.transform(cell, excelWriter, offset, LocaleUtil.getUserLocale(), options);
+      }
+    }
+    // to resolve cell content such as "{{name}} {{crew}}", we match against the full string and resolve per match
+    var matcher = ParsingUtils.matchPlaceholders(cellValue);
+    excelWriter.addCell(cell, matcher.replaceAll(matchResult -> resolver.resolve(matchResult.group(1))
+        .orElse(new ScalarPlaceholderData<>("-"))
+        .toString()));
+    return ModificationInformation.empty();
   }
 
   private void handleLoop(Row row, Iterator<Row> iterator) {
@@ -188,23 +214,6 @@ public class ExcelGenerator {
                   .anyMatch(text -> endLoopMarkers.contains(text.strip()));
             }).orElse(false);
       }
-    }
-    return false;
-  }
-
-  private boolean isCustomPlaceholder(Row row) {
-    var firstCell = row.getFirstCellNum();
-    if (firstCell < 0) {
-      return false;
-    }
-    var cell = row.getCell(firstCell);
-    if (cell.getCellType() == CellType.STRING) {
-      return resolver.resolve(
-              ParsingUtils.stripBrackets(
-                  cell.getStringCellValue()
-              )).map(PlaceholderData::getType)
-          .map(type -> type == PlaceholderType.CUSTOM)
-          .orElse(false);
     }
     return false;
   }

@@ -45,7 +45,7 @@ public interface ExcelWriter {
    * Create a new cell from the templateCell with the specified cell value.
    *
    * @param templateCell The template cell to create the new cell from
-   * @param newCellValue The text to insert into the cell
+   * @param newCellValue The numeric value to insert into the cell
    */
   void addCell(Cell templateCell, double newCellValue);
 
@@ -58,6 +58,16 @@ public interface ExcelWriter {
    * @param columnOffset The column offset to apply to the new cell
    */
   void addCell(Cell templateCell, String newCellText, int columnOffset);
+
+  /**
+   * Create a new cell from the templateCell with the specified cell text and the specified offset. This has to be done e.g. for template cells in
+   * loops which have to be used multiple times.
+   *
+   * @param templateCell The template cell to create the new cell from
+   * @param newCellValue The numeric value to insert into the cell
+   * @param columnOffset The column offset to apply to the new cell
+   */
+  void addCell(Cell templateCell, double newCellValue, int columnOffset);
 
   void addCell(Cell cell);
 
