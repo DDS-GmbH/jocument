@@ -65,7 +65,7 @@ public class WordImageUtils {
           .addPicture(in, contentType, path.getFileName().toString(), dim.width, dim.height);
     } catch (InvalidFormatException | IOException e) {
       logger.error("Could not insert image from given Path %s.".formatted(path), e);
-      throw new IllegalArgumentException("Could not insert image form given Path.", e);
+      throw new IllegalArgumentException("Could not insert image from given Path.", e);
     }
   }
 
