@@ -59,14 +59,21 @@ public class WordImageUtils {
         .orElse(DEFAULT_DIM);
     var contentType = probeImageType(path, imageStrategy);
 
+    XWPFPicture xwpfPicture;
     try (var in = Files.newInputStream(path, StandardOpenOption.READ)) {
       logger.debug("Adding picture from path {} with content type {} and dimensions {} {}", path, contentType, dim.width, dim.height);
-      return paragraph.createRun()
+      xwpfPicture = paragraph.createRun()
           .addPicture(in, contentType, path.getFileName().toString(), dim.width, dim.height);
     } catch (InvalidFormatException | IOException e) {
       logger.error("Could not insert image from given Path %s.".formatted(path), e);
-      throw new IllegalArgumentException("Could not insert image from given Path.", e);
+      throw new IllegalArgumentException("Could not insert image from given %s".formatted(path), e);
     }
+    try {
+      Files.delete(path);
+    } catch (IOException e) {
+      logger.warn("Could not delete image from %s".formatted(path), e);
+    }
+    return xwpfPicture;
   }
 
 
