@@ -21,4 +21,11 @@ public @interface Image {
    */
   int maxWidth() default -1;
 
+  /**
+   * Whether the resolved image should be deleted from the file system after insertion.
+   *
+   * @return whether the image should be deleted after insertion
+   */
+  boolean deleteAfterInsertion() default true;
+
 }

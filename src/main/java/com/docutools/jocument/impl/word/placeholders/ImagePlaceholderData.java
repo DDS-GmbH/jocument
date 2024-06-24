@@ -21,6 +21,7 @@ public class ImagePlaceholderData extends CustomWordPlaceholderData {
 
   // Options
   private int maxWidth;
+  private boolean deleteAfterInsertion;
 
   public ImagePlaceholderData(Path imagePath) {
     this.imagePath = imagePath;
@@ -28,6 +29,11 @@ public class ImagePlaceholderData extends CustomWordPlaceholderData {
 
   public ImagePlaceholderData withMaxWidth(int maxWidth) {
     this.maxWidth = maxWidth;
+    return this;
+  }
+
+  public ImagePlaceholderData withFileDeletionAfterInsertion(boolean deleteAfterInsertion) {
+    this.deleteAfterInsertion = deleteAfterInsertion;
     return this;
   }
 
@@ -47,7 +53,14 @@ public class ImagePlaceholderData extends CustomWordPlaceholderData {
         try {
           Files.deleteIfExists(path);
         } catch (IOException e) {
-          logger.error(e);
+          logger.warn(e);
+        }
+      }
+      if (deleteAfterInsertion) {
+        try {
+          Files.deleteIfExists(imagePath);
+        } catch (IOException e) {
+          logger.warn(e);
         }
       }
     }
