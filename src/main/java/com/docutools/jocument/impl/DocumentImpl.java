@@ -9,6 +9,7 @@ import java.nio.file.Path;
 import java.util.regex.Pattern;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.poi.util.LocaleUtil;
 
 public abstract class DocumentImpl extends Thread implements Document {
   public static final String GERMAN_SPECIAL_CHARACTERS = "ÄäÖöÜüß";
@@ -40,6 +41,7 @@ public abstract class DocumentImpl extends Thread implements Document {
   @Override
   public void run() {
     try {
+      LocaleUtil.setUserLocale(template.getLocale()); // LU is thread-local
       logger.info("Starting generating document from path {} with template {} and resolver {}", path, template, resolver);
       this.path = generate();
       logger.info("Finished generating document from path {} with template {} and resolver {}", path, template, resolver);

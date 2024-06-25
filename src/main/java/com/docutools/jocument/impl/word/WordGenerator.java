@@ -54,11 +54,9 @@ class WordGenerator {
 
   private void transform(IBodyElement element, List<IBodyElement> remaining) {
     logger.debug("Trying to transform element {}", element);
-    Locale locale = WordUtilities.detectMostCommonLocale(element.getBody().getXWPFDocument())
-        .orElse(LocaleUtil.getUserLocale());
     if (isCustomPlaceholder(element)) {
       resolver.resolve(WordUtilities.extractPlaceholderName((XWPFParagraph) element))
-          .ifPresent(placeholderData -> placeholderData.transform(element, locale, options));
+          .ifPresent(placeholderData -> placeholderData.transform(element, LocaleUtil.getUserLocale(), options));
     } else if (isLoopStart(element, remaining)) {
       unrollLoop((XWPFParagraph) element, remaining);
     } else if (element instanceof XWPFParagraph xwpfParagraph) {
@@ -80,11 +78,9 @@ class WordGenerator {
   }
 
   private void transform(XWPFParagraph paragraph) {
-    Locale locale = WordUtilities.detectMostCommonLocale(paragraph)
-        .orElse(LocaleUtil.getUserLocale());
     Matcher matcher = TAG_PATTERN.matcher(WordUtilities.toString(paragraph));
     if (matcher.find()) {
-      WordUtilities.replaceText(paragraph, matcher.replaceAll(matchResult -> fillPlaceholder(matchResult, locale)));
+      WordUtilities.replaceText(paragraph, matcher.replaceAll(matchResult -> fillPlaceholder(matchResult, LocaleUtil.getUserLocale())));
     }
     logger.debug("Transformed paragraph {}", paragraph);
   }

@@ -2,23 +2,15 @@ package com.docutools.jocument.impl.word;
 
 import com.docutools.jocument.impl.ParsingUtils;
 import java.io.IOException;
-import java.util.Collection;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.MissingResourceException;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-import java.util.stream.Stream;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.poi.xwpf.usermodel.IBody;
 import org.apache.poi.xwpf.usermodel.IBodyElement;
-import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.apache.poi.xwpf.usermodel.XWPFFooter;
 import org.apache.poi.xwpf.usermodel.XWPFHeader;
 import org.apache.poi.xwpf.usermodel.XWPFParagraph;
@@ -294,109 +286,6 @@ public class WordUtilities {
     }
   }
 
-  /**
-   * Returns the most common locale used in {@link org.apache.poi.xwpf.usermodel.XWPFRun}s for out the given
-   * {@link org.apache.poi.xwpf.usermodel.XWPFDocument}.
-   *
-   * @param document the document to parse
-   * @return distinct languages as {@link java.util.Locale} instances
-   */
-  public static Optional<Locale> detectMostCommonLocale(XWPFDocument document) {
-    var tableParagraphs = document.getTables()
-        .stream()
-        .flatMap(table -> getTableEmbeddedParagraphs(table).stream());
-
-    var documentParagraphs = document.getParagraphs().stream();
-
-    return Stream.concat(tableParagraphs, documentParagraphs)
-        .flatMap(paragraph -> paragraph.getRuns().stream())
-        .map(XWPFRun::getLang)
-        .filter(Objects::nonNull)
-        .map(Locale::forLanguageTag)
-        .filter(WordUtilities::isValid)
-        .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()))
-        .entrySet()
-        .stream()
-        .max(Map.Entry.comparingByValue())
-        .map(Map.Entry::getKey);
-  }
-
-  /**
-   * Detect the most common locale of a paragraph by going through every run, retrieving its language
-   * tag, merging them, and retrieving the most common one.
-   *
-   * @param paragraph The paragraph for which the most common locale should be found
-   * @return If at least one locale has been found, the most common one is returned
-   */
-  public static Optional<Locale> detectMostCommonLocale(XWPFParagraph paragraph) {
-    return paragraph
-        .getRuns()
-        .stream()
-        .map(XWPFRun::getLang)
-        .filter(Objects::nonNull)
-        .map(Locale::forLanguageTag)
-        .filter(WordUtilities::isValid)
-        .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()))
-        .entrySet()
-        .stream()
-        .max(Map.Entry.comparingByValue())
-        .map(Map.Entry::getKey);
-  }
-
-  /**
-   * Returns all languages used in {@link org.apache.poi.xwpf.usermodel.XWPFRun}s for out the given
-   * {@link org.apache.poi.xwpf.usermodel.XWPFDocument}.
-   *
-   * @param document the document to parse
-   * @return distinct languages as {@link java.util.Locale} instances
-   */
-  public static Collection<Locale> detectLanguages(XWPFDocument document) {
-    var tableParagraphs = document.getTables()
-        .stream()
-        .flatMap(table -> getTableEmbeddedParagraphs(table).stream());
-
-    var documentParagraphs = document.getParagraphs().stream();
-
-    return Stream.concat(tableParagraphs, documentParagraphs)
-        .flatMap(paragraph -> paragraph.getRuns().stream())
-        .map(XWPFRun::getLang)
-        .filter(Objects::nonNull)
-        .distinct()
-        .map(Locale::forLanguageTag)
-        .filter(WordUtilities::isValid)
-        .toList();
-  }
-
-  /**
-   * Get all the paragraphs which are embedded in a table.
-   * This is done recursively, so paragraphs in tables in a table cell will also be found.
-   *
-   * @param table The table to check for embedded paragraphs
-   * @return A list of all the paragraphs in the table
-   */
-  public static Collection<XWPFParagraph> getTableEmbeddedParagraphs(XWPFTable table) {
-    var paragraphs = new LinkedList<XWPFParagraph>();
-    for (XWPFTableRow row : table.getRows()) {
-      for (XWPFTableCell cell : row.getTableCells()) {
-        paragraphs.addAll(cell.getParagraphs());
-        for (XWPFTable subTable : cell.getTables()) {
-          paragraphs.addAll(getTableEmbeddedParagraphs(subTable));
-        }
-      }
-    }
-    return paragraphs;
-  }
-
-  private static boolean isValid(Locale locale) {
-    //Taken from https://stackoverflow.com/a/3684832
-    try {
-      return locale.getISO3Language() != null && locale.getISO3Country() != null;
-    } catch (MissingResourceException e) {
-      logger.warn("Encountered missing resource exception when trying to verify locale %s".formatted(locale), e);
-      return false;
-    }
-  }
-
   private static XWPFTable copyTableTo(XWPFTable sourceTable, XmlCursor cursor) {
     logger.debug("Copying table {} before {}", sourceTable, cursor);
     var document = sourceTable.getBody().getXWPFDocument();
@@ -488,11 +377,6 @@ public class WordUtilities {
     rpr.set(original.getCTR().getRPr());
     String text = original.getText(0);
     clone.setText(text != null ? text : "");
-  }
-
-  public static Optional<Locale> getDocumentLanguage(XWPFDocument document) {
-    var documentLanguage = document.getProperties().getCoreProperties().getUnderlyingProperties().getLanguageProperty();
-    return documentLanguage.map(Locale::forLanguageTag).or(() -> detectMostCommonLocale(document));
   }
 
   public static String extractPlaceholderName(XWPFParagraph paragraph) {

@@ -10,10 +10,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.poi.util.LocaleUtil;
 import org.apache.poi.xwpf.usermodel.IBodyElement;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
 
@@ -29,10 +27,6 @@ public class WordDocumentImpl extends DocumentImpl {
     logger.info("Starting generation");
     Path file = Files.createTempFile("jocument-", ".docx");
     try (XWPFDocument document = new XWPFDocument(template.openStream())) {
-      var locale = WordUtilities.getDocumentLanguage(document).orElse(Locale.getDefault());
-      LocaleUtil.setUserLocale(locale);
-      logger.info("Set user locale to {}", locale);
-
       List<IBodyElement> bodyElements = new ArrayList<>(document.getBodyElements().size() + document.getHeaderList().size());
       bodyElements.addAll(document.getBodyElements());
       bodyElements.addAll(document.getHeaderList().stream().flatMap(xwpfHeader -> xwpfHeader.getBodyElements().stream()).toList());
