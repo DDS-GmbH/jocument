@@ -10,6 +10,6 @@ public record FutureCaptain(CompletableFuture<String> name,
                             CompletableFuture<Uniform> uniform,
                             CompletableFuture<FirstOfficer> officer,
                             CompletableFuture<List<Service>> services,
-                            @Image
+                            @Image(deleteAfterInsertion = false)
                             CompletableFuture<Path> profilePic) {
 }

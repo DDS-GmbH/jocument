@@ -13,7 +13,7 @@ public class Captain {
   private final Uniform uniform;
   private final FirstOfficer officer;
   private final List<Service> services;
-  @Image(maxWidth = 100)
+  @Image(maxWidth = 100, deleteAfterInsertion = false)
   private final Path profilePic;
   @Translatable
   private final String commandingStyle;
