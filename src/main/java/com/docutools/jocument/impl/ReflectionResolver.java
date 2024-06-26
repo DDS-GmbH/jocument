@@ -470,7 +470,10 @@ public class ReflectionResolver extends PlaceholderResolver {
       return formatTemporal(placeholderName, temporal, locale);
     } else if (property instanceof Path path && isFieldAnnotatedWith(bean.getClass(), placeholderName, Image.class)) {
       return ReflectionUtils.findFieldAnnotation(bean.getClass(), placeholderName, Image.class)
-          .map(image -> new ImagePlaceholderData(path).withMaxWidth(image.maxWidth()).withFileDeletionAfterInsertion(image.deleteAfterInsertion()));
+          .map(image -> new ImagePlaceholderData(path)
+              .withMaxWidth(image.maxWidth())
+              .withMaxHeight(image.maxHeight())
+              .withFileDeletionAfterInsertion(image.deleteAfterInsertion()));
     } else if (property instanceof UUID uuid) {
       return Optional.of(new ScalarPlaceholderData<>(uuid.toString()));
     } else {

@@ -16,10 +16,19 @@ public @interface Image {
 
   /**
    * The maximum pixel width the image should be inserted with. If the image is smaller won't affect it.
+   * A value of 0 is not permitted and will be ignored.
    *
    * @return the maximum pixel width of the image to be inserted
    */
   int maxWidth() default -1;
+
+  /**
+   * The maximum pixel height the image should be inserted with. If the image is smaller won't affect it.
+   * A value of 0 is not permitted and will be ignored.
+   *
+   * @return the maximum pixel height of the image to be inserted
+   */
+  int maxHeight() default -1;
 
   /**
    * Whether the resolved image should be deleted from the file system after insertion.

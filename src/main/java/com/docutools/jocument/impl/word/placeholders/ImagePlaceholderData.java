@@ -20,15 +20,41 @@ public class ImagePlaceholderData extends CustomWordPlaceholderData {
   private final Path imagePath;
 
   // Options
-  private int maxWidth;
+  private int maxWidth = -1;
+  private int maxHeight = -1;
   private boolean deleteAfterInsertion;
 
   public ImagePlaceholderData(Path imagePath) {
     this.imagePath = imagePath;
   }
 
+  /**
+   * Set maximum width of the image. A width of 0 is not permitted and will be ignored.
+   *
+   * @param maxWidth The maximum width the image should have.
+   * @return the image placeholder data with the maxWidth applied (if != 0)
+   */
   public ImagePlaceholderData withMaxWidth(int maxWidth) {
+    if (maxWidth == 0) {
+      logger.warn("A max width of 0 is not permitted");
+      return this;
+    }
     this.maxWidth = maxWidth;
+    return this;
+  }
+
+  /**
+   * Set max height of the image. A height of 0 is not permitted and will be ignored.
+   *
+   * @param maxHeight The maximum height the image should have.
+   * @return the image placeholder data with the maxHeight applied (if != 0)
+   */
+  public ImagePlaceholderData withMaxHeight(int maxHeight) {
+    if (maxHeight == 0) {
+      logger.warn("A max height of 0 is not permitted");
+      return this;
+    }
+    this.maxHeight = maxHeight;
     return this;
   }
 
@@ -69,9 +95,9 @@ public class ImagePlaceholderData extends CustomWordPlaceholderData {
   private Path applyOptions(GenerationOptions options) {
     try {
       var image = options.imageStrategy().load(imagePath);
-      if (maxWidth > 0 && image.getWidth() > maxWidth) {
-        double scale = (double) maxWidth / image.getWidth();
-        var resized = options.imageStrategy().scale(image, scale);
+      double scale = Math.max(image.getWidth() / (double) maxWidth, image.getHeight() / (double) maxHeight);
+      if (scale > 1.0) {
+        var resized = options.imageStrategy().scale(image, 1 / scale);
         image.close();
         image = resized;
       }
