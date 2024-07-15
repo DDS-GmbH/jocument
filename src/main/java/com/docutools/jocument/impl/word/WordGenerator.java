@@ -139,7 +139,7 @@ class WordGenerator {
     return element instanceof XWPFParagraph xwpfParagraph
         && resolver.resolve(
         ParsingUtils.stripBrackets(
-            WordUtilities.toString(xwpfParagraph).trim()
+            WordUtilities.toString(xwpfParagraph)
         )).map(PlaceholderData::getType)
         .map(type -> type == PlaceholderType.CUSTOM)
         .orElse(false);

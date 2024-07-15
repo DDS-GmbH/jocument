@@ -3,10 +3,13 @@ package com.docutools.jocument.impl;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class ParsingUtils {
 
   private static final Pattern PLACEHOLDER_PATTERN = Pattern.compile("\\{\\{([^{}]+)?}}");
+  private static final Logger logger = LogManager.getLogger();
 
   private ParsingUtils() {
   }
@@ -21,7 +24,13 @@ public class ParsingUtils {
     if (value.length() < 4) {
       return value;
     }
-    return value.substring(2, value.length() - 2);
+    Matcher matcher = PLACEHOLDER_PATTERN.matcher(value);
+    if (matcher.find()) {
+      return matcher.group(1);
+    } else {
+      logger.debug("String {} did not contain a placeholder", value);
+      return value;
+    }
   }
 
   public static List<String> getMatchingLoopEnds(String placeholder) {
