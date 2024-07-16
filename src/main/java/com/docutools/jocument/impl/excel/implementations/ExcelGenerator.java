@@ -211,7 +211,7 @@ public class ExcelGenerator {
                   .map(nextRow -> nextRow.getCell(nextRow.getFirstCellNum()))
                   .filter(nextCell -> nextCell.getCellType() == CellType.STRING)
                   .map(Cell::getStringCellValue)
-                  .anyMatch(text -> endLoopMarkers.contains(text.strip()));
+                  .anyMatch(text -> endLoopMarkers.contains(text.strip().toLowerCase()));
             }).orElse(false);
       }
     }

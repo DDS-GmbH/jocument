@@ -34,7 +34,7 @@ public class ParsingUtils {
   }
 
   public static List<String> getMatchingLoopEnds(String placeholder) {
-    return List.of("{{/%s}}".formatted(placeholder), "{{end-%s}}".formatted(placeholder));
+    return List.of("{{/%s}}".formatted(placeholder).toLowerCase(), "{{end-%s}}".formatted(placeholder).toLowerCase());
   }
 
   public static Matcher matchPlaceholders(String value) {

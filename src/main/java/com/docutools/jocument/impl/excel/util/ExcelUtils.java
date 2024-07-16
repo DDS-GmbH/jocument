@@ -87,7 +87,7 @@ public class ExcelUtils {
     if (getNumberOfNonEmptyCells(row) == 1) {
       var cell = row.getCell(row.getFirstCellNum());
       if (cell.getCellType() == CellType.STRING) {
-        return endPlaceholders.stream().anyMatch(endPlaceholder -> cell.getStringCellValue().equals(endPlaceholder));
+        return endPlaceholders.stream().anyMatch(endPlaceholder -> cell.getStringCellValue().strip().toLowerCase().equals(endPlaceholder));
       }
     }
     return false;

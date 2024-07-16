@@ -112,25 +112,26 @@ class WordGenerator {
     return remaining.stream()
         //Could be written nice with `takeUntil(element -> (element instanceof XP xp && eLM.equals(WU.toString(xp)))
         .takeWhile(element -> !(element instanceof XWPFParagraph xwpfParagraph
-            && endLoopMarkers.stream().anyMatch(endLoopMarker -> endLoopMarker.equals(WordUtilities.toString(xwpfParagraph).strip()))))
+            && endLoopMarkers.stream().anyMatch(endLoopMarker -> endLoopMarker.equals(WordUtilities.toString(xwpfParagraph).strip().toLowerCase()))))
         .toList();
   }
 
   private boolean isLoopStart(IBodyElement element, List<IBodyElement> remaining) {
     if (element instanceof XWPFParagraph xwpfParagraph) {
-      var placeholderName = ParsingUtils.stripBrackets(
-          WordUtilities.toString(xwpfParagraph)
-      );
-      return resolver.resolve(placeholderName)
-          .filter(placeholderData -> placeholderData.getType() == PlaceholderType.SET)
-          .map(placeholderData -> {
-            var endLoopMarkers = ParsingUtils.getMatchingLoopEnds(placeholderName);
-            return remaining.stream()
-                .filter(XWPFParagraph.class::isInstance)
-                .map(XWPFParagraph.class::cast)
-                .map(XWPFParagraph::getText)
-                .anyMatch(text -> endLoopMarkers.contains(text.strip()));
-          }).orElse(false);
+      Matcher matcher = TAG_PATTERN.matcher(WordUtilities.toString(xwpfParagraph));
+      if (matcher.find()) {
+        var placeholderName = matcher.group(1);
+        return resolver.resolve(placeholderName)
+            .filter(placeholderData -> placeholderData.getType() == PlaceholderType.SET)
+            .map(placeholderData -> {
+              var endLoopMarkers = ParsingUtils.getMatchingLoopEnds(placeholderName);
+              return remaining.stream()
+                  .filter(XWPFParagraph.class::isInstance)
+                  .map(XWPFParagraph.class::cast)
+                  .map(XWPFParagraph::getText)
+                  .anyMatch(text -> endLoopMarkers.contains(text.strip().toLowerCase()));
+            }).orElse(false);
+      }
     }
     return false;
   }
