@@ -276,7 +276,7 @@ public class SXSSFWriter implements ExcelWriter {
     var outputStream = new BufferedOutputStream(Files.newOutputStream(path));
     workbook.write(outputStream);
     outputStream.close();
-    workbook.dispose();
+    workbook.close();
   }
 
   @Override

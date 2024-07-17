@@ -2,6 +2,7 @@ package com.docutools.jocument.impl;
 
 import java.lang.annotation.Annotation;
 import java.time.temporal.Temporal;
+import java.util.Arrays;
 import java.util.Optional;
 import java.util.Set;
 import org.apache.logging.log4j.LogManager;
@@ -37,13 +38,14 @@ public class ReflectionUtils {
    */
   public static <A extends Annotation> Optional<A> findFieldAnnotation(Class<?> baseClass, String fieldName, Class<A> annotationType) {
     logger.debug("Searching for annotation {} in class {}", fieldName, baseClass);
-    try {
-      return Optional.ofNullable(baseClass.getDeclaredField(fieldName)
-          .getDeclaredAnnotation(annotationType));
-    } catch (NoSuchFieldException e) {
-      logger.info("Did not find annotation {} in class {}", fieldName, baseClass);
-      return Optional.empty();
-    }
+    return Arrays.stream(baseClass.getDeclaredFields())
+        .filter(field -> field.getName().equalsIgnoreCase(fieldName))
+        .findFirst()
+        .map(field -> field.getDeclaredAnnotation(annotationType))
+        .or(() -> {
+          logger.info("Did not find annotation {} in class {}", fieldName, baseClass);
+          return Optional.empty();
+        });
   }
 
   public static boolean isWrapperType(Class<?> clazz) {

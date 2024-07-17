@@ -106,11 +106,14 @@ public class ReflectionResolver extends PlaceholderResolver {
 
   private static boolean isFieldAnnotatedWith(Class<?> clazz, String fieldName, Class<? extends Annotation> annotation) {
     try {
-      return clazz.getDeclaredField(fieldName)
-          .getDeclaredAnnotation(annotation) != null;
-    } catch (NoSuchFieldException e) {
-      logger.debug("Class %s does not have field %s".formatted(clazz, fieldName));
-      return false;
+      return Arrays.stream(clazz.getDeclaredFields())
+          .filter(field -> field.getName().equalsIgnoreCase(fieldName))
+          .findFirst()
+          .map(field -> field.getDeclaredAnnotation(annotation) != null)
+          .orElseGet(() -> {
+            logger.debug("Class %s does not have field %s".formatted(clazz, fieldName));
+            return false;
+          });
     } catch (SecurityException e) {
       logger.warn(e);
       return false;
@@ -510,6 +513,7 @@ public class ReflectionResolver extends PlaceholderResolver {
           .orElseThrow(() -> new NoSuchMethodException("Record %s does not have field %s".formatted(bean.getClass().toString(), placeholderName)));
       return Optional.ofNullable(accessor.invoke(bean));
     } else {
+      //This is case-sensitive
       return Optional.ofNullable(pub.getProperty(bean, placeholderName));
     }
   }
