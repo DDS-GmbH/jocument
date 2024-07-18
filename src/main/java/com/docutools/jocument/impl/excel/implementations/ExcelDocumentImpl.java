@@ -6,12 +6,15 @@ import com.docutools.jocument.Template;
 import com.docutools.jocument.impl.DocumentImpl;
 import com.docutools.jocument.impl.excel.interfaces.ExcelWriter;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Iterator;
+import java.util.stream.StreamSupport;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.xssf.usermodel.XSSFFormulaEvaluator;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 
@@ -36,7 +39,7 @@ public class ExcelDocumentImpl extends DocumentImpl {
   }
 
   /**
-   * Start generation of a excel report from the template supplied in the constructor, using the also supplied
+   * Start generation of an excel report from the template supplied in the constructor, using the also supplied
    * resolver for resolving placeholders.
    *
    * @return The path to the generated report
@@ -46,17 +49,19 @@ public class ExcelDocumentImpl extends DocumentImpl {
   protected Path generate() throws IOException {
     logger.info("Starting generation");
     Path file = Files.createTempFile("jocument-", ".xlsx");
-    ExcelWriter excelWriter = new SXSSFWriter(file);
     try (XSSFWorkbook workbook = new XSSFWorkbook(template.openStream())) {
+      ExcelWriter excelWriter = new XSSFWriter(workbook);
       for (Iterator<Sheet> it = workbook.sheetIterator(); it.hasNext(); ) {
         Sheet sheet = it.next();
-        logger.info("Starting generation of sheet {}", sheet.getSheetName());
         excelWriter.newSheet(sheet);
-        ExcelGenerator.apply(resolver, sheet.rowIterator(), excelWriter, options);
+        logger.info("Starting generation of sheet {}", sheet.getSheetName());
+        ExcelGenerator.apply(resolver, StreamSupport.stream(sheet.spliterator(), false).toList(), excelWriter, options);
       }
-    } finally {
-      excelWriter.recalculateFormulas();
-      excelWriter.complete();
+      XSSFFormulaEvaluator.evaluateAllFormulaCells(workbook);
+      try (OutputStream os = Files.newOutputStream(file)) {
+        logger.info("Writing document to {}", os);
+        workbook.write(os);
+      }
     }
     return file;
   }

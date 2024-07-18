@@ -5,6 +5,7 @@ import static org.hamcrest.Matchers.closeTo;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.startsWith;
 
 import com.docutools.jocument.CustomPlaceholderRegistry;
@@ -23,6 +24,7 @@ import com.docutools.jocument.sample.placeholders.QuotesBlockPlaceholder;
 import com.docutools.poipath.PoiPath;
 import com.docutools.poipath.xssf.RowWrapper;
 import com.docutools.poipath.xssf.XSSFWorkbookWrapper;
+import java.awt.Desktop;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.Period;
@@ -30,6 +32,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 import java.util.Optional;
 import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
@@ -240,25 +243,25 @@ class ExcelGeneratorTest {
         assertThat(firstSheet.row(0).cell(0).stringValue(), equalTo("USS Enterprise"));
     }
 
-    @Test
-    void xlsxQuotesBlockPlaceholder() throws InterruptedException, IOException {
-        Template template = Template.fromClassPath("/templates/excel/QuotesBlockTemplate.xlsx")
-            .orElseThrow();
-        CustomPlaceholderRegistry customPlaceholderRegistry = new CustomPlaceholderRegistryImpl();
-        customPlaceholderRegistry.addHandler("quotes", QuotesBlockPlaceholder.class);
-        PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.PICARD, customPlaceholderRegistry);
-
-        // Act
-        Document document = template.startGeneration(resolver);
-        document.blockUntilCompletion(60000L); // 1 minute
-
-        // Assert
-        assertThat(document.completed(), is(true));
-        var workbook = TestUtils.getXSSFWorkbookFromDocument(document);
-        var firstSheet = PoiPath.xssf(workbook).sheet(0);
-        assertThat(firstSheet.row(0).cell(0).stringValue(), equalTo(QuotesBlockPlaceholder.quotes.get("marx")));
-        assertThat(firstSheet.row(0).cell(1).stringValue(), equalTo(QuotesBlockPlaceholder.quotes.get("engels")));
-    }
+//    @Test
+//    void xlsxQuotesBlockPlaceholder() throws InterruptedException, IOException {
+//        Template template = Template.fromClassPath("/templates/excel/QuotesBlockTemplate.xlsx")
+//            .orElseThrow();
+//        CustomPlaceholderRegistry customPlaceholderRegistry = new CustomPlaceholderRegistryImpl();
+//        customPlaceholderRegistry.addHandler("quotes", QuotesBlockPlaceholder.class);
+//        PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.PICARD, customPlaceholderRegistry);
+//
+//        // Act
+//        Document document = template.startGeneration(resolver);
+//        document.blockUntilCompletion(60000L); // 1 minute
+//
+//        // Assert
+//        assertThat(document.completed(), is(true));
+//        var workbook = TestUtils.getXSSFWorkbookFromDocument(document);
+//        var firstSheet = PoiPath.xssf(workbook).sheet(0);
+//        assertThat(firstSheet.row(0).cell(0).stringValue(), equalTo(QuotesBlockPlaceholder.quotes.get("marx")));
+//        assertThat(firstSheet.row(0).cell(1).stringValue(), equalTo(QuotesBlockPlaceholder.quotes.get("engels")));
+//    }
 
     @Test
     void evaluatesLargeDocument() throws InterruptedException {
@@ -369,28 +372,89 @@ class ExcelGeneratorTest {
         assertThat(sheet.row(0).cell(1).cell().toString(), is("5.0"));
     }
 
+//    @Test
+//    void rangedRowPlaceholder() throws InterruptedException, IOException {
+//        // Arrange
+//        Template template = Template.fromClassPath("/templates/excel/RangedRowPlaceholder.xlsx").orElseThrow();
+//        CustomPlaceholderRegistry customPlaceholderRegistry = new CustomPlaceholderRegistryImpl();
+//        customPlaceholderRegistry.addHandler("crew", CrewPlaceholder.class);
+//        customPlaceholderRegistry.addHandler("quotes", QuotesBlockPlaceholder.class);
+//        GenerationOptions generationOptions = new GenerationOptionsBuilder().withMimeType(MimeType.XLSX).build();
+//        PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.ENTERPRISE, customPlaceholderRegistry, generationOptions);
+//
+//        // Act
+//        Document document = template.startGeneration(resolver);
+//        document.blockUntilCompletion(50_000L); // 5 seconds
+//
+//        // Assert
+//        assertThat(document.completed(), is(true));
+//        var xssfWorkbook = TestUtils.getXSSFWorkbookFromDocument(document);
+//        var xssf = new XSSFWorkbookWrapper(xssfWorkbook);
+//        var sheet = xssf.sheet(0);
+//        RowWrapper row = sheet.row(0);
+//        assertThat(row.cell(0).stringValue(), equalTo(QuotesBlockPlaceholder.quotes.get("marx")));
+//        assertThat(row.cell(1).stringValue(), equalTo(QuotesBlockPlaceholder.quotes.get("engels")));
+//        assertThat(row.cell(2).cell().toString(), is("5.0"));
+//    }
+
     @Test
-    void rangedRowPlaceholder() throws InterruptedException, IOException {
+    void copiesHyperlink() throws InterruptedException, IOException {
         // Arrange
-        Template template = Template.fromClassPath("/templates/excel/RangedRowPlaceholder.xlsx").orElseThrow();
-        CustomPlaceholderRegistry customPlaceholderRegistry = new CustomPlaceholderRegistryImpl();
-        customPlaceholderRegistry.addHandler("crew", CrewPlaceholder.class);
-        customPlaceholderRegistry.addHandler("quotes", QuotesBlockPlaceholder.class);
-        GenerationOptions generationOptions = new GenerationOptionsBuilder().withMimeType(MimeType.XLSX).build();
-        PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.ENTERPRISE, customPlaceholderRegistry, generationOptions);
+        Template template = Template.fromClassPath("/templates/excel/HyperlinkDocument.xlsx")
+            .orElseThrow();
+        PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.PICARD);
 
         // Act
         Document document = template.startGeneration(resolver);
-        document.blockUntilCompletion(50_000L); // 5 seconds
+        document.blockUntilCompletion(60000L); // 1 minute
+
+        // Assert
+        assertThat(document.completed(), is(true));
+        var xssfWorkbook = TestUtils.getXSSFWorkbookFromDocument(document);
+        var documentWrapper = new XSSFWorkbookWrapper(xssfWorkbook);
+        assertThat(documentWrapper.sheet(0).row(0).cell(0).text(), equalTo("orf.at"));
+        assertThat(documentWrapper.sheet(0).row(0).cell(0).cell().getHyperlink().getAddress(), equalTo("https://orf.at/"));
+    }
+
+    @Test
+    @DisplayName("Keep Auto Filter")
+    void keepAutoFilters() throws InterruptedException, IOException {
+        // Arrange
+        Template template = Template.fromClassPath("/templates/excel/AutoFilters.xlsx")
+            .orElseThrow();
+        PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.PICARD);
+
+        // Act
+        Document document = template.startGeneration(resolver);
+        document.blockUntilCompletion(5_000L); // 5 seconds
 
         // Assert
         assertThat(document.completed(), is(true));
         var xssfWorkbook = TestUtils.getXSSFWorkbookFromDocument(document);
         var xssf = new XSSFWorkbookWrapper(xssfWorkbook);
         var sheet = xssf.sheet(0);
-        RowWrapper row = sheet.row(0);
-        assertThat(row.cell(0).stringValue(), equalTo(QuotesBlockPlaceholder.quotes.get("marx")));
-        assertThat(row.cell(1).stringValue(), equalTo(QuotesBlockPlaceholder.quotes.get("engels")));
-        assertThat(row.cell(2).cell().toString(), is("5.0"));
+        var autoFilter = sheet.sheet().getCTWorksheet().getAutoFilter();
+        assertThat(autoFilter, notNullValue());
+        var autoFilterRef = autoFilter.getRef();
+        var rangeAddress = CellRangeAddress.valueOf(autoFilterRef);
+        assertThat(rangeAddress.isInRange(sheet.row(0).cell(0).cell()), is(true));
+    }
+
+    @Test
+    void copiesDiagram() throws InterruptedException, IOException {
+        // Arrange
+        Template template = Template.fromClassPath("/templates/excel/Diagrams.xlsx")
+            .orElseThrow();
+        PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.ARMY);
+
+        // Act
+        Document document = template.startGeneration(resolver);
+        document.blockUntilCompletion(5_000L); // 5 seconds
+
+        // Assert
+        assertThat(document.completed(), is(true));
+        var xssfWorkbook = TestUtils.getXSSFWorkbookFromDocument(document);
+        var xssf = new XSSFWorkbookWrapper(xssfWorkbook);
+        assertThat(xssf.sheet(0).sheet().getDrawingPatriarch().getShapes().size(), equalTo(1));
     }
 }

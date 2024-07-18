@@ -72,4 +72,12 @@ public interface ExcelWriter {
   void addCell(Cell cell);
 
   void recalculateFormulas();
+
+  void setRow(Row row);
+
+  void deleteRows(int loopStart, int noRows);
+
+  void shiftRows(int startingRow, int loopBodySize);
+
+  void resetRowOffset();
 }
