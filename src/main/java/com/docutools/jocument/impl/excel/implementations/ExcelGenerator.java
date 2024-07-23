@@ -79,9 +79,9 @@ public class ExcelGenerator {
         if (isLoopStart(row)) {
           toProcess = handleLoop(row, toProcess);
           if (nestedLoopDepth > 0) {
-//            excelWriter.addIgnoreRow(row.getRowNum()); //subtract the looping tags
-            excelWriter.addRowOffset(-2);
-            offsetAccumulator += 2;
+            excelWriter.addIgnoreRow(row.getRowNum()); //ignore the loop tags
+//            excelWriter.addRowOffset(-2);
+//            offsetAccumulator += 2;
           }
         } else {
           handleRow(row);
@@ -90,7 +90,7 @@ public class ExcelGenerator {
         logger.warn(e);
       }
     }
-    excelWriter.addRowOffset(offsetAccumulator);
+//    excelWriter.addRowOffset(offsetAccumulator);
     logger.debug("Finished generation of elements by resolver {}", resolver);
   }
 
@@ -153,9 +153,13 @@ public class ExcelGenerator {
     PlaceholderData placeholderData = getPlaceholderData(row);
     placeholderData.stream().forEach(placeholderResolver -> {
       ExcelGenerator.apply(placeholderResolver, finalLoopBody, excelWriter, nestedLoopDepth + 1, options);
+//      todo for the collections test we need this placeholder, for the nested loop one not?
       excelWriter.addRowOffset(loopBodySize);
       excelWriter.shiftRows(row.getRowNum(), innerEmptyTrailingRows);
     });
+    if (nestedLoopDepth != 0 && placeholderData.count() > 0) {
+      excelWriter.addRowOffset(-loopBodySize);
+    }
     if (nestedLoopDepth == 0) {
       int rowNum = row.getRowNum();
       excelWriter.deleteRows(rowNum, loopSize);

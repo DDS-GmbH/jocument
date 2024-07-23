@@ -58,8 +58,8 @@ public class XSSFWriter implements ExcelWriter {
 
   @Override
   public void newRow(Row row) {
-    logger.debug("Creating new row {}", row.getRowNum() + rowOffset - 1); //row num is 0 based
-    currentRow = currentSheet.createRow(row.getRowNum() + rowOffset - 1);
+    logger.debug("Creating new row {}", row.getRowNum() + rowOffset - 1 - ignoredRows.size() * 2); //row num is 0 based
+    currentRow = currentSheet.createRow(row.getRowNum() + rowOffset - 1 - ignoredRows.size() * 2);
     currentRow.setHeight(row.getHeight());
     if (row.isFormatted()) {
       currentRow.setRowStyle(cellStyleMap.computeIfAbsent((int) row.getRowStyle().getIndex(), i -> copyCellStyle(row.getRowStyle())));
@@ -208,8 +208,8 @@ public class XSSFWriter implements ExcelWriter {
   @Override
   public void shiftRows(int startingRow, int toShift) {
     //rows are 1 indexed, row nums 0
-    if (startingRow + rowOffset - 1  <= currentSheet.getLastRowNum()) {
-      currentSheet.shiftRows(startingRow + rowOffset - 1, currentSheet.getLastRowNum(), toShift);
+    if (startingRow + rowOffset - 1 - ignoredRows.size() * 2  <= currentSheet.getLastRowNum()) {
+      currentSheet.shiftRows(startingRow + rowOffset - 1 - ignoredRows.size() * 2, currentSheet.getLastRowNum(), toShift);
     }
   }
 
