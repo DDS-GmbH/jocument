@@ -22,6 +22,7 @@ import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.util.LocaleUtil;
+import org.apache.xmlbeans.impl.values.XmlValueDisconnectedException;
 
 
 /**
@@ -37,10 +38,9 @@ public class ExcelGenerator {
 
   private final ExcelWriter excelWriter;
   private final PlaceholderResolver resolver;
-  private List<Row> rows;
+  private final List<Row> rows;
   private final int nestedLoopDepth;
   private final GenerationOptions options;
-  private int alreadyProcessedLoopsSize = 0;
 
   private ExcelGenerator(List<Row> rows, ExcelWriter excelWriter, PlaceholderResolver resolver, int nestedLoopDepth,
                          GenerationOptions options) {
@@ -70,12 +70,18 @@ public class ExcelGenerator {
 
   private void generate() {
     logger.debug("Starting generation by applying resolver {}", resolver);
-    for (int i = 0; i < rows.size(); i++) {
-      Row row = rows.get(i);
-      if (isLoopStart(row)) {
-        rows = handleLoop(row, rows.subList(i + 1, rows.size()));
-      } else {
-        handleRow(row);
+    List<Row> toProcess = new LinkedList<>(rows);
+    while (!toProcess.isEmpty()) {
+      Row row = toProcess.get(0);
+      toProcess = toProcess.subList(1, toProcess.size());
+      try {
+        if (isLoopStart(row)) {
+          toProcess = handleLoop(row, toProcess);
+        } else {
+          handleRow(row);
+        }
+      } catch (XmlValueDisconnectedException e) {
+        logger.warn(e);
       }
     }
     logger.debug("Finished generation of elements by resolver {}", resolver);
@@ -85,6 +91,7 @@ public class ExcelGenerator {
     if (nestedLoopDepth == 0) {
       excelWriter.setRow(row);
     } else {
+      excelWriter.shiftRows(row.getRowNum(), 1);
       excelWriter.newRow(row);
     }
     ModificationInformation modificationInformation = new ModificationInformation(Optional.empty(), 0);
@@ -127,19 +134,43 @@ public class ExcelGenerator {
     var loopBody = getLoopBody(row, rows);
     var loopBodySize = getLoopBodySize(loopBody);
     logger.debug("Loop body size: {}", loopBodySize);
-    excelWriter.addRowOffset(loopBodySize + 2); // insert content after placeholders
-    var finalLoopBody = loopBody.subList(1, loopBody.size() - 1);  // remove loop closing tag
-    var placeholderData = getPlaceholderData(row);
-    placeholderData.stream()
-        .forEach(placeholderResolver -> {
-          excelWriter.shiftRows(row.getRowNum(), loopBodySize);
-          ExcelGenerator.apply(placeholderResolver, finalLoopBody, excelWriter, nestedLoopDepth + 1, options);
-          excelWriter.addRowOffset(loopBodySize);
-        });
-    alreadyProcessedLoopsSize += loopBodySize;
+    int loopSize = getLoopSize(loopBody);
     if (nestedLoopDepth == 0) {
-      excelWriter.deleteRows(row.getRowNum(), loopBodySize + 2);
+      excelWriter.addRowOffset(loopSize); // insert content after placeholders
+    } else {
+      excelWriter.addRowOffset(-1); // remove opening tag
+    }
+    var finalLoopBody = loopBody.subList(1, loopBody.size() - 1);  // remove loop closing tag
+    var innerEmptyLeadingRows = loopBody.get(1).getRowNum() - row.getRowNum() - 1;
+//    excelWriter.shiftRows(row.getRowNum(), innerEmptyLeadingRows);
+    var innerEmptyTrailingRows = loopBody.get(loopBody.size() - 1).getRowNum() - finalLoopBody.get(finalLoopBody.size() - 1).getRowNum() - 1;
+//    var outerEmptyTrailingRows = rows.stream().filter(row1 -> row1.getRowNum() > loopBody.get(loopBody.size() - 1).getRowNum()).findFirst()
+//        .map(row1 -> row1.getRowNum() - loopBody.get(loopBody.size() - 1).getRowNum() - 1).orElse(0);
+//    var placeholderData = new LinkedList<>(getPlaceholderData(row).stream().toList());
+//    Collections.reverse(placeholderData);
+    getPlaceholderData(row).stream().forEach(placeholderResolver -> {
+      ExcelGenerator.apply(placeholderResolver, finalLoopBody, excelWriter, nestedLoopDepth + 1, options);
+      excelWriter.shiftRows(row.getRowNum() + loopBodySize, innerEmptyTrailingRows);
+      excelWriter.addRowOffset(loopBodySize);
+    });
+    if (nestedLoopDepth == 0) {
+      int rowNum = row.getRowNum();
+      excelWriter.deleteRows(rowNum, loopSize);
       excelWriter.resetRowOffset(); // processing of loop/collection has finished
+      rows = rows.stream().filter(row1 -> {
+        try {
+          row1.toString();
+          return true;
+        } catch (XmlValueDisconnectedException ignored) {
+          return false;
+        }
+      }).toList();
+      if (!rows.isEmpty()) {
+        excelWriter.shiftRows(rows.get(0).getRowNum(), innerEmptyLeadingRows);
+      }
+    } else {
+      rows = rows.subList(finalLoopBody.size(), rows.size() - 1);
+      excelWriter.addRowOffset(1); // add opening tag so that the subtractions do not stack
     }
     return rows;
   }

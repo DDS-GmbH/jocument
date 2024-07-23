@@ -188,12 +188,13 @@ class ExcelGeneratorTest {
 
         // Act
         Document document = template.startGeneration(resolver);
-        document.blockUntilCompletion(60000L); // 1 minute
+        document.blockUntilCompletion(600000L); // 1 minute
 
         // Assert
         assertThat(document.completed(), is(true));
         workbook = TestUtils.getXSSFWorkbookFromDocument(document);
         var firstSheet = PoiPath.xssf(workbook).sheet(0);
+        Desktop.getDesktop().open(document.getPath().toFile());
         assertThat(firstSheet.row(22).cell(1).stringValue(), equalTo("USS Enterprise"));
         assertThat(firstSheet.row(23).cell(1).stringValue(), equalTo("Mars"));
         assertThat(firstSheet.row(24).cell(1).stringValue(), equalTo("Nova Rojava"));

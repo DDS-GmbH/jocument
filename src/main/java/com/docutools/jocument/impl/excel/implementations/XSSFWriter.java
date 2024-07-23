@@ -203,9 +203,10 @@ public class XSSFWriter implements ExcelWriter {
   }
 
   @Override
-  public void shiftRows(int startingRow, int loopBodySize) {
-    if (startingRow + rowOffset <= currentSheet.getLastRowNum()) {
-      currentSheet.shiftRows(startingRow + rowOffset, currentSheet.getLastRowNum(), loopBodySize);
+  public void shiftRows(int startingRow, int toShift) {
+    //rows are 1 indexed, row nums 0
+    if (startingRow + rowOffset - 1 <= currentSheet.getLastRowNum()) {
+      currentSheet.shiftRows(startingRow + rowOffset - 1, currentSheet.getLastRowNum(), toShift);
     }
   }
 
