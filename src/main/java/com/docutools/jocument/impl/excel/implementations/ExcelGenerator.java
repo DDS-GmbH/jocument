@@ -71,12 +71,18 @@ public class ExcelGenerator {
   private void generate() {
     logger.debug("Starting generation by applying resolver {}", resolver);
     List<Row> toProcess = new LinkedList<>(rows);
+    var offsetAccumulator = 0;
     while (!toProcess.isEmpty()) {
       Row row = toProcess.get(0);
       toProcess = toProcess.subList(1, toProcess.size());
       try {
         if (isLoopStart(row)) {
           toProcess = handleLoop(row, toProcess);
+          if (nestedLoopDepth > 0) {
+//            excelWriter.addIgnoreRow(row.getRowNum()); //subtract the looping tags
+            excelWriter.addRowOffset(-2);
+            offsetAccumulator += 2;
+          }
         } else {
           handleRow(row);
         }
@@ -84,6 +90,7 @@ public class ExcelGenerator {
         logger.warn(e);
       }
     }
+    excelWriter.addRowOffset(offsetAccumulator);
     logger.debug("Finished generation of elements by resolver {}", resolver);
   }
 
@@ -142,16 +149,12 @@ public class ExcelGenerator {
     }
     var finalLoopBody = loopBody.subList(1, loopBody.size() - 1);  // remove loop closing tag
     var innerEmptyLeadingRows = loopBody.get(1).getRowNum() - row.getRowNum() - 1;
-//    excelWriter.shiftRows(row.getRowNum(), innerEmptyLeadingRows);
     var innerEmptyTrailingRows = loopBody.get(loopBody.size() - 1).getRowNum() - finalLoopBody.get(finalLoopBody.size() - 1).getRowNum() - 1;
-//    var outerEmptyTrailingRows = rows.stream().filter(row1 -> row1.getRowNum() > loopBody.get(loopBody.size() - 1).getRowNum()).findFirst()
-//        .map(row1 -> row1.getRowNum() - loopBody.get(loopBody.size() - 1).getRowNum() - 1).orElse(0);
-//    var placeholderData = new LinkedList<>(getPlaceholderData(row).stream().toList());
-//    Collections.reverse(placeholderData);
-    getPlaceholderData(row).stream().forEach(placeholderResolver -> {
+    PlaceholderData placeholderData = getPlaceholderData(row);
+    placeholderData.stream().forEach(placeholderResolver -> {
       ExcelGenerator.apply(placeholderResolver, finalLoopBody, excelWriter, nestedLoopDepth + 1, options);
-      excelWriter.shiftRows(row.getRowNum() + loopBodySize, innerEmptyTrailingRows);
       excelWriter.addRowOffset(loopBodySize);
+      excelWriter.shiftRows(row.getRowNum(), innerEmptyTrailingRows);
     });
     if (nestedLoopDepth == 0) {
       int rowNum = row.getRowNum();
@@ -169,7 +172,7 @@ public class ExcelGenerator {
         excelWriter.shiftRows(rows.get(0).getRowNum(), innerEmptyLeadingRows);
       }
     } else {
-      rows = rows.subList(finalLoopBody.size(), rows.size() - 1);
+      rows = rows.subList(finalLoopBody.size() + 1, rows.size());
       excelWriter.addRowOffset(1); // add opening tag so that the subtractions do not stack
     }
     return rows;

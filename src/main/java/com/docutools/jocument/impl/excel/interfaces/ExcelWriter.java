@@ -80,4 +80,6 @@ public interface ExcelWriter {
   void shiftRows(int startingRow, int loopBodySize);
 
   void resetRowOffset();
+
+  void addIgnoreRow(int row);
 }
