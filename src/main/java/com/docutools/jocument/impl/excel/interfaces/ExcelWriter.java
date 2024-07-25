@@ -82,4 +82,12 @@ public interface ExcelWriter {
   void resetRowOffset();
 
   void addIgnoreRow(int row);
+
+  void preloadOffset(int offset);
+
+  void commitOffset();
+
+  void updateOffset(int nestedLoopDepth, int offsetAccumulator);
+
+  void clearOffsets(int nestedLoopDepth);
 }

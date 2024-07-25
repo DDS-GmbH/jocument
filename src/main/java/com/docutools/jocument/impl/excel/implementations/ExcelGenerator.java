@@ -77,11 +77,12 @@ public class ExcelGenerator {
       toProcess = toProcess.subList(1, toProcess.size());
       try {
         if (isLoopStart(row)) {
-          toProcess = handleLoop(row, toProcess);
+          ResultTuple resultTuple = handleLoop(row, toProcess);
+          toProcess = resultTuple.rows();
+          offsetAccumulator += resultTuple.iterationOffset();
           if (nestedLoopDepth > 0) {
-            excelWriter.addIgnoreRow(row.getRowNum()); //ignore the loop tags
-//            excelWriter.addRowOffset(-2);
-//            offsetAccumulator += 2;
+            excelWriter.addRowOffset(-2); // do not consider the loop tags anymore in this iteration
+            offsetAccumulator += 2; // add the offset for the loop tags for the next iteration
           }
         } else {
           handleRow(row);
@@ -90,7 +91,7 @@ public class ExcelGenerator {
         logger.warn(e);
       }
     }
-//    excelWriter.addRowOffset(offsetAccumulator);
+//    excelWriter.addRowOffset(offsetAccumulator); //todo I think this should be added after the outer iteration finishes
     logger.debug("Finished generation of elements by resolver {}", resolver);
   }
 
@@ -136,7 +137,7 @@ public class ExcelGenerator {
     return ModificationInformation.empty();
   }
 
-  private List<Row> handleLoop(Row row, List<Row> rows) {
+  private ResultTuple handleLoop(Row row, List<Row> rows) {
     logger.debug("Handling loop at row {}", row.getRowNum());
     var loopBody = getLoopBody(row, rows);
     var loopBodySize = getLoopBodySize(loopBody);
@@ -152,12 +153,18 @@ public class ExcelGenerator {
     var innerEmptyTrailingRows = loopBody.get(loopBody.size() - 1).getRowNum() - finalLoopBody.get(finalLoopBody.size() - 1).getRowNum() - 1;
     PlaceholderData placeholderData = getPlaceholderData(row);
     placeholderData.stream().forEach(placeholderResolver -> {
+      excelWriter.updateOffset(nestedLoopDepth, loopBodySize + 2);
       ExcelGenerator.apply(placeholderResolver, finalLoopBody, excelWriter, nestedLoopDepth + 1, options);
-//      todo for the collections test we need this placeholder, for the nested loop one not?
       excelWriter.addRowOffset(loopBodySize);
       excelWriter.shiftRows(row.getRowNum(), innerEmptyTrailingRows);
     });
     if (nestedLoopDepth != 0 && placeholderData.count() > 0) {
+      /*
+       as the first iteration is added in place of the original placeholder, we need to remove one offset here for the next placeholders in the
+       current iteration as we need the offset in the next iteration of the outer loop though, it is added at its end again via the return value in
+       the `ResultTuple`
+      */
+      excelWriter.shiftRows(row.getRowNum(), -innerEmptyTrailingRows);
       excelWriter.addRowOffset(-loopBodySize);
     }
     if (nestedLoopDepth == 0) {
@@ -179,7 +186,7 @@ public class ExcelGenerator {
       rows = rows.subList(finalLoopBody.size() + 1, rows.size());
       excelWriter.addRowOffset(1); // add opening tag so that the subtractions do not stack
     }
-    return rows;
+    return new ResultTuple(loopBodySize, rows);
   }
 
   private List<Row> getLoopBody(Row row, List<Row> rows) {
@@ -256,5 +263,8 @@ public class ExcelGenerator {
       }
     }
     return false;
+  }
+
+  private record ResultTuple(int iterationOffset, List<Row> rows) {
   }
 }

@@ -4,6 +4,7 @@ import com.docutools.jocument.impl.excel.interfaces.ExcelWriter;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import org.apache.logging.log4j.LogManager;
@@ -41,6 +42,8 @@ public class XSSFWriter implements ExcelWriter {
   private int leftMostColumn = -1;
   private int rightMostColumn = -1;
   private final Set<Integer> ignoredRows = new HashSet<>();
+  private final Map<Integer, Integer> offsetMap = new HashMap<>();
+  private int preloadedOffset;
 
   /**
    * Creates a new SXSSFWriter.
@@ -222,6 +225,37 @@ public class XSSFWriter implements ExcelWriter {
   @Override
   public void addIgnoreRow(int row) {
     ignoredRows.add(row);
+  }
+
+  @Override
+  public void preloadOffset(int offset) {
+    this.preloadedOffset += offset;
+  }
+
+  @Override
+  public void commitOffset() {
+    this.rowOffset += preloadedOffset;
+    this.preloadedOffset = 0;
+  }
+
+  @Override
+  public void updateOffset(int nestedLoopDepth, int offsetAccumulator) {
+    var entries = offsetMap.entrySet();
+    var iterator = entries.iterator();
+    while (iterator.hasNext()) {
+      var entry = iterator.next();
+      if (entry.getKey() > nestedLoopDepth) {
+        rowOffset += entry.getValue();
+        iterator.remove();
+      }
+    }
+    offsetMap.put(nestedLoopDepth, offsetAccumulator);
+  }
+
+  @Override
+  public void clearOffsets(int nestedLoopDepth) {
+    var entries = offsetMap.entrySet();
+    entries.removeIf(entry -> entry.getKey() > nestedLoopDepth);
   }
 
   private CellStyle copyCellStyle(CellStyle cellStyle) {
