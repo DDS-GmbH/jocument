@@ -3,10 +3,7 @@ package com.docutools.jocument.impl.excel.implementations;
 import com.docutools.jocument.impl.excel.interfaces.ExcelWriter;
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Map;
-import java.util.Set;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.poi.ss.usermodel.Cell;
@@ -41,9 +38,7 @@ public class XSSFWriter implements ExcelWriter {
   private int rowOffset = 0;
   private int leftMostColumn = -1;
   private int rightMostColumn = -1;
-  private final Set<Integer> ignoredRows = new HashSet<>();
   private final Map<Integer, Integer> offsetMap = new HashMap<>();
-  private int preloadedOffset;
 
   /**
    * Creates a new SXSSFWriter.
@@ -61,8 +56,8 @@ public class XSSFWriter implements ExcelWriter {
 
   @Override
   public void newRow(Row row) {
-    logger.debug("Creating new row {}", row.getRowNum() + rowOffset - 1 - ignoredRows.size() * 2); //row num is 0 based
-    currentRow = currentSheet.createRow(row.getRowNum() + rowOffset - 1 - ignoredRows.size() * 2);
+    logger.debug("Creating new row {}", row.getRowNum() + rowOffset - 1); //row num is 0 based
+    currentRow = currentSheet.createRow(row.getRowNum() + rowOffset - 1);
     currentRow.setHeight(row.getHeight());
     if (row.isFormatted()) {
       currentRow.setRowStyle(cellStyleMap.computeIfAbsent((int) row.getRowStyle().getIndex(), i -> copyCellStyle(row.getRowStyle())));
@@ -211,35 +206,18 @@ public class XSSFWriter implements ExcelWriter {
   @Override
   public void shiftRows(int startingRow, int toShift) {
     //rows are 1 indexed, row nums 0
-    if (startingRow + rowOffset - 1 - ignoredRows.size() * 2  <= currentSheet.getLastRowNum()) {
-      currentSheet.shiftRows(startingRow + rowOffset - 1 - ignoredRows.size() * 2, currentSheet.getLastRowNum(), toShift);
+    if (startingRow + rowOffset - 1 <= currentSheet.getLastRowNum()) {
+      currentSheet.shiftRows(startingRow + rowOffset - 1, currentSheet.getLastRowNum(), toShift);
     }
   }
 
   @Override
   public void resetRowOffset() {
     this.rowOffset = 0;
-    ignoredRows.clear();
   }
 
   @Override
-  public void addIgnoreRow(int row) {
-    ignoredRows.add(row);
-  }
-
-  @Override
-  public void preloadOffset(int offset) {
-    this.preloadedOffset += offset;
-  }
-
-  @Override
-  public void commitOffset() {
-    this.rowOffset += preloadedOffset;
-    this.preloadedOffset = 0;
-  }
-
-  @Override
-  public void updateOffset(int nestedLoopDepth, int offsetAccumulator) {
+  public void applyOffsetMap(int nestedLoopDepth) {
     var entries = offsetMap.entrySet();
     var iterator = entries.iterator();
     while (iterator.hasNext()) {
@@ -249,13 +227,11 @@ public class XSSFWriter implements ExcelWriter {
         iterator.remove();
       }
     }
-    offsetMap.put(nestedLoopDepth, offsetAccumulator);
   }
 
   @Override
-  public void clearOffsets(int nestedLoopDepth) {
-    var entries = offsetMap.entrySet();
-    entries.removeIf(entry -> entry.getKey() > nestedLoopDepth);
+  public void updateOffsetMap(int nestedLoopDepth, int offset) {
+    offsetMap.merge(nestedLoopDepth, offset, Integer::sum);
   }
 
   private CellStyle copyCellStyle(CellStyle cellStyle) {

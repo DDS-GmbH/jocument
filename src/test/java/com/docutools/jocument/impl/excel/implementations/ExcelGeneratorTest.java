@@ -116,6 +116,7 @@ class ExcelGeneratorTest {
         // Assert
         assertThat(document.completed(), is(true));
         workbook = TestUtils.getXSSFWorkbookFromDocument(document);
+        Desktop.getDesktop().open(document.getPath().toFile());
         var firstSheet = PoiPath.xssf(workbook).sheet(0);
         assertThat(firstSheet.row(0).cell(1).stringValue(), equalTo("Jean-Luc Picard"));
         assertThat(firstSheet.row(5).cell(0).stringValue(), equalTo("Riker"));
