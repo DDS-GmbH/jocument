@@ -144,12 +144,14 @@ public class ExcelGenerator {
       excelWriter.addRowOffset(-1); // remove opening tag
     }
     var finalLoopBody = loopBody.subList(1, loopBody.size() - 1);  // remove loop closing tag
-    var innerEmptyLeadingRows = loopBody.get(1).getRowNum() - row.getRowNum() - 1;
     var innerEmptyTrailingRows = loopBody.get(loopBody.size() - 1).getRowNum() - finalLoopBody.get(finalLoopBody.size() - 1).getRowNum() - 1;
     PlaceholderData placeholderData = getPlaceholderData(row);
+    excelWriter.updateOffsetMap(nestedLoopDepth, 2);
+    if (placeholderData.count() > 0) {
+      excelWriter.updateOffsetMap(nestedLoopDepth, loopBodySize);
+    }
     placeholderData.stream().forEach(placeholderResolver -> {
       excelWriter.applyOffsetMap(nestedLoopDepth);
-      excelWriter.updateOffsetMap(nestedLoopDepth, loopBodySize + 2);
       ExcelGenerator.apply(placeholderResolver, finalLoopBody, excelWriter, nestedLoopDepth + 1, options);
       excelWriter.addRowOffset(loopBodySize);
       excelWriter.shiftRows(row.getRowNum(), innerEmptyTrailingRows);
@@ -162,10 +164,10 @@ public class ExcelGenerator {
       */
       excelWriter.shiftRows(row.getRowNum(), -innerEmptyTrailingRows);
       excelWriter.addRowOffset(-loopBodySize);
-      excelWriter.updateOffsetMap(nestedLoopDepth, - (loopBodySize + 2) * ((int) placeholderData.count() - 1));
     }
     if (nestedLoopDepth == 0) {
       int rowNum = row.getRowNum();
+      final var innerEmptyLeadingRows = loopBody.get(1).getRowNum() - row.getRowNum() - 1;
       excelWriter.deleteRows(rowNum, loopSize);
       excelWriter.resetRowOffset(); // processing of loop/collection has finished
       rows = rows.stream().filter(row1 -> {
