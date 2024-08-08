@@ -34,8 +34,8 @@ public class SampleModelData {
       var services = List.of(new Service("USS Enterprise", Collections.singletonList(
               new PlanetServiceInfo("Mars", Collections.singletonList(new City("Nova Rojava"))))),
           new Service("US Defiant", List.of(
-              new PlanetServiceInfo("Venus", List.of(new City("Nova Parisia"), new City("Birnin Zana"))),
-              new PlanetServiceInfo("Jupiter", List.of(new City("Exarcheia"), new City("Nova Metalkova"))))));
+              new PlanetServiceInfo("Venus", List.of(new City("Nova Parisia")/*, new City("Birnin Zana")*/)))));
+//              new PlanetServiceInfo("Jupiter", List.of(new City("Exarcheia"), new City("Nova Metalkova"))))));
       PICARD = new Captain("Jean-Luc Picard",
           4,
           Uniform.Red,

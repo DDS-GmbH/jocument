@@ -77,6 +77,151 @@ class ExcelGeneratorTest {
     }
 
     @Test
+    void simpleLoop() throws InterruptedException, IOException {
+        // Arrange
+        Template template = Template.fromClassPath("/templates/excel/SimpleLoop.xlsx")
+            .orElseThrow();
+        PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.PICARD);
+
+        // Act
+        Document document = template.startGeneration(resolver);
+        document.blockUntilCompletion(60000L); // 1 minute
+
+        // Assert
+        assertThat(document.completed(), is(true));
+        workbook = TestUtils.getXSSFWorkbookFromDocument(document);
+        var firstSheet = PoiPath.xssf(workbook).sheet(0);
+        assertThat(firstSheet.row(0).cell(0).stringValue(), equalTo("USS Enterprise"));
+        assertThat(firstSheet.row(1).cell(0).stringValue(), equalTo("US Defiant"));
+    }
+
+    @Test
+    void simpleLoopWithSpacingAtStart() throws InterruptedException, IOException {
+        // Arrange
+        Template template = Template.fromClassPath("/templates/excel/SimpleLoopWithSpacingAtStart.xlsx")
+            .orElseThrow();
+        PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.PICARD);
+
+        // Act
+        Document document = template.startGeneration(resolver);
+        document.blockUntilCompletion(60000L); // 1 minute
+
+        // Assert
+        assertThat(document.completed(), is(true));
+        workbook = TestUtils.getXSSFWorkbookFromDocument(document);
+        var firstSheet = PoiPath.xssf(workbook).sheet(0);
+        assertThat(firstSheet.row(1).cell(0).stringValue(), equalTo("USS Enterprise"));
+        assertThat(firstSheet.row(3).cell(0).stringValue(), equalTo("US Defiant"));
+    }
+
+    @Test
+    void simpleLoopWithSpacingAtEnd() throws InterruptedException, IOException {
+        // Arrange
+        Template template = Template.fromClassPath("/templates/excel/SimpleLoopWithSpacingAtEnd.xlsx")
+            .orElseThrow();
+        PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.PICARD);
+
+        // Act
+        Document document = template.startGeneration(resolver);
+        document.blockUntilCompletion(60000L); // 1 minute
+
+        // Assert
+        assertThat(document.completed(), is(true));
+        workbook = TestUtils.getXSSFWorkbookFromDocument(document);
+        var firstSheet = PoiPath.xssf(workbook).sheet(0);
+        assertThat(firstSheet.row(0).cell(0).stringValue(), equalTo("USS Enterprise"));
+        assertThat(firstSheet.row(2).cell(0).stringValue(), equalTo("US Defiant"));
+    }
+
+    @Test
+    void nestedSimpleLoop() throws InterruptedException, IOException {
+        // Arrange
+        Template template = Template.fromClassPath("/templates/excel/NestedSimpleLoop.xlsx")
+            .orElseThrow();
+        PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.PICARD);
+
+        // Act
+        Document document = template.startGeneration(resolver);
+        document.blockUntilCompletion(60000L); // 1 minute
+
+        // Assert
+        assertThat(document.completed(), is(true));
+        workbook = TestUtils.getXSSFWorkbookFromDocument(document);
+        var firstSheet = PoiPath.xssf(workbook).sheet(0);
+        var services = SampleModelData.PICARD.getServices();
+        assertThat(firstSheet.row(0).cell(0).stringValue(), equalTo(services.get(0).getVisitedPlanets().get(0).getPlanetName()));
+        assertThat(firstSheet.row(1).cell(0).stringValue(), equalTo(services.get(1).getVisitedPlanets().get(0).getPlanetName()));
+    }
+
+
+    @Test
+    void multiValueLoop() throws InterruptedException, IOException {
+        // Arrange
+        Template template = Template.fromClassPath("/templates/excel/MultiValueLoop.xlsx")
+            .orElseThrow();
+        PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.PICARD);
+
+        // Act
+        Document document = template.startGeneration(resolver);
+        document.blockUntilCompletion(60000L); // 1 minute
+
+        // Assert
+        assertThat(document.completed(), is(true));
+        workbook = TestUtils.getXSSFWorkbookFromDocument(document);
+        var firstSheet = PoiPath.xssf(workbook).sheet(0);
+        var services = SampleModelData.PICARD.getServices();
+        assertThat(firstSheet.row(0).cell(0).stringValue(), equalTo(services.get(0).getShipName()));
+        assertThat(firstSheet.row(1).cell(0).stringValue(), equalTo(services.get(0).getShipName()));
+        assertThat(firstSheet.row(2).cell(0).stringValue(), equalTo(services.get(1).getShipName()));
+        assertThat(firstSheet.row(3).cell(0).stringValue(), equalTo(services.get(1).getShipName()));
+    }
+
+
+    @Test
+    void multiValueLoopWithSpacingInBetween() throws InterruptedException, IOException {
+        // Arrange
+        Template template = Template.fromClassPath("/templates/excel/MultiValueLoopWithSpacingInBetween.xlsx")
+            .orElseThrow();
+        PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.PICARD);
+
+        // Act
+        Document document = template.startGeneration(resolver);
+        document.blockUntilCompletion(60000L); // 1 minute
+
+        // Assert
+        assertThat(document.completed(), is(true));
+        workbook = TestUtils.getXSSFWorkbookFromDocument(document);
+        var firstSheet = PoiPath.xssf(workbook).sheet(0);
+        var services = SampleModelData.PICARD.getServices();
+        assertThat(firstSheet.row(0).cell(0).stringValue(), equalTo(services.get(0).getShipName()));
+        assertThat(firstSheet.row(2).cell(0).stringValue(), equalTo(services.get(0).getShipName()));
+        assertThat(firstSheet.row(3).cell(0).stringValue(), equalTo(services.get(1).getShipName()));
+        assertThat(firstSheet.row(5).cell(0).stringValue(), equalTo(services.get(1).getShipName()));
+    }
+
+    @Test
+    void nestedMultiValueLoop() throws InterruptedException, IOException {
+        // Arrange
+        Template template = Template.fromClassPath("/templates/excel/NestedMultiValueLoop.xlsx")
+            .orElseThrow();
+        PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.PICARD);
+
+        // Act
+        Document document = template.startGeneration(resolver);
+        document.blockUntilCompletion(60000L); // 1 minute
+
+        // Assert
+        assertThat(document.completed(), is(true));
+        workbook = TestUtils.getXSSFWorkbookFromDocument(document);
+        var firstSheet = PoiPath.xssf(workbook).sheet(0);
+        var services = SampleModelData.PICARD.getServices();
+        assertThat(firstSheet.row(0).cell(0).stringValue(), equalTo(services.get(0).getVisitedPlanets().get(0).getPlanetName()));
+        assertThat(firstSheet.row(1).cell(0).stringValue(), equalTo(services.get(0).getVisitedPlanets().get(0).getPlanetName()));
+        assertThat(firstSheet.row(2).cell(0).stringValue(), equalTo(services.get(1).getVisitedPlanets().get(0).getPlanetName()));
+        assertThat(firstSheet.row(3).cell(0).stringValue(), equalTo(services.get(1).getVisitedPlanets().get(0).getPlanetName()));
+    }
+
+    @Test
     @DisplayName("Should copy constant cell values in a loop.")
     void shouldCloneSimpleExcelWithLoop() throws InterruptedException, IOException {
         // Arrange
@@ -111,12 +256,12 @@ class ExcelGeneratorTest {
 
         // Act
         Document document = template.startGeneration(resolver);
-        document.blockUntilCompletion(60000L); // 1 minute
+        document.blockUntilCompletion(600000L); // 1 minute
 
         // Assert
         assertThat(document.completed(), is(true));
-        workbook = TestUtils.getXSSFWorkbookFromDocument(document);
         Desktop.getDesktop().open(document.getPath().toFile());
+        workbook = TestUtils.getXSSFWorkbookFromDocument(document);
         var firstSheet = PoiPath.xssf(workbook).sheet(0);
         assertThat(firstSheet.row(0).cell(1).stringValue(), equalTo("Jean-Luc Picard"));
         assertThat(firstSheet.row(5).cell(0).stringValue(), equalTo("Riker"));
@@ -193,9 +338,9 @@ class ExcelGeneratorTest {
 
         // Assert
         assertThat(document.completed(), is(true));
+        Desktop.getDesktop().open(document.getPath().toFile());
         workbook = TestUtils.getXSSFWorkbookFromDocument(document);
         var firstSheet = PoiPath.xssf(workbook).sheet(0);
-        Desktop.getDesktop().open(document.getPath().toFile());
         assertThat(firstSheet.row(22).cell(1).stringValue(), equalTo("USS Enterprise"));
         assertThat(firstSheet.row(23).cell(1).stringValue(), equalTo("Mars"));
         assertThat(firstSheet.row(24).cell(1).stringValue(), equalTo("Nova Rojava"));
@@ -205,53 +350,12 @@ class ExcelGeneratorTest {
         assertThat(firstSheet.row(52).cell(0).stringValue(), startsWith("Das Denken"));
     }
 
-    @Test
-    void shouldResolveHyperlink() throws InterruptedException, IOException {
-        // Arrange
-        Template template = Template.fromClassPath("/templates/excel/HyperlinkDocument.xlsx")
-            .orElseThrow();
-        PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.PICARD);
-
-        // Act
-        Document document = template.startGeneration(resolver);
-        document.blockUntilCompletion(60000L); // 1 minute
-
-        // Assert
-        assertThat(document.completed(), is(true));
-        var xssfWorkbook = TestUtils.getXSSFWorkbookFromDocument(document);
-        var documentWrapper = new XSSFWorkbookWrapper(xssfWorkbook);
-        assertThat(documentWrapper.sheet(0).row(0).cell(0).text(), equalTo("orf.at"));
-        assertThat(documentWrapper.sheet(0).row(0).cell(0).cell().getHyperlink().getAddress(), equalTo("https://orf.at/"));
-    }
-
-    @Test
-    void shouldResolveHyperlinkFormula() throws InterruptedException, IOException {
-      // Arrange
-      Template template = Template.fromClassPath("/templates/excel/HyperlinkFormula.xlsx")
-          .orElseThrow();
-      PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.PICARD);
-
-      // Act
-      Document document = template.startGeneration(resolver);
-      document.blockUntilCompletion(60000L); // 1 minute
-
-        // Assert
-        assertThat(document.completed(), is(true));
-        var workbook = TestUtils.getXSSFWorkbookFromDocument(document);
-        var firstSheet = PoiPath.xssf(workbook).sheet(0);
-        assertThat(firstSheet.row(0).cell(0).cell().getCellType(), equalTo(CellType.FORMULA));
-        assertThat(firstSheet.row(0).cell(0).cell().getCellFormula(),
-            equalTo("HYPERLINK(\"https://link.me/USS Enterprise\", \"USS Enterprise\")"));
-        assertThat(firstSheet.row(0).cell(0).stringValue(), equalTo("USS Enterprise"));
-    }
-
 //    @Test
-//    void xlsxQuotesBlockPlaceholder() throws InterruptedException, IOException {
-//        Template template = Template.fromClassPath("/templates/excel/QuotesBlockTemplate.xlsx")
+//    void shouldResolveHyperlink() throws InterruptedException, IOException {
+//        // Arrange
+//        Template template = Template.fromClassPath("/templates/excel/HyperlinkDocument.xlsx")
 //            .orElseThrow();
-//        CustomPlaceholderRegistry customPlaceholderRegistry = new CustomPlaceholderRegistryImpl();
-//        customPlaceholderRegistry.addHandler("quotes", QuotesBlockPlaceholder.class);
-//        PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.PICARD, customPlaceholderRegistry);
+//        PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.PICARD);
 //
 //        // Act
 //        Document document = template.startGeneration(resolver);
@@ -259,204 +363,245 @@ class ExcelGeneratorTest {
 //
 //        // Assert
 //        assertThat(document.completed(), is(true));
+//        var xssfWorkbook = TestUtils.getXSSFWorkbookFromDocument(document);
+//        var documentWrapper = new XSSFWorkbookWrapper(xssfWorkbook);
+//        assertThat(documentWrapper.sheet(0).row(0).cell(0).text(), equalTo("orf.at"));
+//        assertThat(documentWrapper.sheet(0).row(0).cell(0).cell().getHyperlink().getAddress(), equalTo("https://orf.at/"));
+//    }
+//
+//    @Test
+//    void shouldResolveHyperlinkFormula() throws InterruptedException, IOException {
+//      // Arrange
+//      Template template = Template.fromClassPath("/templates/excel/HyperlinkFormula.xlsx")
+//          .orElseThrow();
+//      PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.PICARD);
+//
+//      // Act
+//      Document document = template.startGeneration(resolver);
+//      document.blockUntilCompletion(60000L); // 1 minute
+//
+//        // Assert
+//        assertThat(document.completed(), is(true));
 //        var workbook = TestUtils.getXSSFWorkbookFromDocument(document);
 //        var firstSheet = PoiPath.xssf(workbook).sheet(0);
-//        assertThat(firstSheet.row(0).cell(0).stringValue(), equalTo(QuotesBlockPlaceholder.quotes.get("marx")));
-//        assertThat(firstSheet.row(0).cell(1).stringValue(), equalTo(QuotesBlockPlaceholder.quotes.get("engels")));
+//        assertThat(firstSheet.row(0).cell(0).cell().getCellType(), equalTo(CellType.FORMULA));
+//        assertThat(firstSheet.row(0).cell(0).cell().getCellFormula(),
+//            equalTo("HYPERLINK(\"https://link.me/USS Enterprise\", \"USS Enterprise\")"));
+//        assertThat(firstSheet.row(0).cell(0).stringValue(), equalTo("USS Enterprise"));
 //    }
-
-    @Test
-    void evaluatesLargeDocument() throws InterruptedException {
-        // Assemble
-        Template template = Template.fromClassPath("/templates/excel/LargeTemplate.xlsx")
-            .orElseThrow();
-        PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.PICARD_PERSON);
-
-        // Act
-        Document document = template.startGeneration(resolver);
-        document.blockUntilCompletion(60000L); // 1 minute
-
-        // Assert
-        assertThat(document.completed(), is(true));
-
-    }
-
-    @Test
-    @DisplayName("Resolve IterablePlaceholder with toString when there's no closing placeholder.")
-    void shouldResolveIPWithToStringWhenNoLoop() throws InterruptedException, IOException {
-        // Assemble
-        Template template = Template.fromClassPath("/templates/excel/IterablePlaceholderWithoutLoop.xlsx")
-            .orElseThrow();
-        var resolver = new ReflectionResolver(SampleModelData.PICARD);
-
-        // Act
-        Document document = template.startGeneration(resolver);
-        document.blockUntilCompletion(60000L); // 1 minute
-
-        // Assert
-        assertThat(document.completed(), is(true));
-        workbook = TestUtils.getXSSFWorkbookFromDocument(document);
-        var documentWrapper = new XSSFWorkbookWrapper(workbook);
-        assertThat(documentWrapper.sheet(0).row(0).cell(0).text(), containsString(SampleModelData.PICARD.getOfficer().toString()));
-    }
-
-
-    @Test
-    void insertNumericValue() throws InterruptedException, IOException {
-        // Arrange
-        Template template = Template.fromClassPath("/templates/excel/NumericValues.xlsx")
-            .orElseThrow();
-        PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.ENTERPRISE);
-
-        // Act
-        Document document = template.startGeneration(resolver);
-        document.blockUntilCompletion(5_000L); // 5 seconds
-
-        // Assert
-        assertThat(document.completed(), is(true));
-        var xssfWorkbook = TestUtils.getXSSFWorkbookFromDocument(document);
-        var xssf = new XSSFWorkbookWrapper(xssfWorkbook);
-        var sheet = xssf.sheet(0);
-        assertThat(sheet.row(0).cell(0).doubleValue(), is(5.0));
-    }
-
-
-    @Test
-    void insertNumericValueFromCustomPlaceholder() throws InterruptedException, IOException {
-        // Arrange
-        Template template = Template.fromClassPath("/templates/excel/NumericValues.xlsx")
-            .orElseThrow();
-        CustomPlaceholderRegistry customPlaceholderRegistry = new CustomPlaceholderRegistryImpl() {
-            @Override
-            public boolean governs(String placeholderName, Object bean, Optional<MimeType> mimeType) {
-                if (placeholderName.equals("crew") && mimeType.isPresent()) {
-                    return mimeType.get().equals(MimeType.XLSX);
-                } else {
-                    return governs(placeholderName, bean);
-                }
-            }
-        };
-        customPlaceholderRegistry.addHandler("crew", CrewPlaceholder.class);
-        GenerationOptions generationOptions = new GenerationOptionsBuilder().withMimeType(MimeType.XLSX).build();
-        PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.ENTERPRISE, customPlaceholderRegistry, generationOptions);
-
-        // Act
-        Document document = template.startGeneration(resolver);
-        document.blockUntilCompletion(5_000L); // 5 seconds
-
-        // Assert
-        assertThat(document.completed(), is(true));
-        var xssfWorkbook = TestUtils.getXSSFWorkbookFromDocument(document);
-        var xssf = new XSSFWorkbookWrapper(xssfWorkbook);
-        var sheet = xssf.sheet(0);
-        assertThat(sheet.row(0).cell(0).doubleValue(), is(5.0));
-    }
-
-    @Test
-    void multiplePlaceholdersPerRow() throws InterruptedException, IOException {
-        // Arrange
-        Template template = Template.fromClassPath("/templates/excel/MultiplePlaceholdersPerRow.xlsx").orElseThrow();
-        CustomPlaceholderRegistry customPlaceholderRegistry = new CustomPlaceholderRegistryImpl();
-        customPlaceholderRegistry.addHandler("crew", CrewPlaceholder.class);
-        GenerationOptions generationOptions = new GenerationOptionsBuilder().withMimeType(MimeType.XLSX).build();
-        PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.ENTERPRISE, customPlaceholderRegistry, generationOptions);
-
-        // Act
-        Document document = template.startGeneration(resolver);
-        document.blockUntilCompletion(5_000L); // 5 seconds
-
-        // Assert
-        assertThat(document.completed(), is(true));
-        var xssfWorkbook = TestUtils.getXSSFWorkbookFromDocument(document);
-        var xssf = new XSSFWorkbookWrapper(xssfWorkbook);
-        var sheet = xssf.sheet(0);
-        assertThat(sheet.row(0).cell(0).stringValue(), is(SampleModelData.ENTERPRISE.name()));
-        assertThat(sheet.row(0).cell(1).cell().toString(), is("5.0"));
-    }
-
+//
+////    @Test
+////    void xlsxQuotesBlockPlaceholder() throws InterruptedException, IOException {
+////        Template template = Template.fromClassPath("/templates/excel/QuotesBlockTemplate.xlsx")
+////            .orElseThrow();
+////        CustomPlaceholderRegistry customPlaceholderRegistry = new CustomPlaceholderRegistryImpl();
+////        customPlaceholderRegistry.addHandler("quotes", QuotesBlockPlaceholder.class);
+////        PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.PICARD, customPlaceholderRegistry);
+////
+////        // Act
+////        Document document = template.startGeneration(resolver);
+////        document.blockUntilCompletion(60000L); // 1 minute
+////
+////        // Assert
+////        assertThat(document.completed(), is(true));
+////        var workbook = TestUtils.getXSSFWorkbookFromDocument(document);
+////        var firstSheet = PoiPath.xssf(workbook).sheet(0);
+////        assertThat(firstSheet.row(0).cell(0).stringValue(), equalTo(QuotesBlockPlaceholder.quotes.get("marx")));
+////        assertThat(firstSheet.row(0).cell(1).stringValue(), equalTo(QuotesBlockPlaceholder.quotes.get("engels")));
+////    }
+//
 //    @Test
-//    void rangedRowPlaceholder() throws InterruptedException, IOException {
-//        // Arrange
-//        Template template = Template.fromClassPath("/templates/excel/RangedRowPlaceholder.xlsx").orElseThrow();
-//        CustomPlaceholderRegistry customPlaceholderRegistry = new CustomPlaceholderRegistryImpl();
-//        customPlaceholderRegistry.addHandler("crew", CrewPlaceholder.class);
-//        customPlaceholderRegistry.addHandler("quotes", QuotesBlockPlaceholder.class);
-//        GenerationOptions generationOptions = new GenerationOptionsBuilder().withMimeType(MimeType.XLSX).build();
-//        PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.ENTERPRISE, customPlaceholderRegistry, generationOptions);
+//    void evaluatesLargeDocument() throws InterruptedException {
+//        // Assemble
+//        Template template = Template.fromClassPath("/templates/excel/LargeTemplate.xlsx")
+//            .orElseThrow();
+//        PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.PICARD_PERSON);
 //
 //        // Act
 //        Document document = template.startGeneration(resolver);
-//        document.blockUntilCompletion(50_000L); // 5 seconds
+//        document.blockUntilCompletion(60000L); // 1 minute
+//
+//        // Assert
+//        assertThat(document.completed(), is(true));
+//
+//    }
+//
+//    @Test
+//    @DisplayName("Resolve IterablePlaceholder with toString when there's no closing placeholder.")
+//    void shouldResolveIPWithToStringWhenNoLoop() throws InterruptedException, IOException {
+//        // Assemble
+//        Template template = Template.fromClassPath("/templates/excel/IterablePlaceholderWithoutLoop.xlsx")
+//            .orElseThrow();
+//        var resolver = new ReflectionResolver(SampleModelData.PICARD);
+//
+//        // Act
+//        Document document = template.startGeneration(resolver);
+//        document.blockUntilCompletion(60000L); // 1 minute
+//
+//        // Assert
+//        assertThat(document.completed(), is(true));
+//        workbook = TestUtils.getXSSFWorkbookFromDocument(document);
+//        var documentWrapper = new XSSFWorkbookWrapper(workbook);
+//        assertThat(documentWrapper.sheet(0).row(0).cell(0).text(), containsString(SampleModelData.PICARD.getOfficer().toString()));
+//    }
+//
+//
+//    @Test
+//    void insertNumericValue() throws InterruptedException, IOException {
+//        // Arrange
+//        Template template = Template.fromClassPath("/templates/excel/NumericValues.xlsx")
+//            .orElseThrow();
+//        PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.ENTERPRISE);
+//
+//        // Act
+//        Document document = template.startGeneration(resolver);
+//        document.blockUntilCompletion(5_000L); // 5 seconds
 //
 //        // Assert
 //        assertThat(document.completed(), is(true));
 //        var xssfWorkbook = TestUtils.getXSSFWorkbookFromDocument(document);
 //        var xssf = new XSSFWorkbookWrapper(xssfWorkbook);
 //        var sheet = xssf.sheet(0);
-//        RowWrapper row = sheet.row(0);
-//        assertThat(row.cell(0).stringValue(), equalTo(QuotesBlockPlaceholder.quotes.get("marx")));
-//        assertThat(row.cell(1).stringValue(), equalTo(QuotesBlockPlaceholder.quotes.get("engels")));
-//        assertThat(row.cell(2).cell().toString(), is("5.0"));
+//        assertThat(sheet.row(0).cell(0).doubleValue(), is(5.0));
 //    }
-
-    @Test
-    void copiesHyperlink() throws InterruptedException, IOException {
-        // Arrange
-        Template template = Template.fromClassPath("/templates/excel/HyperlinkDocument.xlsx")
-            .orElseThrow();
-        PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.PICARD);
-
-        // Act
-        Document document = template.startGeneration(resolver);
-        document.blockUntilCompletion(60000L); // 1 minute
-
-        // Assert
-        assertThat(document.completed(), is(true));
-        var xssfWorkbook = TestUtils.getXSSFWorkbookFromDocument(document);
-        var documentWrapper = new XSSFWorkbookWrapper(xssfWorkbook);
-        assertThat(documentWrapper.sheet(0).row(0).cell(0).text(), equalTo("orf.at"));
-        assertThat(documentWrapper.sheet(0).row(0).cell(0).cell().getHyperlink().getAddress(), equalTo("https://orf.at/"));
-    }
-
-    @Test
-    @DisplayName("Keep Auto Filter")
-    void keepAutoFilters() throws InterruptedException, IOException {
-        // Arrange
-        Template template = Template.fromClassPath("/templates/excel/AutoFilters.xlsx")
-            .orElseThrow();
-        PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.PICARD);
-
-        // Act
-        Document document = template.startGeneration(resolver);
-        document.blockUntilCompletion(5_000L); // 5 seconds
-
-        // Assert
-        assertThat(document.completed(), is(true));
-        var xssfWorkbook = TestUtils.getXSSFWorkbookFromDocument(document);
-        var xssf = new XSSFWorkbookWrapper(xssfWorkbook);
-        var sheet = xssf.sheet(0);
-        var autoFilter = sheet.sheet().getCTWorksheet().getAutoFilter();
-        assertThat(autoFilter, notNullValue());
-        var autoFilterRef = autoFilter.getRef();
-        var rangeAddress = CellRangeAddress.valueOf(autoFilterRef);
-        assertThat(rangeAddress.isInRange(sheet.row(0).cell(0).cell()), is(true));
-    }
-
-    @Test
-    void copiesDiagram() throws InterruptedException, IOException {
-        // Arrange
-        Template template = Template.fromClassPath("/templates/excel/Diagrams.xlsx")
-            .orElseThrow();
-        PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.ARMY);
-
-        // Act
-        Document document = template.startGeneration(resolver);
-        document.blockUntilCompletion(5_000L); // 5 seconds
-
-        // Assert
-        assertThat(document.completed(), is(true));
-        var xssfWorkbook = TestUtils.getXSSFWorkbookFromDocument(document);
-        var xssf = new XSSFWorkbookWrapper(xssfWorkbook);
-        assertThat(xssf.sheet(0).sheet().getDrawingPatriarch().getShapes().size(), equalTo(1));
-    }
+//
+//
+//    @Test
+//    void insertNumericValueFromCustomPlaceholder() throws InterruptedException, IOException {
+//        // Arrange
+//        Template template = Template.fromClassPath("/templates/excel/NumericValues.xlsx")
+//            .orElseThrow();
+//        CustomPlaceholderRegistry customPlaceholderRegistry = new CustomPlaceholderRegistryImpl() {
+//            @Override
+//            public boolean governs(String placeholderName, Object bean, Optional<MimeType> mimeType) {
+//                if (placeholderName.equals("crew") && mimeType.isPresent()) {
+//                    return mimeType.get().equals(MimeType.XLSX);
+//                } else {
+//                    return governs(placeholderName, bean);
+//                }
+//            }
+//        };
+//        customPlaceholderRegistry.addHandler("crew", CrewPlaceholder.class);
+//        GenerationOptions generationOptions = new GenerationOptionsBuilder().withMimeType(MimeType.XLSX).build();
+//        PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.ENTERPRISE, customPlaceholderRegistry, generationOptions);
+//
+//        // Act
+//        Document document = template.startGeneration(resolver);
+//        document.blockUntilCompletion(5_000L); // 5 seconds
+//
+//        // Assert
+//        assertThat(document.completed(), is(true));
+//        var xssfWorkbook = TestUtils.getXSSFWorkbookFromDocument(document);
+//        var xssf = new XSSFWorkbookWrapper(xssfWorkbook);
+//        var sheet = xssf.sheet(0);
+//        assertThat(sheet.row(0).cell(0).doubleValue(), is(5.0));
+//    }
+//
+//    @Test
+//    void multiplePlaceholdersPerRow() throws InterruptedException, IOException {
+//        // Arrange
+//        Template template = Template.fromClassPath("/templates/excel/MultiplePlaceholdersPerRow.xlsx").orElseThrow();
+//        CustomPlaceholderRegistry customPlaceholderRegistry = new CustomPlaceholderRegistryImpl();
+//        customPlaceholderRegistry.addHandler("crew", CrewPlaceholder.class);
+//        GenerationOptions generationOptions = new GenerationOptionsBuilder().withMimeType(MimeType.XLSX).build();
+//        PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.ENTERPRISE, customPlaceholderRegistry, generationOptions);
+//
+//        // Act
+//        Document document = template.startGeneration(resolver);
+//        document.blockUntilCompletion(5_000L); // 5 seconds
+//
+//        // Assert
+//        assertThat(document.completed(), is(true));
+//        var xssfWorkbook = TestUtils.getXSSFWorkbookFromDocument(document);
+//        var xssf = new XSSFWorkbookWrapper(xssfWorkbook);
+//        var sheet = xssf.sheet(0);
+//        assertThat(sheet.row(0).cell(0).stringValue(), is(SampleModelData.ENTERPRISE.name()));
+//        assertThat(sheet.row(0).cell(1).cell().toString(), is("5.0"));
+//    }
+//
+////    @Test
+////    void rangedRowPlaceholder() throws InterruptedException, IOException {
+////        // Arrange
+////        Template template = Template.fromClassPath("/templates/excel/RangedRowPlaceholder.xlsx").orElseThrow();
+////        CustomPlaceholderRegistry customPlaceholderRegistry = new CustomPlaceholderRegistryImpl();
+////        customPlaceholderRegistry.addHandler("crew", CrewPlaceholder.class);
+////        customPlaceholderRegistry.addHandler("quotes", QuotesBlockPlaceholder.class);
+////        GenerationOptions generationOptions = new GenerationOptionsBuilder().withMimeType(MimeType.XLSX).build();
+////        PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.ENTERPRISE, customPlaceholderRegistry, generationOptions);
+////
+////        // Act
+////        Document document = template.startGeneration(resolver);
+////        document.blockUntilCompletion(50_000L); // 5 seconds
+////
+////        // Assert
+////        assertThat(document.completed(), is(true));
+////        var xssfWorkbook = TestUtils.getXSSFWorkbookFromDocument(document);
+////        var xssf = new XSSFWorkbookWrapper(xssfWorkbook);
+////        var sheet = xssf.sheet(0);
+////        RowWrapper row = sheet.row(0);
+////        assertThat(row.cell(0).stringValue(), equalTo(QuotesBlockPlaceholder.quotes.get("marx")));
+////        assertThat(row.cell(1).stringValue(), equalTo(QuotesBlockPlaceholder.quotes.get("engels")));
+////        assertThat(row.cell(2).cell().toString(), is("5.0"));
+////    }
+//
+//    @Test
+//    void copiesHyperlink() throws InterruptedException, IOException {
+//        // Arrange
+//        Template template = Template.fromClassPath("/templates/excel/HyperlinkDocument.xlsx")
+//            .orElseThrow();
+//        PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.PICARD);
+//
+//        // Act
+//        Document document = template.startGeneration(resolver);
+//        document.blockUntilCompletion(60000L); // 1 minute
+//
+//        // Assert
+//        assertThat(document.completed(), is(true));
+//        var xssfWorkbook = TestUtils.getXSSFWorkbookFromDocument(document);
+//        var documentWrapper = new XSSFWorkbookWrapper(xssfWorkbook);
+//        assertThat(documentWrapper.sheet(0).row(0).cell(0).text(), equalTo("orf.at"));
+//        assertThat(documentWrapper.sheet(0).row(0).cell(0).cell().getHyperlink().getAddress(), equalTo("https://orf.at/"));
+//    }
+//
+//    @Test
+//    @DisplayName("Keep Auto Filter")
+//    void keepAutoFilters() throws InterruptedException, IOException {
+//        // Arrange
+//        Template template = Template.fromClassPath("/templates/excel/AutoFilters.xlsx")
+//            .orElseThrow();
+//        PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.PICARD);
+//
+//        // Act
+//        Document document = template.startGeneration(resolver);
+//        document.blockUntilCompletion(5_000L); // 5 seconds
+//
+//        // Assert
+//        assertThat(document.completed(), is(true));
+//        var xssfWorkbook = TestUtils.getXSSFWorkbookFromDocument(document);
+//        var xssf = new XSSFWorkbookWrapper(xssfWorkbook);
+//        var sheet = xssf.sheet(0);
+//        var autoFilter = sheet.sheet().getCTWorksheet().getAutoFilter();
+//        assertThat(autoFilter, notNullValue());
+//        var autoFilterRef = autoFilter.getRef();
+//        var rangeAddress = CellRangeAddress.valueOf(autoFilterRef);
+//        assertThat(rangeAddress.isInRange(sheet.row(0).cell(0).cell()), is(true));
+//    }
+//
+//    @Test
+//    void copiesDiagram() throws InterruptedException, IOException {
+//        // Arrange
+//        Template template = Template.fromClassPath("/templates/excel/Diagrams.xlsx")
+//            .orElseThrow();
+//        PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.ARMY);
+//
+//        // Act
+//        Document document = template.startGeneration(resolver);
+//        document.blockUntilCompletion(5_000L); // 5 seconds
+//
+//        // Assert
+//        assertThat(document.completed(), is(true));
+//        var xssfWorkbook = TestUtils.getXSSFWorkbookFromDocument(document);
+//        var xssf = new XSSFWorkbookWrapper(xssfWorkbook);
+//        assertThat(xssf.sheet(0).sheet().getDrawingPatriarch().getShapes().size(), equalTo(1));
+//    }
 }

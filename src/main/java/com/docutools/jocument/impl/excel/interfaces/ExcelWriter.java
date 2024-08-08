@@ -79,9 +79,11 @@ public interface ExcelWriter {
 
   void shiftRows(int startingRow, int loopBodySize);
 
-  void resetRowOffset();
+  void updateRowsWritten(int rows);
 
-  void applyOffsetMap(int nestedLoopDepth);
+  void addRowToIgnore(int row);
 
-  void updateOffsetMap(int nestedLoopDepth, int offset);
+  void setSectionOffset(int rows);
+
+  void finishLoopProcessing(int rowNum, int loopSize);
 }
