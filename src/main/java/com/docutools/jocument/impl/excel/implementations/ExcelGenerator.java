@@ -38,11 +38,11 @@ public class ExcelGenerator {
 
   private final ExcelWriter excelWriter;
   private final PlaceholderResolver resolver;
-  private final List<Row> rows;
+  private final List<Optional<Row>> rows;
   private final int nestedLoopDepth;
   private final GenerationOptions options;
 
-  private ExcelGenerator(List<Row> rows, ExcelWriter excelWriter, PlaceholderResolver resolver, int nestedLoopDepth,
+  private ExcelGenerator(List<Optional<Row>> rows, ExcelWriter excelWriter, PlaceholderResolver resolver, int nestedLoopDepth,
                          GenerationOptions options) {
     this.rows = rows;
     this.excelWriter = excelWriter;
@@ -60,32 +60,55 @@ public class ExcelGenerator {
    * @param options     {@link GenerationOptions}
    */
   static void apply(PlaceholderResolver resolver, List<Row> rows, ExcelWriter excelWriter, GenerationOptions options) {
-    apply(resolver, rows, excelWriter, 0, options);
+    //todo the problem is that we don't have a line number when inserting an empty row
+    List<Optional<Row>> nonSparseRows = new LinkedList<>();
+    var lastRow = rows.get(0);
+    for (Row row : rows) {
+      var difference = row.getRowNum() - lastRow.getRowNum();
+      if (difference > 1) {
+        for (int i = 0; i < difference - 1; i++) {
+          nonSparseRows.add(Optional.empty());
+        }
+      }
+      nonSparseRows.add(Optional.of(row));
+      lastRow = row;
+    }
+    apply(resolver, nonSparseRows, excelWriter, 0, options);
   }
 
-  private static void apply(PlaceholderResolver resolver, List<Row> rows, ExcelWriter excelWriter, int nestedLoopDepth,
+  private static void apply(PlaceholderResolver resolver, List<Optional<Row>> rows, ExcelWriter excelWriter, int nestedLoopDepth,
                             GenerationOptions options) {
     new ExcelGenerator(rows, excelWriter, resolver, nestedLoopDepth, options).generate();
   }
 
   private void generate() {
     logger.debug("Starting generation by applying resolver {}", resolver);
-    List<Row> toProcess = new LinkedList<>(rows);
+    List<Optional<Row>> toProcess = new LinkedList<>(rows);
+    int i = toProcess.get(0).get().getRowNum();
     while (!toProcess.isEmpty()) {
-      Row row = toProcess.get(0);
+      Optional<Row> rowOptional = toProcess.get(0);
+      toProcess = toProcess.subList(1, toProcess.size());
+      if (rowOptional.isPresent()) {
+        Row row = rowOptional.get();
 //      if (nestedLoopDepth != 0 && lastRowNum != -1 && row.getRowNum() > lastRowNum + 1) {
 //        excelWriter.shiftRows(row.getRowNum(), row.getRowNum() - lastRowNum);
 //      }
-      toProcess = toProcess.subList(1, toProcess.size());
-      try {
-        if (isLoopStart(row)) {
-          toProcess = handleLoop(row, toProcess);
-        } else {
-          handleRow(row);
+        try {
+          if (isLoopStart(row)) {
+            toProcess = handleLoop(row, toProcess);
+          } else {
+            handleRow(row);
+          }
+        } catch (XmlValueDisconnectedException e) {
+          logger.warn(e);
         }
-      } catch (XmlValueDisconnectedException e) {
-        logger.warn(e);
+      } else {
+        if (nestedLoopDepth > 0) {
+          excelWriter.shiftRows(i, 1);
+          excelWriter.updateRowsWritten(1);
+        }
       }
+      i++;
     }
     logger.debug("Finished generation of elements by resolver {}", resolver);
   }
@@ -134,29 +157,29 @@ public class ExcelGenerator {
     return ModificationInformation.empty();
   }
 
-  private List<Row> handleLoop(Row row, List<Row> rows) {
+  private List<Optional<Row>> handleLoop(Row row, List<Optional<Row>> rows) {
     logger.debug("Handling loop at row {}", row.getRowNum());
     var loopBody = getLoopBody(row, rows);
     var loopBodySize = getLoopBodySize(loopBody);
     logger.debug("Loop body size: {}", loopBodySize);
     int loopSize = getLoopSize(loopBody);
     excelWriter.addRowToIgnore(row.getRowNum()); // remove opening tag
-    excelWriter.addRowToIgnore(loopBody.get(loopBody.size() - 1).getRowNum()); // remove closing tag
+    excelWriter.addRowToIgnore(loopBody.get(loopBody.size() - 1).get().getRowNum()); // remove closing tag
     if (nestedLoopDepth == 0) {
       excelWriter.setSectionOffset(loopSize); // insert content after placeholders, tags already in ignore list
     }
     var finalLoopBody = loopBody.subList(1, loopBody.size() - 1);  // remove loop closing tag
-    var innerEmptyTrailingRows = loopBody.get(loopBody.size() - 1).getRowNum() - finalLoopBody.get(finalLoopBody.size() - 1).getRowNum() - 1;
-    var outerEmptyTrailingRows = rows.stream().filter(row1 -> row1.getRowNum() > loopBody.get(loopBody.size() - 1).getRowNum()).findFirst()
-        .map(row1 -> row1.getRowNum() - loopBody.get(loopBody.size() - 1).getRowNum() - 1).orElse(0);
-    var innerEmptyLeadingRows = loopBody.get(1).getRowNum() - row.getRowNum() - 1;
+//    var innerEmptyTrailingRows = loopBody.get(loopBody.size() - 1).getRowNum() - finalLoopBody.get(finalLoopBody.size() - 1).getRowNum() - 1;
+//    var outerEmptyTrailingRows = rows.stream().filter(row1 -> row1.getRowNum() > loopBody.get(loopBody.size() - 1).getRowNum()).findFirst()
+//        .map(row1 -> row1.getRowNum() - loopBody.get(loopBody.size() - 1).getRowNum() - 1).orElse(0);
+//    var innerEmptyLeadingRows = loopBody.get(1).getRowNum() - row.getRowNum() - 1;
     PlaceholderData placeholderData = getPlaceholderData(row);
     placeholderData.stream().forEach(placeholderResolver -> {
-      excelWriter.shiftRows(row.getRowNum() + 1, innerEmptyLeadingRows);
+//      excelWriter.shiftRows(row.getRowNum() + 1, innerEmptyLeadingRows);
 //      excelWriter.updateRowsWritten(innerEmptyLeadingRows);
       ExcelGenerator.apply(placeholderResolver, finalLoopBody, excelWriter, nestedLoopDepth + 1, options);
-      excelWriter.shiftRows(row.getRowNum() + loopBodySize, innerEmptyTrailingRows);
-      excelWriter.updateRowsWritten(innerEmptyTrailingRows);
+//      excelWriter.shiftRows(row.getRowNum() + loopBodySize, innerEmptyTrailingRows);
+//      excelWriter.updateRowsWritten(innerEmptyTrailingRows);
     });
 //    if (placeholderData.count() > 0) {
 //      excelWriter.shiftRows(row.getRowNum() + loopBodySize, innerEmptyTrailingRows);
@@ -184,14 +207,14 @@ public class ExcelGenerator {
     return rows;
   }
 
-  private List<Row> getLoopBody(Row row, List<Row> rows) {
+  private List<Optional<Row>> getLoopBody(Row row, List<Optional<Row>> rows) {
     var placeholder = ExcelUtils.getPlaceholder(row);
     logger.debug("Getting loop body of {}", placeholder);
-    LinkedList<Row> rowBuffer = new LinkedList<>();
-    rowBuffer.add(row);
-    Iterator<Row> rowIterator = rows.iterator();
+    LinkedList<Optional<Row>> rowBuffer = new LinkedList<>();
+    rowBuffer.add(Optional.of(row));
+    Iterator<Optional<Row>> rowIterator = rows.iterator();
     var rowInFocus = rowIterator.next();
-    while (!ExcelUtils.isMatchingLoopEnd(rowInFocus, placeholder)) {
+    while (rowInFocus.isEmpty() || !ExcelUtils.isMatchingLoopEnd(rowInFocus.get(), placeholder)) {
       rowBuffer.addLast(rowInFocus);
       rowInFocus = rowIterator.next();
     }
@@ -199,25 +222,25 @@ public class ExcelGenerator {
     return rowBuffer;
   }
 
-  private int getLoopBodySize(List<Row> loopBody) {
-    var size = loopBody.get(loopBody.size() - 1).getRowNum() - loopBody.get(0).getRowNum() + 1;  //inclusive
+  private int getLoopBodySize(List<Optional<Row>> loopBody) {
+    var size = loopBody.get(loopBody.size() - 1).get().getRowNum() - loopBody.get(0).get().getRowNum() + 1;  //inclusive
     Optional<String> inLoop = Optional.empty();
     Optional<Integer> loopEnd = Optional.empty();
-    for (Row row : Lists.reverse(loopBody.subList(1, loopBody.size() - 1))) {
-      if (inLoop.isEmpty() && ExcelUtils.isLoopEnd(row)) {
-        inLoop = Optional.of(ExcelUtils.getPlaceholderFromLoopEnd(row));
-        loopEnd = Optional.of(row.getRowNum());
-      } else if (inLoop.isPresent() && ExcelUtils.isMatchingLoopStart(row, inLoop.get())) {
+    for (Optional<Row> row : Lists.reverse(loopBody.subList(1, loopBody.size() - 1))) {
+      if (row.isPresent() && inLoop.isEmpty() && ExcelUtils.isLoopEnd(row.get())) {
+        inLoop = Optional.of(ExcelUtils.getPlaceholderFromLoopEnd(row.get()));
+        loopEnd = Optional.of(row.get().getRowNum());
+      } else if (row.isPresent() && inLoop.isPresent() && ExcelUtils.isMatchingLoopStart(row.get(), inLoop.get())) {
         inLoop = Optional.empty();
-        size -= loopEnd.orElseThrow() - row.getRowNum() + 1; //inclusive
+        size -= loopEnd.orElseThrow() - row.get().getRowNum() + 1; //inclusive
         loopEnd = Optional.empty();
       }
     }
     return size - 2; //loop start/end placeholders
   }
 
-  private int getLoopSize(List<Row> loopBody) {
-    return loopBody.get(loopBody.size() - 1).getRowNum() - loopBody.get(0).getRowNum() + 1;  //inclusive
+  private int getLoopSize(List<Optional<Row>> loopBody) {
+    return loopBody.get(loopBody.size() - 1).get().getRowNum() - loopBody.get(0).get().getRowNum() + 1;  //inclusive
   }
 
   private PlaceholderData getPlaceholderData(Row row) {
