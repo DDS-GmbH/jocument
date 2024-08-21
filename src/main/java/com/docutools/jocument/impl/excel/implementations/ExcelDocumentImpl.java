@@ -53,6 +53,7 @@ public class ExcelDocumentImpl extends DocumentImpl {
       ExcelWriter excelWriter = new XSSFWriter(workbook);
       for (Iterator<Sheet> it = workbook.sheetIterator(); it.hasNext(); ) {
         Sheet sheet = it.next();
+        sanitizeSheet(sheet);
         excelWriter.newSheet(sheet);
         logger.info("Starting generation of sheet {}", sheet.getSheetName());
         ExcelGenerator.apply(resolver, StreamSupport.stream(sheet.spliterator(), false).toList(), excelWriter, options);
@@ -64,5 +65,21 @@ public class ExcelDocumentImpl extends DocumentImpl {
       }
     }
     return file;
+  }
+
+  private void sanitizeSheet(Sheet sheet) {
+    // creates rows where there are none
+    // Get the last row number (0-based index) that has data
+    int lastRowNum = sheet.getLastRowNum();
+
+    // Iterate through all rows from the first to the last one
+    for (int i = 0; i <= lastRowNum; i++) {
+      // Create a row if it does not already exist
+      var row = sheet.getRow(i);
+      if (row == null) {
+        sheet.createRow(i);
+      }
+      System.out.println(i);
+    }
   }
 }

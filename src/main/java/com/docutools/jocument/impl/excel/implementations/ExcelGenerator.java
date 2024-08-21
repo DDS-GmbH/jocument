@@ -146,27 +146,9 @@ public class ExcelGenerator {
       excelWriter.setSectionOffset(loopSize); // insert content after placeholders, tags already in ignore list
     }
     var finalLoopBody = loopBody.subList(1, loopBody.size() - 1);  // remove loop closing tag
-    var innerEmptyTrailingRows = loopBody.get(loopBody.size() - 1).getRowNum() - finalLoopBody.get(finalLoopBody.size() - 1).getRowNum() - 1;
-    var outerEmptyTrailingRows = rows.stream().filter(row1 -> row1.getRowNum() > loopBody.get(loopBody.size() - 1).getRowNum()).findFirst()
-        .map(row1 -> row1.getRowNum() - loopBody.get(loopBody.size() - 1).getRowNum() - 1).orElse(0);
-    var innerEmptyLeadingRows = loopBody.get(1).getRowNum() - row.getRowNum() - 1;
     PlaceholderData placeholderData = getPlaceholderData(row);
-    placeholderData.stream().forEach(placeholderResolver -> {
-      excelWriter.shiftRows(row.getRowNum() + 1, innerEmptyLeadingRows);
-//      excelWriter.updateRowsWritten(innerEmptyLeadingRows);
-      ExcelGenerator.apply(placeholderResolver, finalLoopBody, excelWriter, nestedLoopDepth + 1, options);
-      excelWriter.shiftRows(row.getRowNum() + loopBodySize, innerEmptyTrailingRows);
-      excelWriter.updateRowsWritten(innerEmptyTrailingRows);
-    });
-//    if (placeholderData.count() > 0) {
-//      excelWriter.shiftRows(row.getRowNum() + loopBodySize, innerEmptyTrailingRows);
-//      excelWriter.updateRowsWritten(innerEmptyTrailingRows);
-//    }
-//    final var innerEmptyLeadingRows = loopBody.get(1).getRowNum() - row.getRowNum() - 1;
-//    if (!rows.isEmpty()) {
-//      excelWriter.shiftRows(rows.get(0).getRowNum(), innerEmptyLeadingRows);
-//    }
-//    excelWriter.shiftRows(row.getRowNum() + loopBodySize, outerEmptyTrailingRows);
+    placeholderData.stream().forEach(placeholderResolver ->
+            ExcelGenerator.apply(placeholderResolver, finalLoopBody, excelWriter, nestedLoopDepth + 1, options));
     if (nestedLoopDepth == 0) {
       int rowNum = row.getRowNum();
       excelWriter.finishLoopProcessing(rowNum, loopSize);
