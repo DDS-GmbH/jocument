@@ -27,7 +27,6 @@ public class QuotesBlockPlaceholder implements ExcelPlaceholderData {
 
   private ModificationInformation transform(Row row, ExcelWriter excelWriter) {
     int cellPointer = getPlaceholderStart(row);
-    excelWriter.newRow(row);
     while (!row.getCell(cellPointer).getStringCellValue().equals("{{/quotes}}")) {
       Cell authorCell = row.getCell(cellPointer + 1);  //cells get shifted to the left by one since the placeholder is removed
       String quote = quotes.get(authorCell.getStringCellValue().toLowerCase());

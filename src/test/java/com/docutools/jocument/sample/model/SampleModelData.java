@@ -13,6 +13,7 @@ import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Random;
 import java.util.concurrent.CompletableFuture;
 
 public class SampleModelData {
@@ -25,6 +26,8 @@ public class SampleModelData {
   public static final Ship ENTERPRISE;
   public static final Ship ENTERPRISE_WITHOUT_SERVICES;
   public static final Planet PLANET;
+  public static final Army ARMY;
+  private static final Random RANDOM = new Random();
 
   static {
     try {
@@ -55,9 +58,15 @@ public class SampleModelData {
           return new IterablePlaceholderData(new ReflectionResolver(PICARD, customPlaceholderRegistry, options, parent));
         }
       });
+      ARMY = new Army(List.of(createCaptain(), createCaptain(), createCaptain(), createCaptain()));
     } catch (URISyntaxException e) {
       throw new RuntimeException(e);
     }
+  }
+
+  private static Captain createCaptain() {
+    return new Captain("Captain #%s".formatted(RANDOM.nextInt()), RANDOM.nextInt(), Uniform.values()[RANDOM.nextInt(Uniform.values().length - 1)],
+        null, Collections.emptyList(), null, "");
   }
 
   private SampleModelData() {

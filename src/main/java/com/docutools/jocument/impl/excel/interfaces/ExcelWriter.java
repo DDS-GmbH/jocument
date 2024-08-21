@@ -1,6 +1,5 @@
 package com.docutools.jocument.impl.excel.interfaces;
 
-import java.io.IOException;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -16,22 +15,6 @@ public interface ExcelWriter {
   void newSheet(Sheet sheet);
 
   void newRow(Row row);
-
-  /**
-   * Complete the creation of the report, writing the workbook to the earlier specified path.
-   *
-   * @throws IOException If writing out of the workbook fails.
-   */
-  void complete() throws IOException;
-
-  /**
-   * Add a row offset to consider when creating new rows.
-   * This has to be done for example when unrolling loops, since the original rows still have the old indices,
-   * possibly pointing to already written rows
-   *
-   * @param size The number of rows to add to the row index of rows to clone when creating new rows
-   */
-  void addRowOffset(int size);
 
   /**
    * Create a new cell from the templateCell with the specified cell text.
@@ -71,5 +54,17 @@ public interface ExcelWriter {
 
   void addCell(Cell cell);
 
-  void recalculateFormulas();
+  void setRow(Row row);
+
+  void deleteRows(int loopStart, int noRows);
+
+  void shiftRows(int startingRow, int loopBodySize);
+
+  void updateRowsWritten(int rows);
+
+  void addRowToIgnore(int row);
+
+  void setSectionOffset(int rows);
+
+  void finishLoopProcessing(int rowNum, int loopSize);
 }
