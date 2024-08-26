@@ -88,10 +88,12 @@ public class ExcelGenerator {
   }
 
   private void handleRow(Row row) {
-    if (nestedLoopDepth == 0) {
+    if (notInNestedLoop()) {
+      // We can operate on original row
       excelWriter.setRow(row);
     } else {
-      excelWriter.shiftRows(row.getRowNum(), 1);
+      // We need to insert a new row
+      excelWriter.shiftRows(row.getRowNum(), 1); // shift rows below insertion point one down, so we do not overwrite an existing one
       excelWriter.newRow(row);
     }
     excelWriter.addRowToIgnore(row.getRowNum());
@@ -139,14 +141,16 @@ public class ExcelGenerator {
     int loopSize = getLoopSize(loopBody);
     excelWriter.addRowToIgnore(row.getRowNum()); // ignore opening tag
     excelWriter.addRowToIgnore(loopBody.get(loopBody.size() - 1).getRowNum()); // ignore closing tag
-    if (nestedLoopDepth == 0) {
-      excelWriter.setSectionOffset(loopSize); // insert content after placeholders, tags already in ignore list
+    if (notInNestedLoop()) {
+      // Insert all data after the template rows
+      excelWriter.setSectionOffset(loopSize);
     }
-    var finalLoopBody = loopBody.subList(1, loopBody.size() - 1);  // remove loop closing tag
+    var loopBodyWithoutTags = loopBody.subList(1, loopBody.size() - 1);  // remove loop opening and closing tag
     PlaceholderData placeholderData = getPlaceholderData(row);
     placeholderData.stream().forEach(placeholderResolver ->
-        ExcelGenerator.apply(placeholderResolver, finalLoopBody, excelWriter, nestedLoopDepth + 1, options));
-    if (nestedLoopDepth == 0) {
+        ExcelGenerator.apply(placeholderResolver, loopBodyWithoutTags, excelWriter, nestedLoopDepth + 1, options));
+    if (notInNestedLoop()) {
+      // Processing of the outermost loop has finished, we can delete the template
       int rowNum = row.getRowNum();
       excelWriter.finishLoopProcessing(rowNum, loopSize);
       rows = rows.stream().filter(row1 -> {
@@ -158,9 +162,14 @@ public class ExcelGenerator {
         }
       }).toList();
     } else {
-      rows = rows.subList(finalLoopBody.size() + 1, rows.size());
+      // We finished a nested loop, remove the template from the working set to continue processing of the current iteration
+      rows = rows.subList(loopBodyWithoutTags.size() + 1, rows.size());
     }
     return rows;
+  }
+
+  private boolean notInNestedLoop() {
+    return nestedLoopDepth == 0;
   }
 
   private List<Row> getLoopBody(Row row, List<Row> rows) {

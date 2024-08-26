@@ -67,6 +67,13 @@ public class ExcelDocumentImpl extends DocumentImpl {
     return file;
   }
 
+  /**
+   * Add empty rows to sheet.
+   * To save storage space, Excel files are usually stored in a sparse format, meaning that empty rows are not represented as java objects.
+   * To be able to work with loops which contain empty rows properly, we fill those empty rows up.
+   *
+   * @param sheet The sheet to insert the empty rows into
+   */
   private void sanitizeSheet(Sheet sheet) {
     // creates rows where there are none
     int lastRowNum = sheet.getLastRowNum();
