@@ -30,7 +30,7 @@ public interface PlaceholderData {
    * @return stream of {@link com.docutools.jocument.PlaceholderResolver}s
    */
   default Stream<PlaceholderResolver> stream() {
-    throw new UnsupportedOperationException();
+    throw new UnsupportedOperationException(this.getClass().toString());
   }
 
   /**
@@ -41,7 +41,7 @@ public interface PlaceholderData {
    * @return count of {@link com.docutools.jocument.PlaceholderResolver}s
    */
   default long count() {
-    throw new UnsupportedOperationException();
+    throw new UnsupportedOperationException(this.getClass().toString());
   }
 
   /**
@@ -54,7 +54,7 @@ public interface PlaceholderData {
    * @param options the {@link GenerationOptions}
    */
   default void transform(Object placeholder, Locale locale, GenerationOptions options) {
-    throw new UnsupportedOperationException();
+    throw new UnsupportedOperationException(this.getClass().toString());
   }
 
   /**
@@ -63,7 +63,7 @@ public interface PlaceholderData {
    * @return the raw value
    */
   default Object getRawValue() {
-    throw new UnsupportedOperationException();
+    throw new UnsupportedOperationException(this.getClass().toString());
   }
 
   /**
