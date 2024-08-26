@@ -6,6 +6,9 @@
         </Console>
     </Appenders>
     <Loggers>
+        <Logger name="com.docutools.jocument.impl.excel.implementations" level="trace" additivity="false">
+            <AppenderRef ref="Console"/>
+        </Logger>
         <Root level="DEBUG">
             <AppenderRef ref="Console"/>
         </Root>

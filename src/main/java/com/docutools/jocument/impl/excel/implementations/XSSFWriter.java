@@ -1,14 +1,10 @@
 package com.docutools.jocument.impl.excel.implementations;
 
 import com.docutools.jocument.impl.excel.interfaces.ExcelWriter;
-import java.io.BufferedOutputStream;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.poi.ss.usermodel.Cell;
@@ -18,143 +14,50 @@ import org.apache.poi.ss.usermodel.CreationHelper;
 import org.apache.poi.ss.usermodel.Hyperlink;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.util.CellRangeAddress;
-import org.apache.poi.xssf.streaming.SXSSFFormulaEvaluator;
-import org.apache.poi.xssf.streaming.SXSSFSheet;
-import org.apache.poi.xssf.streaming.SXSSFWorkbook;
-import org.apache.poi.xssf.usermodel.XSSFClientAnchor;
-import org.apache.poi.xssf.usermodel.XSSFDrawing;
-import org.apache.poi.xssf.usermodel.XSSFPicture;
-import org.apache.poi.xssf.usermodel.XSSFPictureData;
-import org.apache.poi.xssf.usermodel.XSSFShape;
-import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.ss.usermodel.Workbook;
 
 /**
- * This is a streamed implementation of the {@link com.docutools.jocument.impl.excel.interfaces.ExcelWriter} interface. The streaming is done so
- * memory can be saved. For now, the amount of rows kept in memory is set to the default, 100. SXSSFWriter works by keeping a reference to the current
- * sheet and row being edited, and copying/cloning required values on the creation of new objects. This is why to the `new...`/`add...` methods the
- * original references of the template should be passed. If one would like to use objects created somewhere else directly, a new implementation
- * considering this would have to be created.
+ * This is an implementation of the {@link ExcelWriter} interface.
  *
  * @author Anton Oellerer
- * @since 2020-04-02
+ * @since 2024-08-21
  */
-public class SXSSFWriter implements ExcelWriter {
+public class XSSFWriter implements ExcelWriter {
   private static final Logger logger = LogManager.getLogger();
 
-  private final Path path;
-  private final SXSSFWorkbook workbook;
+  private final Workbook workbook;
   private final CreationHelper creationHelper;
   /**
    * Maps the {@link CellStyle} objects of the old workbook to the new ones.
    */
   private final Map<Integer, CellStyle> cellStyleMap = new HashMap<>();
+  private final SortedSet<Integer> rowsToIgnore = new TreeSet<>();
   private Sheet currentSheet;
-  private Sheet templateSheet;
   private Row currentRow;
-  private int rowOffset = 0;
   private int leftMostColumn = -1;
   private int rightMostColumn = -1;
+  private int rowsWritten = 0;
+  private int sectionOffset = 0;
 
   /**
    * Creates a new SXSSFWriter.
-   *
-   * @param path The path to save the finished report to.
    */
-  public SXSSFWriter(Path path) {
-    workbook = new SXSSFWorkbook();
+  public XSSFWriter(Workbook workbook) {
     this.creationHelper = workbook.getCreationHelper();
-    this.path = path;
-  }
-
-  private static void transferPicture(XSSFShape shape, SXSSFSheet newSheet) {
-    XSSFPicture picture = (XSSFPicture) shape;
-
-    XSSFPictureData xssfPictureData = picture.getPictureData();
-    XSSFClientAnchor anchor = (XSSFClientAnchor) shape.getAnchor();
-
-    int col1 = anchor.getCol1();
-    int col2 = anchor.getCol2();
-    int row1 = anchor.getRow1();
-    int row2 = anchor.getRow2();
-
-    int x1 = anchor.getDx1();
-    int x2 = anchor.getDx2();
-    int y1 = anchor.getDy1();
-    int y2 = anchor.getDy2();
-
-    var newWb = newSheet.getWorkbook();
-    var newHelper = newWb.getCreationHelper();
-    var newAnchor = newHelper.createClientAnchor();
-
-    // Row / Column placement.
-    newAnchor.setCol1(col1);
-    newAnchor.setCol2(col2);
-    newAnchor.setRow1(row1);
-    newAnchor.setRow2(row2);
-
-    // Fine touch adjustment along the XY coordinate.
-    newAnchor.setDx1(x1);
-    newAnchor.setDx2(x2);
-    newAnchor.setDy1(y1);
-    newAnchor.setDy2(y2);
-
-    int newPictureIndex = newWb.addPicture(xssfPictureData.getData(), xssfPictureData.getPictureType());
-
-    var newDrawing = newSheet.createDrawingPatriarch();
-    newDrawing.createPicture(newAnchor, newPictureIndex);
+    this.workbook = workbook;
   }
 
   @Override
   public void newSheet(Sheet sheet) {
-    logger.info("Creating new sheet of {}", sheet.getSheetName());
-    templateSheet = sheet;
-    currentSheet = workbook.createSheet(sheet.getSheetName());
-    Optional.ofNullable(sheet.getActiveCell()).ifPresent(activeCell -> currentSheet.setActiveCell(activeCell));
-    currentSheet.setAutobreaks(sheet.getAutobreaks());
-    Arrays.stream(sheet.getColumnBreaks()).forEach(column -> currentSheet.setColumnBreak(column));
-    currentSheet.setDefaultColumnWidth(sheet.getDefaultColumnWidth());
-    currentSheet.setDefaultRowHeight(sheet.getDefaultRowHeight());
-    currentSheet.setDisplayFormulas(sheet.isDisplayFormulas());
-    currentSheet.setDisplayGridlines(sheet.isDisplayGridlines());
-    currentSheet.setDisplayGuts(sheet.getDisplayGuts());
-    currentSheet.setDisplayRowColHeadings(sheet.isDisplayRowColHeadings());
-    currentSheet.setDisplayZeros(sheet.isDisplayZeros());
-    currentSheet.setFitToPage(sheet.getFitToPage());
-    currentSheet.setHorizontallyCenter(sheet.getHorizontallyCenter());
-    currentSheet.setPrintGridlines(sheet.isPrintGridlines());
-    currentSheet.setPrintRowAndColumnHeadings(sheet.isPrintRowAndColumnHeadings());
-    currentSheet.setRepeatingColumns(sheet.getRepeatingColumns());
-    currentSheet.setRepeatingRows(sheet.getRepeatingRows());
-    currentSheet.setRightToLeft(sheet.isRightToLeft());
-    Arrays.stream(sheet.getRowBreaks()).forEach(row -> currentSheet.setRowBreak(row));
-    currentSheet.setRowSumsBelow(sheet.getRowSumsBelow());
-    currentSheet.setRowSumsRight(sheet.getRowSumsRight());
-    currentSheet.setSelected(sheet.isSelected());
-    currentSheet.setVerticallyCenter(sheet.getVerticallyCenter());
-
-    // copy auto filters to new sheet
-    if (sheet instanceof XSSFSheet xssfSheet) {
-      var autoFilter = xssfSheet.getCTWorksheet().getAutoFilter();
-      if (autoFilter != null) {
-        var ref = autoFilter.getRef();
-        var range = CellRangeAddress.valueOf(ref);
-        currentSheet.setAutoFilter(range);
-      }
-    }
-
-    var drawing = (XSSFDrawing) sheet.createDrawingPatriarch();
-    for (var shape : drawing.getShapes()) {
-      if (shape instanceof XSSFPicture) {
-        transferPicture(shape, (SXSSFSheet) currentSheet);
-      }
-    }
+    currentSheet = sheet;
   }
 
   @Override
   public void newRow(Row row) {
-    logger.debug("Creating new row {}", row.getRowNum());
-    currentRow = currentSheet.createRow(row.getRowNum() + rowOffset);
+    logger.debug("Creating new row {}",
+        row.getRowNum() + sectionOffset + rowsWritten - rowsToIgnore.headSet(row.getRowNum()).size()); //row num is 0 based
+    currentRow = currentSheet.createRow(
+        row.getRowNum() + sectionOffset + rowsWritten - rowsToIgnore.headSet(row.getRowNum()).size());
     currentRow.setHeight(row.getHeight());
     if (row.isFormatted()) {
       currentRow.setRowStyle(cellStyleMap.computeIfAbsent((int) row.getRowStyle().getIndex(), i -> copyCellStyle(row.getRowStyle())));
@@ -201,7 +104,7 @@ public class SXSSFWriter implements ExcelWriter {
   }
 
   private void copyColumnStyle(int rightMostColumn) {
-    CellStyle columnStyle = templateSheet.getColumnStyle(rightMostColumn);
+    CellStyle columnStyle = currentSheet.getColumnStyle(rightMostColumn);
     if (columnStyle != null) {
       currentSheet.setDefaultColumnStyle(rightMostColumn,
           cellStyleMap.computeIfAbsent((int) columnStyle.getIndex(), i -> copyCellStyle(columnStyle)));
@@ -245,7 +148,7 @@ public class SXSSFWriter implements ExcelWriter {
   @Override
   public void addCell(Cell templateCell, String newCellText, int columnOffset) {
     logger.trace("Creating new cell {} {} with text {}",
-        templateCell.getColumnIndex(), templateCell.getRow().getRowNum(), newCellText);
+        templateCell.getColumnIndex() + columnOffset, templateCell.getRow().getRowNum(), newCellText);
     var newCell = createNewCell(templateCell, columnOffset);
     if (templateCell.getCellType() == CellType.FORMULA) {
       newCell.setCellFormula(newCellText);
@@ -272,27 +175,55 @@ public class SXSSFWriter implements ExcelWriter {
   }
 
   @Override
-  public void complete() throws IOException {
-    var outputStream = new BufferedOutputStream(Files.newOutputStream(path));
-    workbook.write(outputStream);
-    outputStream.close();
-    workbook.close();
+  public void setRow(Row row) {
+    this.currentRow = row;
   }
 
   @Override
-  public void addRowOffset(int size) {
-    rowOffset += size;
+  public void deleteRows(int loopStart, int noRows) {
+    for (int i = loopStart; i < loopStart + noRows; i++) {
+      Row row = currentSheet.getRow(i);
+      if (row != null) {
+        currentSheet.removeRow(row);
+      }
+    }
+    currentSheet.shiftRows(loopStart + noRows, currentSheet.getLastRowNum(), -noRows);
   }
 
   @Override
-  public void recalculateFormulas() {
-    try {
-      SXSSFFormulaEvaluator.evaluateAllFormulaCells(workbook, true);
-    } catch (Exception e) {
-      workbook.setForceFormulaRecalculation(true);
-      logger.error(e);
+  public void shiftRows(int startingRow, int toShift) {
+    //rows are 1 indexed, row nums 0
+    if (startingRow + sectionOffset + rowsWritten - rowsToIgnore.headSet(startingRow).size()
+        <= currentSheet.getLastRowNum()) {
+      currentSheet.shiftRows(startingRow + sectionOffset + rowsWritten - rowsToIgnore.headSet(startingRow).size(),
+          currentSheet.getLastRowNum(),
+          toShift);
     }
   }
+
+  @Override
+  public void updateRowsWritten(int rows) {
+    this.rowsWritten += rows;
+  }
+
+  @Override
+  public void addRowToIgnore(int row) {
+    this.rowsToIgnore.add(row);
+  }
+
+  @Override
+  public void setSectionOffset(int rows) {
+    this.sectionOffset = rows;
+  }
+
+  @Override
+  public void finishLoopProcessing(int rowNum, int loopSize) {
+    this.deleteRows(rowNum, loopSize);
+    this.sectionOffset = 0;
+    this.rowsWritten = 0;
+    rowsToIgnore.clear();
+  }
+
 
   private CellStyle copyCellStyle(CellStyle cellStyle) {
     var newStyle = workbook.createCellStyle();

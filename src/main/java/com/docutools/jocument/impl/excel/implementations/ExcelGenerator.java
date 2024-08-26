@@ -22,6 +22,7 @@ import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.util.LocaleUtil;
+import org.apache.xmlbeans.impl.values.XmlValueDisconnectedException;
 
 
 /**
@@ -37,14 +38,13 @@ public class ExcelGenerator {
 
   private final ExcelWriter excelWriter;
   private final PlaceholderResolver resolver;
-  private final Iterator<Row> rowIterator;
+  private final List<Row> rows;
   private final int nestedLoopDepth;
   private final GenerationOptions options;
-  private int alreadyProcessedLoopsSize = 0;
 
-  private ExcelGenerator(Iterator<Row> rowIterator, ExcelWriter excelWriter, PlaceholderResolver resolver, int nestedLoopDepth,
+  private ExcelGenerator(List<Row> rows, ExcelWriter excelWriter, PlaceholderResolver resolver, int nestedLoopDepth,
                          GenerationOptions options) {
-    this.rowIterator = rowIterator;
+    this.rows = rows;
     this.excelWriter = excelWriter;
     this.resolver = resolver;
     this.nestedLoopDepth = nestedLoopDepth;
@@ -55,38 +55,49 @@ public class ExcelGenerator {
    * This function starts the generating process for the supplied row iterator.
    *
    * @param resolver    The resolver to use for looking up placeholders
-   * @param rowIterator An iterator over the template row which should be processed
+   * @param rows        The rows which should be processed
    * @param excelWriter The writer to write the report out to.
    * @param options     {@link GenerationOptions}
    */
-  static void apply(PlaceholderResolver resolver, Iterator<Row> rowIterator, ExcelWriter excelWriter, GenerationOptions options) {
-    apply(resolver, rowIterator, excelWriter, 0, options);
+  static void apply(PlaceholderResolver resolver, List<Row> rows, ExcelWriter excelWriter, GenerationOptions options) {
+    apply(resolver, rows, excelWriter, 0, options);
   }
 
-  private static void apply(PlaceholderResolver resolver, Iterator<Row> rowIterator, ExcelWriter excelWriter, int nestedLoopDepth,
+  private static void apply(PlaceholderResolver resolver, List<Row> rows, ExcelWriter excelWriter, int nestedLoopDepth,
                             GenerationOptions options) {
-    new ExcelGenerator(rowIterator, excelWriter, resolver, nestedLoopDepth, options).generate();
+    new ExcelGenerator(rows, excelWriter, resolver, nestedLoopDepth, options).generate();
   }
 
   private void generate() {
     logger.debug("Starting generation by applying resolver {}", resolver);
-    for (Iterator<Row> iterator = rowIterator; iterator.hasNext(); ) {
-      Row row = iterator.next();
-      if (isLoopStart(row)) {
-        handleLoop(row, iterator);
-      } else {
-        handleRow(row);
+    List<Row> toProcess = new LinkedList<>(rows);
+    while (!toProcess.isEmpty()) {
+      Row row = toProcess.get(0);
+      toProcess = toProcess.subList(1, toProcess.size());
+      try {
+        if (isLoopStart(row)) {
+          toProcess = handleLoop(row, toProcess);
+        } else {
+          handleRow(row);
+        }
+      } catch (XmlValueDisconnectedException e) {
+        logger.warn(e);
       }
-    }
-    if (nestedLoopDepth != 0) { //here for clarity, could be removed since generation finishes if nestedLoopDepth == 0
-      logger.debug("Adding offset of {}", alreadyProcessedLoopsSize);
-      excelWriter.addRowOffset(alreadyProcessedLoopsSize); //we are in nested loop, readd the offset to prevent subtracting it multiple times
     }
     logger.debug("Finished generation of elements by resolver {}", resolver);
   }
 
   private void handleRow(Row row) {
-    excelWriter.newRow(row);
+    if (notInNestedLoop()) {
+      // We can operate on original row
+      excelWriter.setRow(row);
+    } else {
+      // We need to insert a new row
+      excelWriter.shiftRows(row.getRowNum(), 1); // shift rows below insertion point one down, so we do not overwrite an existing one
+      excelWriter.newRow(row);
+    }
+    excelWriter.addRowToIgnore(row.getRowNum());
+    excelWriter.updateRowsWritten(1);
     ModificationInformation modificationInformation = new ModificationInformation(Optional.empty(), 0);
     for (Cell cell : row) {
       Optional<Integer> skipUntil = modificationInformation.skipUntil();
@@ -94,7 +105,7 @@ public class ExcelGenerator {
         if (ExcelUtils.containsPlaceholder(cell)) {
           var newModificationInformation = replacePlaceholder(cell, modificationInformation.offset());
           modificationInformation = modificationInformation.merge(newModificationInformation);
-        } else if (ExcelUtils.isSimpleCell(cell)) {
+        } else if (nestedLoopDepth != 0) {
           excelWriter.addCell(cell);
         }
       }
@@ -122,38 +133,57 @@ public class ExcelGenerator {
     return ModificationInformation.empty();
   }
 
-  private void handleLoop(Row row, Iterator<Row> iterator) {
+  private List<Row> handleLoop(Row row, List<Row> rows) {
     logger.debug("Handling loop at row {}", row.getRowNum());
-    var loopBody = getLoopBody(row, iterator);
+    var loopBody = getLoopBody(row, rows);
     var loopBodySize = getLoopBodySize(loopBody);
     logger.debug("Loop body size: {}", loopBodySize);
-    var finalLoopBody = loopBody.subList(1, loopBody.size() - 1);
-    var placeholderData = getPlaceholderData(row);
-    placeholderData.stream()
-        .forEach(placeholderResolver -> {
-          excelWriter.addRowOffset(-1); //So we also fill the cell of the loop start placeholder
-          ExcelGenerator.apply(placeholderResolver, finalLoopBody.iterator(), excelWriter, nestedLoopDepth + 1, options);
-          excelWriter.addRowOffset(1); //To avoid subtracting the placeholder size multiple times
-          excelWriter.addRowOffset(loopBodySize);
-        });
-    var loopPlaceholderSize = getLoopSize(loopBody);
-    excelWriter.addRowOffset(-1 * loopPlaceholderSize);
-    logger.debug("Subtracting row offset of {}", loopPlaceholderSize);
-    alreadyProcessedLoopsSize += loopPlaceholderSize;
+    int loopSize = getLoopSize(loopBody);
+    excelWriter.addRowToIgnore(row.getRowNum()); // ignore opening tag
+    excelWriter.addRowToIgnore(loopBody.get(loopBody.size() - 1).getRowNum()); // ignore closing tag
+    if (notInNestedLoop()) {
+      // Insert all data after the template rows
+      excelWriter.setSectionOffset(loopSize);
+    }
+    var loopBodyWithoutTags = loopBody.subList(1, loopBody.size() - 1);  // remove loop opening and closing tag
+    PlaceholderData placeholderData = getPlaceholderData(row);
+    placeholderData.stream().forEach(placeholderResolver ->
+        ExcelGenerator.apply(placeholderResolver, loopBodyWithoutTags, excelWriter, nestedLoopDepth + 1, options));
+    if (notInNestedLoop()) {
+      // Processing of the outermost loop has finished, we can delete the template
+      int rowNum = row.getRowNum();
+      excelWriter.finishLoopProcessing(rowNum, loopSize);
+      rows = rows.stream().filter(row1 -> {
+        try {
+          row1.toString();
+          return true;
+        } catch (XmlValueDisconnectedException ignored) {
+          return false;
+        }
+      }).toList();
+    } else {
+      // We finished a nested loop, remove the template from the working set to continue processing of the current iteration
+      rows = rows.subList(loopBodyWithoutTags.size() + 1, rows.size());
+    }
+    return rows;
   }
 
-  private List<Row> getLoopBody(Row row, Iterator<Row> iterator) {
+  private boolean notInNestedLoop() {
+    return nestedLoopDepth == 0;
+  }
+
+  private List<Row> getLoopBody(Row row, List<Row> rows) {
     var placeholder = ExcelUtils.getPlaceholder(row);
-    logger.debug("Unrolling loop of {}", placeholder);
+    logger.debug("Getting loop body of {}", placeholder);
     LinkedList<Row> rowBuffer = new LinkedList<>();
     rowBuffer.add(row);
-    var rowInFocus = iterator.next();
+    Iterator<Row> rowIterator = rows.iterator();
+    var rowInFocus = rowIterator.next();
     while (!ExcelUtils.isMatchingLoopEnd(rowInFocus, placeholder)) {
       rowBuffer.addLast(rowInFocus);
-      rowInFocus = iterator.next();
+      rowInFocus = rowIterator.next();
     }
     rowBuffer.addLast(rowInFocus);
-    logger.debug("Unrolled loop of {}", placeholder);
     return rowBuffer;
   }
 
