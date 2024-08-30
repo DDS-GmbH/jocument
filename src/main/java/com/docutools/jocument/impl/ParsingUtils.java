@@ -40,4 +40,8 @@ public class ParsingUtils {
   public static Matcher matchPlaceholders(String value) {
     return PLACEHOLDER_PATTERN.matcher(value);
   }
+
+  public static boolean containsPlaceholder(String text) {
+    return PLACEHOLDER_PATTERN.matcher(text).find();
+  }
 }

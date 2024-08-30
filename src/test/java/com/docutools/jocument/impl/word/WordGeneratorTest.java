@@ -558,6 +558,27 @@ class WordGeneratorTest {
             .map(String::strip)
             .toList();
         assertThat(instructions, contains("PAGE", "NUMPAGES"));
-
     }
+
+    @Test
+    void doesNotResolveCustomPlaceholderWithoutBrackets() throws InterruptedException, IOException {
+        // assemble
+        Template template = Template.fromClassPath("/templates/word/NoCustomPlaceholder.docx")
+            .orElseThrow();
+        CustomPlaceholderRegistry customPlaceholderRegistry = new CustomPlaceholderRegistryImpl();
+        customPlaceholderRegistry.addHandler("quote", QuotePlaceholder.class);
+        PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.PLANET, customPlaceholderRegistry);
+
+        // act
+        Document document = template.startGeneration(resolver);
+        document.blockUntilCompletion(60000L); // 1 minute
+
+        // assert
+        assertThat(document.completed(), is(true));
+        xwpfDocument = TestUtils.getXWPFDocumentFromDocument(document);
+        var documentWrapper = new XWPFDocumentWrapper(xwpfDocument);
+        assertThat(documentWrapper.bodyElement(0).asParagraph().run(0).text(),
+            equalTo("quote"));
+    }
+
 }
