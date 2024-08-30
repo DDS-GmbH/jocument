@@ -137,13 +137,19 @@ class WordGenerator {
   }
 
   private boolean isCustomPlaceholder(IBodyElement element) {
-    return element instanceof XWPFParagraph xwpfParagraph
-        && resolver.resolve(
-        ParsingUtils.stripBrackets(
-            WordUtilities.toString(xwpfParagraph)
-        )).map(PlaceholderData::getType)
-        .map(type -> type == PlaceholderType.CUSTOM)
-        .orElse(false);
+    if (!(element instanceof XWPFParagraph xwpfParagraph)) {
+      return false;
+    }
+    String paragraphText = WordUtilities.toString(xwpfParagraph);
+    if (!ParsingUtils.containsPlaceholder(paragraphText)) {
+      return false;
+    }
+    return resolver.resolve(
+    ParsingUtils.stripBrackets(
+        paragraphText
+    )).map(PlaceholderData::getType)
+    .map(type -> type == PlaceholderType.CUSTOM)
+    .orElse(false);
   }
 
   private String fillPlaceholder(MatchResult result, Locale locale) {
