@@ -530,6 +530,8 @@ class WordGeneratorTest {
         assertThat(document.completed(), is(true));
         xwpfDocument = TestUtils.getXWPFDocumentFromDocument(document);
         assertThat(xwpfDocument.getHeaderArray(0).getAllPictures(), hasSize(1));
+        assertThat(xwpfDocument.getHeaderArray(0).getParagraphs().stream()
+            .noneMatch(xwpfParagraph -> xwpfParagraph.getParagraphText().equals("{{profilePic}}")), is(true));
     }
 
     @Test

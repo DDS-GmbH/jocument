@@ -1,18 +1,21 @@
 package com.docutools.jocument.impl.word;
 
 import com.docutools.jocument.impl.ParsingUtils;
-import java.io.IOException;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.poi.xwpf.usermodel.IBody;
 import org.apache.poi.xwpf.usermodel.IBodyElement;
+import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.apache.poi.xwpf.usermodel.XWPFFooter;
 import org.apache.poi.xwpf.usermodel.XWPFHeader;
+import org.apache.poi.xwpf.usermodel.XWPFHeaderFooter;
 import org.apache.poi.xwpf.usermodel.XWPFParagraph;
 import org.apache.poi.xwpf.usermodel.XWPFRun;
 import org.apache.poi.xwpf.usermodel.XWPFTable;
@@ -130,34 +133,40 @@ public class WordUtilities {
    */
   public static void removeIfExists(IBodyElement element) {
     IBody body = element.getBody();
-    CTDocument1 document = body.getXWPFDocument().getDocument();
+    XWPFDocument xwpfDocument = body.getXWPFDocument();
+    CTDocument1 document = xwpfDocument.getDocument();
     if (element instanceof XWPFParagraph xwpfParagraph) {
       try (XmlCursor xmlCursor = xwpfParagraph.getCTP().newCursor()) {
         XmlObject object = getParentObject(xmlCursor);
         if (object.equals(document.getBody())) {
-          findPositionInBody(element).ifPresent(pos -> body.getXWPFDocument().removeBodyElement(pos));
+          findPositionInBody(element).ifPresent(xwpfDocument::removeBodyElement);
         } else if (object instanceof CTTc) {
           removeElementFromTable(xwpfParagraph);
         } else if (object instanceof CTHdrFtr ctHdrFtr) {
-          xmlCursor.toParent();
-          new XWPFFooter(body.getXWPFDocument(), ctHdrFtr).removeParagraph(xwpfParagraph);
+          removeObjectFromDocument(ctHdrFtr, xwpfDocument, xwpfHeaderFooter -> xwpfHeaderFooter.removeParagraph(xwpfParagraph));
         }
-      } catch (IOException e) {
-        throw new ElementRemovalException(e);
       }
     } else if (element instanceof XWPFTable xwpfTable) {
       try (XmlCursor xmlCursor = xwpfTable.getCTTbl().newCursor()) {
         XmlObject object = getParentObject(xmlCursor);
         if (object.equals(document.getBody())) {
-          findPositionInBody(element).ifPresent(pos -> body.getXWPFDocument().removeBodyElement(pos));
+          findPositionInBody(element).ifPresent(xwpfDocument::removeBodyElement);
         } else if (object instanceof CTTc) {
           removeElementFromTable(xwpfTable);
         } else if (object instanceof CTHdrFtr ctHdrFtr) {
-          xmlCursor.toParent();
-          new XWPFFooter(body.getXWPFDocument(), ctHdrFtr).removeTable(xwpfTable);
+          removeObjectFromDocument(ctHdrFtr, xwpfDocument, xwpfHeaderFooter -> xwpfHeaderFooter.removeTable(xwpfTable));
         }
-      } catch (IOException e) {
-        throw new ElementRemovalException(e);
+      }
+    }
+  }
+
+  private static void removeObjectFromDocument(CTHdrFtr ctHdrFtr, XWPFDocument xwpfDocument, Consumer<XWPFHeaderFooter> removalAction) {
+    List<XWPFHeaderFooter> headerFooterList = new LinkedList<>(xwpfDocument.getHeaderList());
+    headerFooterList.addAll(xwpfDocument.getFooterList());
+    for (XWPFHeaderFooter xwpfHeaderFooter : headerFooterList) {
+      if (xwpfHeaderFooter._getHdrFtr().equals(ctHdrFtr)) {
+        removalAction.accept(xwpfHeaderFooter);
+        break;
       }
     }
   }
