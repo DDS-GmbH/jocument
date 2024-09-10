@@ -19,12 +19,14 @@ import com.docutools.jocument.impl.ReflectionResolver;
 import com.docutools.jocument.sample.model.SampleModelData;
 import com.docutools.jocument.sample.placeholders.QuotePlaceholder;
 import com.docutools.jocument.sample.placeholders.TextPlaceholder;
+import com.docutools.poipath.xwpf.RunWrapper;
 import com.docutools.poipath.xwpf.XWPFDocumentWrapper;
 import java.io.IOException;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.Period;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.Locale;
 import org.apache.poi.xwpf.usermodel.BodyElementType;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
@@ -583,4 +585,26 @@ class WordGeneratorTest {
             equalTo("quote"));
     }
 
+    @Test
+    void preservesLinebreaksInStrings() throws InterruptedException, IOException {
+        // Arrange
+        Template template = Template.fromClassPath("/templates/word/UserProfileTemplate.docx")
+            .orElseThrow();
+        PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.LINEBREAK_NAME_PERSON);
+
+        // Act
+        Document document = template.startGeneration(resolver);
+        document.blockUntilCompletion(60000L); // 1 minute
+
+        // Assert
+        assertThat(document.completed(), is(true));
+        xwpfDocument = TestUtils.getXWPFDocumentFromDocument(document);
+        var documentWrapper = new XWPFDocumentWrapper(xwpfDocument);
+        List<RunWrapper> runs = documentWrapper.bodyElement(0).asParagraph().runs();
+        assertThat(runs.size(), equalTo(1));
+        XWPFRun xwpfRun = runs.get(0).xwpfRun();
+        assertThat(xwpfRun.getText(0), equalTo("User Profile: Tyron "));
+        assertThat(xwpfRun.getText(1), equalTo(" Socci Mignon "));
+        assertThat(xwpfRun.getText(2), equalTo(" Ellworths"));
+    }
 }
