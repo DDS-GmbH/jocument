@@ -288,13 +288,13 @@ class ReflectionResolvingTests {
   }
 
   @Test
-  void shouldResolveNullToEmptyString() {
+  void shouldResolveNullToMinus() {
     Person picardPerson = SampleModelData.PICARD_NULL;
     var resolver = new ReflectionResolver(picardPerson);
 
     var name = resolver.resolve("firstName");
 
-    assertThat(name.get().toString(), equalTo(""));
+    assertThat(name.get().toString(), equalTo("-"));
   }
 
   @Test

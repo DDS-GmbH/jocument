@@ -42,7 +42,7 @@ public class ScalarPlaceholderData<T> implements PlaceholderData {
     if (value instanceof Number number) {
       return number.longValue() != 0L;
     } else if (value instanceof String string) {
-      return !string.isEmpty();
+      return !string.isEmpty() && !string.equals("-");
     } else if (value instanceof Boolean bool) {
       return bool;
     } else if (value instanceof Collection<?> collection) {
