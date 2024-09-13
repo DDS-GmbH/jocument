@@ -391,7 +391,7 @@ public class ReflectionResolver extends PlaceholderResolver {
       }
       var wrappedProperty = getBeanProperty(placeholderName);
       if (wrappedProperty.isEmpty()) {
-        return Optional.of(new ScalarPlaceholderData<>(null));
+        return Optional.of(new ScalarPlaceholderData<>("-"));
       }
       return toPlaceholderData(placeholderName, locale, wrappedProperty.get());
     } catch (NoSuchMethodException | IllegalArgumentException e) {
@@ -502,12 +502,11 @@ public class ReflectionResolver extends PlaceholderResolver {
   }
 
   private Optional<Object> getBeanProperty(String placeholderName) throws InvocationTargetException, IllegalAccessException, NoSuchMethodException {
-    var ignoreCasePlaceholder = placeholderName.toLowerCase();
     if (SELF_REFERENCE.equals(placeholderName)) {
       return Optional.ofNullable(bean);
     } else if (bean.getClass().isRecord()) {
       var accessor = Arrays.stream(bean.getClass().getRecordComponents())
-          .filter(recordComponent -> recordComponent.getName().toLowerCase().equals(ignoreCasePlaceholder))
+          .filter(recordComponent -> recordComponent.getName().equalsIgnoreCase(placeholderName))
           .map(RecordComponent::getAccessor)
           .findFirst()
           .orElseThrow(() -> new NoSuchMethodException("Record %s does not have field %s".formatted(bean.getClass().toString(), placeholderName)));
