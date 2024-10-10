@@ -32,6 +32,7 @@ import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTTbl;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTTblPr;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTTc;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTTcPr;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTText;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTTrPr;
 
 public class WordUtilities {
@@ -67,14 +68,11 @@ public class WordUtilities {
     // When deleting a run from a paragraph, the collection keeping the runs shrinks to fit to the new size
     // If we delete the runs with indices 1,2,3...,x,  the second half of the delete operations fails silently
     // To avoid this, we simply delete the first run x times.
-    IntStream.range(1, runs.size()).forEach(value -> paragraph.removeRun(0));
+    IntStream.range(1, runs.size()).forEach(value -> paragraph.removeRun(1));
   }
 
   private static void removeRunText(XWPFRun run) {
-    int sizeOfTextArray = run.getCTR().sizeOfTArray();
-    for (int i = 0; i < sizeOfTextArray; i++) {
-      run.setText("", i);
-    }
+    run.getCTR().setTArray(new CTText[]{});
   }
 
   private static void insertLines(String[] lines, XWPFRun run) {
