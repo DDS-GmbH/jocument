@@ -61,12 +61,20 @@ public class WordUtilities {
   public static void replaceText(XWPFParagraph paragraph, String newText) {
     String[] lines = newText.split("(\\r\\n|\\r|\\n)");
     List<XWPFRun> runs = paragraph.getRuns();
+    XWPFRun run = runs.isEmpty() ? paragraph.createRun() : runs.get(0);
+    removeRunText(run);
+    insertLines(lines, run);
     // When deleting a run from a paragraph, the collection keeping the runs shrinks to fit to the new size
     // If we delete the runs with indices 1,2,3...,x,  the second half of the delete operations fails silently
     // To avoid this, we simply delete the first run x times.
-    IntStream.range(0, runs.size()).forEach(value -> paragraph.removeRun(0));
-    XWPFRun run = paragraph.createRun();
-    insertLines(lines, run);
+    IntStream.range(1, runs.size()).forEach(value -> paragraph.removeRun(0));
+  }
+
+  private static void removeRunText(XWPFRun run) {
+    int sizeOfTextArray = run.getCTR().sizeOfTArray();
+    for (int i = 0; i < sizeOfTextArray; i++) {
+      run.setText("", i);
+    }
   }
 
   private static void insertLines(String[] lines, XWPFRun run) {
