@@ -48,7 +48,10 @@ public final class DefaultImageReference extends ImageReference {
     var filePath = Files.createTempFile("jocument-", ".jpg");
     log.trace("Saving image {} to '{}'...", id, filePath);
 
-    ImageIO.write(image, "JPEG", filePath.toFile());
+    boolean foundWriter = ImageIO.write(image, "JPEG", filePath.toFile());
+    if (!foundWriter) {
+      throw new IOException("Found no JPG writer");
+    }
     log.trace("Successfully saved image {} to '{}'!", id, filePath);
 
     return filePath;
