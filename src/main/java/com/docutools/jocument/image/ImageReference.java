@@ -24,7 +24,7 @@ public abstract class ImageReference implements AutoCloseable {
    * @param width width in pixel
    * @param height height in pixel
    */
-  public ImageReference(int width, int height) {
+  protected ImageReference(int width, int height) {
     this.id = UUID.randomUUID();
     this.width = width;
     this.height = height;
@@ -62,7 +62,9 @@ public abstract class ImageReference implements AutoCloseable {
    *
    * @return the {@link Path} to the JPEG
    */
-  public abstract Path saveAsJpeg() throws IOException;
+  public abstract Path saveAsJpeg() throws IOException, NoWriterFoundException;
+
+  public abstract Path saveAsPng() throws IOException, NoWriterFoundException;
 
   @Override
   public abstract void close();

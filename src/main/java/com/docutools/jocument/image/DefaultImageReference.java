@@ -40,19 +40,28 @@ public final class DefaultImageReference extends ImageReference {
   }
 
   @Override
-  public Path saveAsJpeg() throws IOException {
+  public Path saveAsJpeg() throws IOException, NoWriterFoundException {
+    return saveAs(".jpg", "JPEG");
+  }
+
+  @Override
+  public Path saveAsPng() throws IOException, NoWriterFoundException {
+    return saveAs(".png", "PNG");
+  }
+
+  private Path saveAs(String suffix, String formatName) throws IOException, NoWriterFoundException {
     if (image == null) {
       throw new ImageReferenceClosedException("Image was already closed.");
     }
 
-    var filePath = Files.createTempFile("jocument-", ".jpg");
+    var filePath = Files.createTempFile("jocument-", suffix);
     log.trace("Saving image {} to '{}'...", id, filePath);
 
-    boolean foundWriter = ImageIO.write(image, "JPEG", filePath.toFile());
+    boolean foundWriter = ImageIO.write(image, formatName, filePath.toFile());
     if (!foundWriter) {
-      throw new IOException("Found no JPG writer");
+      throw new NoWriterFoundException(formatName);
     }
-    log.trace("Successfully saved image {} to '{}'!", id, filePath);
+    log.trace("Successfully saved image {} to '{}'", id, filePath);
 
     return filePath;
   }
