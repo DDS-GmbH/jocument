@@ -1,6 +1,8 @@
 package com.docutools.jocument.impl.word.placeholders;
 
 import com.docutools.jocument.GenerationOptions;
+import com.docutools.jocument.image.ImageReference;
+import com.docutools.jocument.image.NoWriterFoundException;
 import com.docutools.jocument.impl.word.CustomWordPlaceholderData;
 import com.docutools.jocument.impl.word.ElementRemovalException;
 import com.docutools.jocument.impl.word.WordImageUtils;
@@ -93,20 +95,29 @@ public class ImagePlaceholderData extends CustomWordPlaceholderData {
   }
 
   private Path applyOptions(GenerationOptions options) {
-    try {
-      var image = options.imageStrategy().load(imagePath);
+    try (var image = options.imageStrategy().load(imagePath)) {
       double scale = Math.max(image.getWidth() / (double) maxWidth, image.getHeight() / (double) maxHeight);
       if (scale > 1.0) {
-        var resized = options.imageStrategy().scale(image, 1 / scale);
-        image.close();
-        image = resized;
+        try (var resized = options.imageStrategy().scale(image, 1 / scale)) {
+          return saveImage(resized);
+        }
       }
-      Path path = image.saveAsJpeg();
-      image.close();
-      return path;
-    } catch (Exception e) {
+      return saveImage(image);
+    } catch (IOException | NoWriterFoundException e) {
       logger.error(e);
       return imagePath;
+    }
+  }
+
+  private Path saveImage(ImageReference imageReference) throws IOException, NoWriterFoundException {
+    try {
+      return imageReference.saveAsJpeg();
+    } catch (NoWriterFoundException e) {
+      try {
+        return imageReference.saveAsPng();
+      } catch (NoWriterFoundException ex) {
+        throw new NoWriterFoundException("JPG,PNG");
+      }
     }
   }
 }
