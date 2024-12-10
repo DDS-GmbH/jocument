@@ -4,7 +4,6 @@ import com.docutools.jocument.GenerationOptions;
 import com.docutools.jocument.image.ImageReference;
 import com.docutools.jocument.image.NoWriterFoundException;
 import com.docutools.jocument.impl.word.CustomWordPlaceholderData;
-import com.docutools.jocument.impl.word.ElementRemovalException;
 import com.docutools.jocument.impl.word.WordImageUtils;
 import com.docutools.jocument.impl.word.WordUtilities;
 import java.io.IOException;
@@ -74,8 +73,6 @@ public class ImagePlaceholderData extends CustomWordPlaceholderData {
       WordUtilities.removeIfExists(placeholder);
     } catch (IllegalArgumentException e) {
       logger.error("Could not insert image", e);
-    } catch (ElementRemovalException e) {
-      logger.error("Could not remove placeholder paragraph", e);
     } finally {
       if (path != null && !path.equals(imagePath)) {
         try {

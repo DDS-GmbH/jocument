@@ -80,8 +80,8 @@ public class WordImageUtils {
   public static Optional<Dimension> probeDimensions(Path path, ImageStrategy imageStrategy) {
     try {
       return Optional.of(imageStrategy.getDimensions(path));
-    } catch (Exception any) {
-      logger.error("Could not probe image '%s' for dimensions.".formatted(path), any);
+    } catch (IOException | IllegalArgumentException e) {
+      logger.error("Could not probe image '%s' for dimensions.".formatted(path), e);
       return Optional.empty();
     }
   }
