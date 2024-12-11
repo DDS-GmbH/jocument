@@ -47,14 +47,17 @@ public final class DefaultImageStrategy implements ImageStrategy {
   }
 
   @Override
-  public ImageReference load(Path path) throws IOException {
+  public ImageReference load(Path path) throws IOException, IncompatibleImageReferenceException {
     log.trace("Loading image from '{}'", path);
     var image = ImageIO.read(path.toFile());
+    if (image == null) {
+      throw new IncompatibleImageReferenceException("Could not read image %s".formatted(path));
+    }
     return new DefaultImageReference(image);
   }
 
   @Override
-  public ImageReference scale(ImageReference original, double scaleBy) {
+  public ImageReference scale(ImageReference original, double scaleBy) throws IncompatibleImageReferenceException {
     log.trace("Scaling image {} by factor {}", original, scaleBy);
 
     if (original instanceof DefaultImageReference ref) {
@@ -66,7 +69,7 @@ public final class DefaultImageStrategy implements ImageStrategy {
       op.filter(source, target);
       return new DefaultImageReference(target);
     }
-    throw new IncompatibleImageReferenceException();
+    throw new IncompatibleImageReferenceException("Image reference {} not instance of DefaultImageReference %s".formatted(original.getId()));
   }
 
   @Override

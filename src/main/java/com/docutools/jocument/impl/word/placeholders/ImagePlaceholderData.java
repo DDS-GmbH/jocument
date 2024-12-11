@@ -2,6 +2,7 @@ package com.docutools.jocument.impl.word.placeholders;
 
 import com.docutools.jocument.GenerationOptions;
 import com.docutools.jocument.image.ImageReference;
+import com.docutools.jocument.image.IncompatibleImageReferenceException;
 import com.docutools.jocument.image.NoWriterFoundException;
 import com.docutools.jocument.impl.word.CustomWordPlaceholderData;
 import com.docutools.jocument.impl.word.WordImageUtils;
@@ -100,7 +101,7 @@ public class ImagePlaceholderData extends CustomWordPlaceholderData {
         }
       }
       return saveImage(image);
-    } catch (IOException | NoWriterFoundException e) {
+    } catch (IOException | NoWriterFoundException | IncompatibleImageReferenceException e) {
       logger.error(e);
       return imagePath;
     }

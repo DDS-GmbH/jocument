@@ -28,7 +28,7 @@ public interface ImageStrategy {
    * @param path the path to the image file
    * @return the reference to the in-memory image
    */
-  ImageReference load(Path path) throws IOException;
+  ImageReference load(Path path) throws IOException, IncompatibleImageReferenceException;
 
   /**
    * Scales an image by the given factor (can be > or < to 1.0) into a new in-memory image and returns it. The OG
@@ -40,7 +40,7 @@ public interface ImageStrategy {
    * @param scaleBy  the scaling factor (>= 0)
    * @return the scaled image
    */
-  ImageReference scale(ImageReference original, double scaleBy);
+  ImageReference scale(ImageReference original, double scaleBy) throws IncompatibleImageReferenceException;
 
   /**
    * Gets the dimensions of the provided image.
