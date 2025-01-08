@@ -15,6 +15,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.poi.xwpf.usermodel.IBody;
 import org.apache.poi.xwpf.usermodel.IBodyElement;
+import org.apache.poi.xwpf.usermodel.XWPFParagraph;
 
 public class ImagePlaceholderData extends CustomWordPlaceholderData {
   private static final Logger logger = LogManager.getLogger();
@@ -70,6 +71,9 @@ public class ImagePlaceholderData extends CustomWordPlaceholderData {
     Path path = applyOptions(options);
     try {
       var paragraph = part.insertNewParagraph(WordUtilities.openCursor(placeholder).orElseThrow());
+      if (placeholder instanceof XWPFParagraph placeholderParagraph) {
+        paragraph.setAlignment(placeholderParagraph.getAlignment());
+      }
       WordImageUtils.insertImage(paragraph, path, options.imageStrategy());
       WordUtilities.removeIfExists(placeholder);
     } catch (IllegalArgumentException e) {
