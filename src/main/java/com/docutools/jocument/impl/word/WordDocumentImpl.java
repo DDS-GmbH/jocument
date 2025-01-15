@@ -14,6 +14,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.poi.xwpf.usermodel.IBodyElement;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
+import org.apache.poi.xwpf.usermodel.XWPFParagraph;
+import org.apache.poi.xwpf.usermodel.XWPFRun;
 
 public class WordDocumentImpl extends DocumentImpl {
   private static final Logger logger = LogManager.getLogger();
@@ -35,6 +37,8 @@ public class WordDocumentImpl extends DocumentImpl {
       logger.debug("Retrieved all body elements, starting WordGenerator");
       WordGenerator.apply(resolver, bodyElements, options);
 
+      cleanLastEmptyPage(document);
+
       document.enforceUpdateFields();
 
       try (OutputStream os = Files.newOutputStream(file)) {
@@ -46,4 +50,32 @@ public class WordDocumentImpl extends DocumentImpl {
     return file;
   }
 
+  private void cleanLastEmptyPage(XWPFDocument document) {
+    List<IBodyElement> elements = document.getBodyElements();
+    int elementsToRemove = 0;
+    for (int i = elements.size() - 1; i >= 0; i--) {
+      IBodyElement element = elements.get(i);
+      if (element instanceof XWPFParagraph xwpfParagraph && isEmpty(xwpfParagraph)) {
+        elementsToRemove++;
+      } else {
+        break;
+      }
+    }
+    for (; elementsToRemove > 0; elementsToRemove--) {
+      document.removeBodyElement(elements.size() - 1);
+    }
+  }
+
+  private boolean isEmpty(XWPFParagraph xwpfParagraph) {
+    return xwpfParagraph.isPageBreak() || (xwpfParagraph.getText().trim().isEmpty() && !hasPictures(xwpfParagraph));
+  }
+
+  private boolean hasPictures(XWPFParagraph paragraph) {
+    for (XWPFRun xwpfRun : paragraph.getRuns()) {
+      if (!xwpfRun.getEmbeddedPictures().isEmpty()) {
+        return true;
+      }
+    }
+    return false;
+  }
 }

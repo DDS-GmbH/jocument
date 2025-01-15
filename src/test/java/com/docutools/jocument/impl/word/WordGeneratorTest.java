@@ -607,4 +607,21 @@ class WordGeneratorTest {
         assertThat(xwpfRun.getText(1), equalTo(" Socci Mignon "));
         assertThat(xwpfRun.getText(2), equalTo(" Ellworths"));
     }
+
+    @Test
+    void deletesEmptyPage() throws InterruptedException, IOException {
+        // Arrange
+        Template template = Template.fromClassPath("/templates/word/EmptyTemplate.docx")
+            .orElseThrow();
+        PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.LINEBREAK_NAME_PERSON);
+
+        // Act
+        Document document = template.startGeneration(resolver);
+        document.blockUntilCompletion(60000L); // 1 minute
+
+        // Assert
+        assertThat(document.completed(), is(true));
+        xwpfDocument = TestUtils.getXWPFDocumentFromDocument(document);
+        assertThat(xwpfDocument.getBodyElements().size(), equalTo(0));
+    }
 }
