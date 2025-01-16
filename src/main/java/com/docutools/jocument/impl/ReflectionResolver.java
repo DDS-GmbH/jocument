@@ -391,7 +391,7 @@ public class ReflectionResolver extends PlaceholderResolver {
       }
       var wrappedProperty = getBeanProperty(placeholderName);
       if (wrappedProperty.isEmpty()) {
-        return Optional.of(new ScalarPlaceholderData<>("-"));
+        return Optional.of(new ScalarPlaceholderData<>(""));
       }
       return toPlaceholderData(placeholderName, locale, wrappedProperty.get());
     } catch (NoSuchMethodException | IllegalArgumentException e) {

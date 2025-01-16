@@ -128,7 +128,7 @@ public class ExcelGenerator {
     // to resolve cell content such as "{{name}} {{crew}}", we match against the full string and resolve per match
     var matcher = ParsingUtils.matchPlaceholders(cellValue);
     excelWriter.addCell(cell, matcher.replaceAll(matchResult -> resolver.resolve(matchResult.group(1))
-        .orElse(new ScalarPlaceholderData<>("-"))
+        .orElse(new ScalarPlaceholderData<>(""))
         .toString()));
     return ModificationInformation.empty();
   }
