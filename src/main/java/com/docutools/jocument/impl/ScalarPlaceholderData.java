@@ -28,7 +28,11 @@ public class ScalarPlaceholderData<T> implements PlaceholderData {
 
   @Override
   public String toString() {
-    return stringifier.apply(value);
+    String string = stringifier.apply(value);
+    if (string == null || string.isEmpty()) {
+      return "-";
+    }
+    return string;
   }
 
   @Override
