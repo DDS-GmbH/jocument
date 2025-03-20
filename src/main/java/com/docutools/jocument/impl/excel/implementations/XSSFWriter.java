@@ -187,7 +187,9 @@ public class XSSFWriter implements ExcelWriter {
         currentSheet.removeRow(row);
       }
     }
-    currentSheet.shiftRows(loopStart + noRows, currentSheet.getLastRowNum(), -noRows);
+    if (loopStart + noRows < currentSheet.getLastRowNum()) {
+      currentSheet.shiftRows(loopStart + noRows, currentSheet.getLastRowNum(), -noRows);
+    }
   }
 
   @Override
