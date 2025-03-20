@@ -18,7 +18,10 @@ import com.docutools.jocument.Template;
 import com.docutools.jocument.TestUtils;
 import com.docutools.jocument.impl.CustomPlaceholderRegistryImpl;
 import com.docutools.jocument.impl.ReflectionResolver;
+import com.docutools.jocument.sample.model.Captain;
 import com.docutools.jocument.sample.model.SampleModelData;
+import com.docutools.jocument.sample.model.Service;
+import com.docutools.jocument.sample.model.Uniform;
 import com.docutools.jocument.sample.placeholders.CrewPlaceholder;
 import com.docutools.jocument.sample.placeholders.QuotesBlockPlaceholder;
 import com.docutools.poipath.PoiPath;
@@ -28,6 +31,8 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.Period;
 import java.time.format.DateTimeFormatter;
+import java.util.Collections;
+import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import org.apache.poi.ss.usermodel.CellType;
@@ -602,5 +607,39 @@ class ExcelGeneratorTest {
         var xssfWorkbook = TestUtils.getXSSFWorkbookFromDocument(document);
         var xssf = new XSSFWorkbookWrapper(xssfWorkbook);
         assertThat(xssf.sheet(0).sheet().getDrawingPatriarch().getShapes().size(), equalTo(1));
+    }
+
+    @Test
+    void doesNotShiftBeyondFile() throws InterruptedException {
+        // Arrange
+        Template template = Template.fromClassPath("/templates/excel/SimpleLoop.xlsx")
+            .orElseThrow();
+        PlaceholderResolver resolver = new ReflectionResolver(new Captain("Test", 1, Uniform.Blue, null, Collections.emptyList(), null, "angry"));
+
+        // Act
+        Document document = template.startGeneration(resolver);
+        document.blockUntilCompletion(60000L); // 1 minute
+
+        // Assert
+        assertThat(document.completed(), is(true));
+    }
+
+    @Test
+    void shiftsSingleRow() throws InterruptedException, IOException {
+        // Arrange
+        Template template = Template.fromClassPath("/templates/excel/SimpleLoop.xlsx")
+            .orElseThrow();
+        PlaceholderResolver resolver =
+            new ReflectionResolver(new Captain("Test", 1, Uniform.Blue, null, List.of(new Service("Hello", Collections.emptyList())), null, "angry"));
+
+        // Act
+        Document document = template.startGeneration(resolver);
+        document.blockUntilCompletion(60000L); // 1 minute
+
+        // Assert
+        assertThat(document.completed(), is(true));
+        var xssfWorkbook = TestUtils.getXSSFWorkbookFromDocument(document);
+        var xssf = new XSSFWorkbookWrapper(xssfWorkbook);
+        assertThat(xssf.sheet(0).row(0).cell(0).text(), equalTo("Hello"));
     }
 }
