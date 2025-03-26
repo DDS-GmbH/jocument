@@ -8,7 +8,7 @@ plugins {
 }
 
 group 'com.docutools'
-version = '9.0.2'
+version = '9.0.3'
 
 java {
     toolchain {
@@ -27,29 +27,29 @@ repositories {
     }
 }
 
-def apachePOIVersion = '5.3.0'
-def log4jVersion = '2.23.1'
+def apachePOIVersion = '5.4.0'
+def log4jVersion = '2.24.3'
 
 dependencies {
-    implementation('commons-beanutils:commons-beanutils:1.9.4')
+    implementation('commons-beanutils:commons-beanutils:1.10.1')
 
     implementation("org.apache.poi:poi:$apachePOIVersion")
     implementation("org.apache.poi:poi-ooxml:$apachePOIVersion")
     implementation("org.apache.poi:poi-ooxml-lite:$apachePOIVersion")
 
-    implementation("com.google.code.gson:gson:2.10.1")
-    implementation("org.apache.tika:tika-core:2.9.2")
+    implementation("com.google.code.gson:gson:2.12.1")
+    implementation("org.apache.tika:tika-core:3.1.0")
 
     runtimeOnly("org.apache.logging.log4j:log4j-core:$log4jVersion")
     implementation("org.apache.logging.log4j:log4j-api:$log4jVersion")
 
     implementation 'com.codepoetics:protonpack:1.16'
-    implementation 'com.google.guava:guava:33.2.0-jre'
+    implementation 'com.google.guava:guava:33.4.5-jre'
 
     implementation 'io.github.jbock-java:either:1.5.2'
 
-    testImplementation 'org.junit.jupiter:junit-jupiter:5.11.0-M1'
-    testImplementation("org.hamcrest:hamcrest:2.2")
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.11.4'
+    testImplementation("org.hamcrest:hamcrest:3.0")
     testImplementation("com.docutools:poipath:2.0.0")
 }
 
