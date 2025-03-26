@@ -15,6 +15,9 @@ import org.apache.poi.ss.usermodel.Hyperlink;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFCellStyle;
+import org.apache.poi.xssf.usermodel.XSSFColor;
+import org.apache.poi.xssf.usermodel.XSSFFont;
 
 /**
  * This is an implementation of the {@link ExcelWriter} interface.
@@ -60,7 +63,7 @@ public class XSSFWriter implements ExcelWriter {
         row.getRowNum() + sectionOffset + rowsWritten - rowsToIgnore.headSet(row.getRowNum()).size());
     currentRow.setHeight(row.getHeight());
     if (row.isFormatted()) {
-      currentRow.setRowStyle(cellStyleMap.computeIfAbsent((int) row.getRowStyle().getIndex(), i -> copyCellStyle(row.getRowStyle())));
+      currentRow.setRowStyle(cellStyleMap.computeIfAbsent((int) row.getRowStyle().getIndex(), i -> copyStyle(row.getRowStyle())));
     }
     currentRow.setZeroHeight(row.getZeroHeight());
     updateColumnStyles(row);
@@ -107,7 +110,7 @@ public class XSSFWriter implements ExcelWriter {
     CellStyle columnStyle = currentSheet.getColumnStyle(rightMostColumn);
     if (columnStyle != null) {
       currentSheet.setDefaultColumnStyle(rightMostColumn,
-          cellStyleMap.computeIfAbsent((int) columnStyle.getIndex(), i -> copyCellStyle(columnStyle)));
+          cellStyleMap.computeIfAbsent((int) columnStyle.getIndex(), i -> copyStyle(columnStyle)));
     }
   }
 
@@ -168,7 +171,7 @@ public class XSSFWriter implements ExcelWriter {
   private Cell createNewCell(Cell templateCell, int columnOffset) {
     var newCell = currentRow.createCell(templateCell.getColumnIndex() + columnOffset, templateCell.getCellType());
     newCell.setCellComment(templateCell.getCellComment());
-    newCell.setCellStyle(cellStyleMap.computeIfAbsent((int) templateCell.getCellStyle().getIndex(), i -> copyCellStyle(templateCell.getCellStyle())));
+    newCell.setCellStyle(cellStyleMap.computeIfAbsent((int) templateCell.getCellStyle().getIndex(), i -> copyStyle(templateCell.getCellStyle())));
     newCell.setHyperlink(templateCell.getHyperlink());
     currentSheet.setColumnWidth(templateCell.getColumnIndex(), templateCell.getSheet().getColumnWidth(templateCell.getColumnIndex()));
     return newCell;
@@ -226,10 +229,27 @@ public class XSSFWriter implements ExcelWriter {
     rowsToIgnore.clear();
   }
 
-
-  private CellStyle copyCellStyle(CellStyle cellStyle) {
+  private CellStyle copyStyle(CellStyle cellStyle) {
     var newStyle = workbook.createCellStyle();
     newStyle.cloneStyleFrom(cellStyle);
+    setDefaultColorToBlack(cellStyle);
     return newStyle;
+  }
+
+  private void setDefaultColorToBlack(CellStyle cellStyle) {
+    if (cellStyle instanceof XSSFCellStyle xssfCellStyle) {
+      XSSFFont font = xssfCellStyle.getFont();
+      XSSFColor xssfColor = font.getXSSFColor();
+      if (xssfColor != null && xssfColor.isRGB()) {
+        byte[] argb = xssfColor.getARGB();
+        if (isStandardLilac(argb)) {
+          font.setColor(new XSSFColor(new byte[] {(byte) 255, (byte) 0, (byte) 0, (byte) 0}));
+        }
+      }
+    }
+  }
+
+  private boolean isStandardLilac(byte[] argb) {
+    return argb[0] == -1 && argb[1] == -88 && argb[2] == -113 && argb[3] == -86;
   }
 }
