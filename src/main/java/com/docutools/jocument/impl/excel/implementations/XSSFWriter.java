@@ -232,10 +232,17 @@ public class XSSFWriter implements ExcelWriter {
   private CellStyle copyStyle(CellStyle cellStyle) {
     var newStyle = workbook.createCellStyle();
     newStyle.cloneStyleFrom(cellStyle);
+    // https://bz.apache.org/bugzilla/show_bug.cgi?id=69629
     setDefaultColorToBlack(cellStyle);
     return newStyle;
   }
 
+  /**
+   * Workaround for <a href="https://bz.apache.org/bugzilla/show_bug.cgi?id=69629">Apache POI bug #69629</a> where in some cases the explicit style is not detected.
+   * In this case, the font color is set to lilac, which is seldom in line with spreadsheet designs, thus it is set to black here.
+   *
+   * @param cellStyle The cell style of the
+   */
   private void setDefaultColorToBlack(CellStyle cellStyle) {
     if (cellStyle instanceof XSSFCellStyle xssfCellStyle) {
       XSSFFont font = xssfCellStyle.getFont();
@@ -249,7 +256,12 @@ public class XSSFWriter implements ExcelWriter {
     }
   }
 
-  private boolean isStandardLilac(byte[] argb) {
-    return argb[0] == -1 && argb[1] == -88 && argb[2] == -113 && argb[3] == -86;
+  private boolean isStandardLilac(byte[] getColorArray) {
+    if (getColorArray == null) {
+      return false;
+    } else if (getColorArray.length == 4) {
+      return getColorArray[0] == -1 && getColorArray[1] == -88 && getColorArray[2] == -113 && getColorArray[3] == -86;
+    }
+    return false;
   }
 }
