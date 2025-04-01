@@ -38,6 +38,7 @@ import java.util.Optional;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFCellStyle;
+import org.apache.poi.xssf.usermodel.XSSFFont;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Disabled;
@@ -660,10 +661,13 @@ class ExcelGeneratorTest {
         assertThat(document.completed(), is(true));
         var xssfWorkbook = TestUtils.getXSSFWorkbookFromDocument(document);
         var xssf = new XSSFWorkbookWrapper(xssfWorkbook);
-        byte[] argbFontColor = ((XSSFCellStyle) xssf.sheet(0).row(0).cell(0).cellStyle()).getFont().getXSSFColor().getARGB();
+        XSSFFont font = ((XSSFCellStyle) xssf.sheet(0).row(0).cell(0).cellStyle()).getFont();
+        byte[] argbFontColor = font.getXSSFColor().getARGB();
         assertThat(argbFontColor[0] & 0xFF, equalTo(255));
-        assertThat(argbFontColor[1] & 0xFF, equalTo(0));
+        assertThat(argbFontColor[1] & 0xFF, equalTo(255));
         assertThat(argbFontColor[2] & 0xFF, equalTo(0));
         assertThat(argbFontColor[3] & 0xFF, equalTo(0));
+        assertThat(font.getBold(), equalTo(true));
+        assertThat(font.getFontHeightInPoints(), is((short)14));
     }
 }

@@ -177,4 +177,21 @@ public class ExcelDocuments {
     assertThat(document.completed(), is(true));
     Desktop.getDesktop().open(document.getPath().toFile());
   }
+
+  @Test
+  @DisplayName("Keep Cell Formatting")
+  void keepCellFormatting() throws InterruptedException, IOException {
+    // Arrange
+    Template template = Template.fromClassPath("/templates/excel/CellFormatting.xlsx")
+        .orElseThrow();
+    PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.PICARD);
+
+    // Act
+    Document document = template.startGeneration(resolver);
+    document.blockUntilCompletion(720_000L); // 5 seconds
+
+    // Assert
+    assertThat(document.completed(), is(true));
+    Desktop.getDesktop().open(document.getPath().toFile());
+  }
 }

@@ -119,7 +119,10 @@ public class ExcelGenerator {
       PlaceholderData placeholderData = placeholderDataOptional.get();
       if (placeholderData instanceof ScalarPlaceholderData<?> scalarPlaceholderData
           && scalarPlaceholderData.getRawValue() instanceof Number number) {
-        excelWriter.addCell(cell, number.doubleValue());
+        if(nestedLoopDepth > 0)
+          excelWriter.addCell(cell, number.doubleValue());
+        else // if we are not in a loop, we can set the cell value directly, otherwise we would overwrite the template cell and styles (*)
+          cell.setCellValue(number.doubleValue());
         return ModificationInformation.empty();
       } else if (placeholderData.getType().equals(PlaceholderType.CUSTOM) && placeholderData instanceof ExcelPlaceholderData excelPlaceholderData) {
         return excelPlaceholderData.transform(cell, excelWriter, offset, LocaleUtil.getUserLocale(), options);
@@ -127,9 +130,13 @@ public class ExcelGenerator {
     }
     // to resolve cell content such as "{{name}} {{crew}}", we match against the full string and resolve per match
     var matcher = ParsingUtils.matchPlaceholders(cellValue);
-    excelWriter.addCell(cell, matcher.replaceAll(matchResult -> resolver.resolve(matchResult.group(1))
-        .orElse(new ScalarPlaceholderData<>(""))
-        .toString()));
+    String newCellText = matcher.replaceAll(matchResult -> resolver.resolve(matchResult.group(1))
+            .orElse(new ScalarPlaceholderData<>(""))
+            .toString());
+    if(nestedLoopDepth > 0)
+      excelWriter.addCell(cell, newCellText);
+    else // (*) see above
+      cell.setCellValue(newCellText);
     return ModificationInformation.empty();
   }
 
