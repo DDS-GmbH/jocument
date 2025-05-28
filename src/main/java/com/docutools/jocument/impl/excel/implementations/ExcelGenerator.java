@@ -15,6 +15,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
+import java.util.regex.Matcher;
 import java.util.stream.StreamSupport;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -130,9 +131,13 @@ public class ExcelGenerator {
     }
     // to resolve cell content such as "{{name}} {{crew}}", we match against the full string and resolve per match
     var matcher = ParsingUtils.matchPlaceholders(cellValue);
-    String newCellText = matcher.replaceAll(matchResult -> resolver.resolve(matchResult.group(1))
-            .orElse(new ScalarPlaceholderData<>(""))
-            .toString());
+    String newCellText = matcher
+        .replaceAll(matchResult -> resolver.resolve(matchResult.group(1))
+            .map(Object::toString)
+            // we need to quote the replacement string, so it is not interpreted as a regex replacement
+            // see: https://docs.oracle.com/en/java/javase/21/docs//api/java.base/java/lang/String.html#replaceAll(java.lang.String,java.lang.String)
+            .map(Matcher::quoteReplacement)
+            .orElse(""));
     if(nestedLoopDepth > 0)
       excelWriter.addCell(cell, newCellText);
     else // (*) see above

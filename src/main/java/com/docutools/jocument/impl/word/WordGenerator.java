@@ -80,7 +80,12 @@ class WordGenerator {
   private void transform(XWPFParagraph paragraph) {
     Matcher matcher = TAG_PATTERN.matcher(WordUtilities.toString(paragraph));
     if (matcher.find()) {
-      WordUtilities.replaceText(paragraph, matcher.replaceAll(matchResult -> fillPlaceholder(matchResult, LocaleUtil.getUserLocale())));
+      WordUtilities.replaceText(paragraph, matcher.replaceAll(matchResult -> {
+        var filler = fillPlaceholder(matchResult, LocaleUtil.getUserLocale());
+        // we need to quote the replacement string, so it is not interpreted as a regex replacement
+        // see: https://docs.oracle.com/en/java/javase/21/docs//api/java.base/java/lang/String.html#replaceAll(java.lang.String,java.lang.String)
+        return Matcher.quoteReplacement(filler);
+      }));
     }
     logger.debug("Transformed paragraph {}", paragraph);
   }

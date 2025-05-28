@@ -29,6 +29,7 @@ public class SampleModelData {
   public static final Army ARMY;
   private static final Random RANDOM = new Random();
   public static final Person LINEBREAK_NAME_PERSON = new Person("Tyron \n Socci", "Mignon \n Ellworths", LocalDate.now());
+  public static final String PLACEHOLDER_WITH_SPECIAL_CHARS = "Hello $ Special Chars";
 
   static {
     try {

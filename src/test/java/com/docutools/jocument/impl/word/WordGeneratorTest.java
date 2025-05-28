@@ -21,6 +21,7 @@ import com.docutools.jocument.sample.placeholders.QuotePlaceholder;
 import com.docutools.jocument.sample.placeholders.TextPlaceholder;
 import com.docutools.poipath.xwpf.RunWrapper;
 import com.docutools.poipath.xwpf.XWPFDocumentWrapper;
+import java.awt.Desktop;
 import java.io.IOException;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -623,5 +624,24 @@ class WordGeneratorTest {
         assertThat(document.completed(), is(true));
         xwpfDocument = TestUtils.getXWPFDocumentFromDocument(document);
         assertThat(xwpfDocument.getBodyElements().size(), equalTo(0));
+    }
+
+    @Test
+    @DisplayName("Fill palceholder with string containing special meaning characters for regex (e.g. $)")
+    void shouldFillPlaceholderWithSpecialCharacters() throws InterruptedException, IOException {
+        // Arrange
+        Template template = Template.fromClassPath("/templates/word/SpecialCharsTemplate.docx")
+            .orElseThrow();
+        PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.PLACEHOLDER_WITH_SPECIAL_CHARS);
+
+        // Act
+        Document document = template.startGeneration(resolver);
+        document.blockUntilCompletion(60000L); // 1 minute
+
+        // Assert
+        assertThat(document.completed(), is(true));
+        xwpfDocument = TestUtils.getXWPFDocumentFromDocument(document);
+        var documentWrapper = new XWPFDocumentWrapper(xwpfDocument);
+        assertThat(documentWrapper.bodyElement(0).asParagraph().text(), equalTo(SampleModelData.PLACEHOLDER_WITH_SPECIAL_CHARS));
     }
 }
