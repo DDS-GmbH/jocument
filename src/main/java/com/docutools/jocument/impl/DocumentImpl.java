@@ -45,11 +45,15 @@ public abstract class DocumentImpl extends Thread implements Document {
       logger.info("Starting generating document from path {} with template {} and resolver {}", path, template, resolver);
       this.path = generate();
       logger.info("Finished generating document from path {} with template {} and resolver {}", path, template, resolver);
-    } catch (IOException e) {
+    }  catch (IOException e) {
       logger
           .error("Encountered IOException when generating document from path %s with template %s and resolver %s".formatted(path, template, resolver),
               e);
       throw new IllegalStateException("Got IOException when generating, probably due to template.", e);
+    } catch (Exception e) {
+      logger
+          .error("Encountered exception when generating document from path %s with template %s and resolver %s".formatted(path, template, resolver),
+              e);
     }
     complete = true;
   }
