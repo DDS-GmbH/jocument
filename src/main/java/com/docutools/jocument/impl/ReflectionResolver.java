@@ -362,6 +362,8 @@ public class ReflectionResolver extends PlaceholderResolver {
           .flatMap(placeholderData -> placeholderData.stream().findFirst())
           .flatMap(childResolver -> childResolver.resolve(property, locale))
           .or(() -> doReflectiveResolve(property, locale));
+      if(result.isEmpty())
+        break;
     }
     return result;
   }
