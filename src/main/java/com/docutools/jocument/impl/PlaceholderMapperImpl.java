@@ -42,13 +42,13 @@ public class PlaceholderMapperImpl implements PlaceholderMapper {
       var file = path.toFile();
       if (file.exists() && file.canRead()) {
         try (var reader = new BufferedReader(new FileReader(file))) {
-          logger.info("Parsing mappings");
+          logger.debug("Parsing mappings");
           placeholderMappings = reader.lines()
               .filter(line -> !line.isEmpty())
               .filter(line -> !line.startsWith("//"))
               .map(line -> line.split(":"))
               .collect(Collectors.toMap(strings -> strings[0].toLowerCase(), strings -> strings[1]));
-          logger.info("Parsed mappings");
+          logger.debug("Parsed mappings");
         } catch (IOException e) {
           logger.error(e);
         }
@@ -58,7 +58,7 @@ public class PlaceholderMapperImpl implements PlaceholderMapper {
         logger.error("Mappings file {} can not be read", pathString);
       }
     } else {
-      logger.info("Path to mapping file is null");
+      logger.debug("Path to mapping file is null");
     }
   }
 }
