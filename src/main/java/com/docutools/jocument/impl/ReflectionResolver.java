@@ -358,6 +358,8 @@ public class ReflectionResolver extends PlaceholderResolver {
   private Optional<PlaceholderData> resolveChain(String placeholderName, Locale locale) {
     Optional<PlaceholderData> result = Optional.empty();
     for (String property : placeholderName.split("\\.")) {
+      if(result.filter(placeholderData -> !(placeholderData instanceof IterablePlaceholderData)).isPresent())
+        return Optional.empty(); // property access only possible on IterablePlaceholderData
       result = result
           .flatMap(placeholderData -> placeholderData.stream().findFirst())
           .flatMap(childResolver -> childResolver.resolve(property, locale))
