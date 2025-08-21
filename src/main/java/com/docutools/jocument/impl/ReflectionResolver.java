@@ -471,16 +471,20 @@ public class ReflectionResolver extends PlaceholderResolver {
       }
     } else if (isFieldAnnotatedWith(bean.getClass(), placeholderName, Translatable.class)) {
       return getObjectTranslation(placeholderName, locale, options);
-    } else if (property instanceof Enum || property instanceof String || ReflectionUtils.isWrapperType(property.getClass())) {
-      return Optional.of(new ScalarPlaceholderData<>(property));
-    } else if (property instanceof Temporal temporal) {
-      return formatTemporal(placeholderName, temporal, locale);
-    } else if (property instanceof Path path && isFieldAnnotatedWith(bean.getClass(), placeholderName, Image.class)) {
+    } else if (isFieldAnnotatedWith(bean.getClass(), placeholderName, Image.class)) {
+      Path path;
+      if(property instanceof Path pathVar) path = pathVar;
+      else if(property instanceof String pathString) path = Path.of(pathString);
+      else return Optional.empty();
       return ReflectionUtils.findFieldAnnotation(bean.getClass(), placeholderName, Image.class)
           .map(image -> new ImagePlaceholderData(path)
               .withMaxWidth(image.maxWidth())
               .withMaxHeight(image.maxHeight())
               .withFileDeletionAfterInsertion(image.deleteAfterInsertion()));
+    } else if (property instanceof Enum || property instanceof String || ReflectionUtils.isWrapperType(property.getClass())) {
+      return Optional.of(new ScalarPlaceholderData<>(property));
+    } else if (property instanceof Temporal temporal) {
+      return formatTemporal(placeholderName, temporal, locale);
     } else if (property instanceof UUID uuid) {
       return Optional.of(new ScalarPlaceholderData<>(uuid.toString()));
     } else {
