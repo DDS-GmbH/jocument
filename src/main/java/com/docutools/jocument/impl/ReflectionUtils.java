@@ -43,7 +43,7 @@ public class ReflectionUtils {
         .findFirst()
         .map(field -> field.getDeclaredAnnotation(annotationType))
         .or(() -> {
-          logger.info("Did not find annotation {} in class {}", fieldName, baseClass);
+          logger.debug("Did not find annotation {} in class {}", fieldName, baseClass);
           return Optional.empty();
         });
   }
