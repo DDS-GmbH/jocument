@@ -69,16 +69,18 @@ public class ImagePlaceholderData extends CustomWordPlaceholderData {
   @Override
   protected void transform(IBodyElement placeholder, IBody part, Locale locale, GenerationOptions options) {
     Path path = applyOptions(options);
+    var paragraph = part.insertNewParagraph(WordUtilities.openCursor(placeholder).orElseThrow());
+    if (placeholder instanceof XWPFParagraph placeholderParagraph) {
+      paragraph.setAlignment(placeholderParagraph.getAlignment());
+    }
     try {
-      var paragraph = part.insertNewParagraph(WordUtilities.openCursor(placeholder).orElseThrow());
-      if (placeholder instanceof XWPFParagraph placeholderParagraph) {
-        paragraph.setAlignment(placeholderParagraph.getAlignment());
-      }
       WordImageUtils.insertImage(paragraph, path, options.imageStrategy());
-      WordUtilities.removeIfExists(placeholder);
-    } catch (IllegalArgumentException e) {
+    } catch (Exception e) {
       logger.error("Could not insert image", e);
+      WordUtilities.replaceText(paragraph, "-");
     } finally {
+      WordUtilities.removeIfExists(placeholder);
+
       if (path != null && !path.equals(imagePath)) {
         try {
           Files.deleteIfExists(path);
