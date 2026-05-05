@@ -644,4 +644,29 @@ class WordGeneratorTest {
         var documentWrapper = new XWPFDocumentWrapper(xwpfDocument);
         assertThat(documentWrapper.bodyElement(0).asParagraph().text(), equalTo(SampleModelData.PLACEHOLDER_WITH_SPECIAL_CHARS));
     }
+
+    @Test
+    @DisplayName("Allow multiple colors per paragraph, when replacing placeholders.")
+    void shouldAllowMultipleColorsInParagraph() throws IOException, InterruptedException {
+        // Arrange
+        Template template = Template.fromClassPath("/templates/word/MultipleColorsPerParagraph.docx")
+            .orElseThrow();
+        PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.PICARD);
+
+        // Act
+        Document document = template.startGeneration(resolver);
+        document.blockUntilCompletion(60000L); // 1 minute
+
+        // Assert
+        assertThat(document.completed(), is(true));
+        xwpfDocument = TestUtils.getXWPFDocumentFromDocument(document);
+        var documentWrapper = new XWPFDocumentWrapper(xwpfDocument);
+        var paragraph = documentWrapper.bodyElement(0).asParagraph();
+
+        List<RunWrapper> runs = paragraph.runs();
+        assertThat(runs, hasSize(2));
+        assertThat(runs.get(0).xwpfRun().getColor(), is(equalTo(null)));
+        assertThat(runs.get(1).xwpfRun().getColor(), is(equalTo("EE0000")));
+        assertThat(paragraph.text(), is(equalTo("Jean-Luc Picard – 4")));
+    }
 }
