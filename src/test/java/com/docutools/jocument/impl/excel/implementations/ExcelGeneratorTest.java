@@ -28,6 +28,9 @@ import com.docutools.poipath.PoiPath;
 import com.docutools.poipath.xssf.RowWrapper;
 import com.docutools.poipath.xssf.XSSFWorkbookWrapper;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.Period;
 import java.time.format.DateTimeFormatter;
@@ -669,5 +672,42 @@ class ExcelGeneratorTest {
         assertThat(argbFontColor[3] & 0xFF, equalTo(0));
         assertThat(font.getBold(), equalTo(true));
         assertThat(font.getFontHeightInPoints(), is((short)14));
+    }
+
+    @Test
+    @DisplayName("Should generate the report even when the template contains formulas POI cannot evaluate.")
+    void shouldSkipUnevaluableFormulas() throws InterruptedException, IOException {
+        // Arrange
+        // Excel stores =ÜBERSETZEN(L8;"DE";"EN") as _xlfn.TRANSLATE(L8,"DE","EN"); the formula is injected
+        // on XML level since POI's formula parser does not know the function either (see sc-44689).
+        Path templatePath = Files.createTempFile("jocument-translate-template", ".xlsx");
+        try (XSSFWorkbook templateWorkbook = new XSSFWorkbook()) {
+            var sheet = templateWorkbook.createSheet("Report");
+            var row = sheet.createRow(7);
+            row.createCell(11).setCellValue("{{firstName}}");
+            row.createCell(12).getCTCell().addNewF().setStringValue("_xlfn.TRANSLATE(L8,\"DE\",\"EN\")");
+            row.createCell(13).setCellFormula("SUM(1,2)");
+            try (OutputStream os = Files.newOutputStream(templatePath)) {
+                templateWorkbook.write(os);
+            }
+        }
+        Template template = Template.from(templatePath).orElseThrow();
+        PlaceholderResolver resolver = new ReflectionResolver(SampleModelData.PICARD_PERSON);
+
+        // Act
+        Document document = template.startGeneration(resolver);
+        document.blockUntilCompletion(60000L); // 1 minute
+
+        // Assert
+        assertThat(document.completed(), is(true));
+        assertThat(document.getPath(), notNullValue());
+        workbook = TestUtils.getXSSFWorkbookFromDocument(document);
+        var firstSheet = PoiPath.xssf(workbook).sheet(0);
+        assertThat(firstSheet.row(7).cell(11).stringValue(), equalTo("Jean-Luc"));
+        var translateCell = workbook.getSheetAt(0).getRow(7).getCell(12);
+        assertThat(translateCell.getCellFormula(), equalTo("_xlfn.TRANSLATE(L8,\"DE\",\"EN\")"));
+        var sumCell = workbook.getSheetAt(0).getRow(7).getCell(13);
+        assertThat(sumCell.getNumericCellValue(), closeTo(3.0, 0.001));
+        assertThat(workbook.getForceFormulaRecalculation(), is(true));
     }
 }
