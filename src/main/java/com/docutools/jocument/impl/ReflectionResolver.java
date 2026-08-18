@@ -358,14 +358,16 @@ public class ReflectionResolver extends PlaceholderResolver {
   private Optional<PlaceholderData> resolveChain(String placeholderName, Locale locale) {
     Optional<PlaceholderData> result = Optional.empty();
     for (String property : placeholderName.split("\\.")) {
-      if(result.filter(placeholderData -> !(placeholderData instanceof IterablePlaceholderData)).isPresent())
+      if (result.filter(placeholderData -> !(placeholderData instanceof IterablePlaceholderData)).isPresent()) {
         return Optional.empty(); // property access only possible on IterablePlaceholderData
+      }
       result = result
           .flatMap(placeholderData -> placeholderData.stream().findFirst())
           .flatMap(childResolver -> childResolver.resolve(property, locale))
           .or(() -> doReflectiveResolve(property, locale));
-      if(result.isEmpty())
+      if (result.isEmpty()) {
         break;
+      }
     }
     return result;
   }
@@ -473,9 +475,13 @@ public class ReflectionResolver extends PlaceholderResolver {
       return getObjectTranslation(placeholderName, locale, options);
     } else if (isFieldAnnotatedWith(bean.getClass(), placeholderName, Image.class)) {
       Path path;
-      if(property instanceof Path pathVar) path = pathVar;
-      else if(property instanceof String pathString) path = Path.of(pathString);
-      else return Optional.empty();
+      if (property instanceof Path pathVar) {
+        path = pathVar;
+      } else if (property instanceof String pathString) {
+        path = Path.of(pathString);
+      } else {
+        return Optional.empty();
+      }
       return ReflectionUtils.findFieldAnnotation(bean.getClass(), placeholderName, Image.class)
           .map(image -> new ImagePlaceholderData(path)
               .withMaxWidth(image.maxWidth())
