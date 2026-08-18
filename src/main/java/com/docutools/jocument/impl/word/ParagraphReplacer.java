@@ -61,7 +61,9 @@ public class ParagraphReplacer {
   private static void consolidatePlaceholderRuns(XWPFParagraph paragraph, Pattern pattern) {
     // Loop until no more cross-run placeholders are found, since each merge mutates the run list.
     // This re-scans the paragraph after each merge, which is safe for typical paragraphs.
-    while (mergeOneCrossRunMatch(paragraph, pattern)) { /* keep going */ }
+    while (mergeOneCrossRunMatch(paragraph, pattern)) {
+      // keep going
+    }
   }
 
   /**

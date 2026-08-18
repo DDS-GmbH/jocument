@@ -13,8 +13,14 @@ import java.util.Iterator;
 import java.util.stream.StreamSupport;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.poi.ss.formula.FormulaParseException;
+import org.apache.poi.ss.formula.eval.NotImplementedException;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.FormulaEvaluator;
+import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.xssf.usermodel.XSSFFormulaEvaluator;
+import org.apache.poi.ss.util.CellReference;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 
@@ -58,13 +64,55 @@ public class ExcelDocumentImpl extends DocumentImpl {
         logger.info("Starting generation of sheet {}", sheet.getSheetName());
         ExcelGenerator.apply(resolver, StreamSupport.stream(sheet.spliterator(), false).toList(), excelWriter, options);
       }
-      XSSFFormulaEvaluator.evaluateAllFormulaCells(workbook);
+      evaluateFormulaCells(workbook);
       try (OutputStream os = Files.newOutputStream(file)) {
         logger.info("Writing document to {}", os);
         workbook.write(os);
       }
     }
     return file;
+  }
+
+  /**
+   * Evaluates all formula cells of the workbook, skipping formulas POI cannot parse or evaluate,
+   * e.g. functions like TRANSLATE which only Microsoft 365 can compute. Skipped cells keep their
+   * formula, and the workbook is flagged for recalculation so they are computed when the report is opened.
+   *
+   * @param workbook The workbook whose formula cells should be evaluated
+   */
+  private void evaluateFormulaCells(XSSFWorkbook workbook) {
+    FormulaEvaluator evaluator = workbook.getCreationHelper().createFormulaEvaluator();
+    boolean unevaluableFormula = false;
+    for (Sheet sheet : workbook) {
+      for (Row row : sheet) {
+        for (Cell cell : row) {
+          if (cell.getCellType() == CellType.FORMULA && !evaluateFormulaCell(evaluator, cell)) {
+            unevaluableFormula = true;
+          }
+        }
+      }
+    }
+    if (unevaluableFormula) {
+      workbook.setForceFormulaRecalculation(true);
+    }
+  }
+
+  /**
+   * Evaluates a single formula cell, treating formulas POI does not support as non-fatal.
+   *
+   * @param evaluator The evaluator to evaluate the cell with
+   * @param cell      The formula cell to evaluate
+   * @return Whether the formula could be evaluated
+   */
+  private boolean evaluateFormulaCell(FormulaEvaluator evaluator, Cell cell) {
+    try {
+      evaluator.evaluateFormulaCell(cell);
+      return true;
+    } catch (NotImplementedException | FormulaParseException e) {
+      logger.warn("Could not evaluate formula '{}' of cell {}, leaving it to be calculated when the report is opened",
+          cell.getCellFormula(), new CellReference(cell).formatAsString(), e);
+      return false;
+    }
   }
 
   /**

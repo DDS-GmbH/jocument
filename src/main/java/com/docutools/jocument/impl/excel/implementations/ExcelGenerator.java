@@ -120,10 +120,11 @@ public class ExcelGenerator {
       PlaceholderData placeholderData = placeholderDataOptional.get();
       if (placeholderData instanceof ScalarPlaceholderData<?> scalarPlaceholderData
           && scalarPlaceholderData.getRawValue() instanceof Number number) {
-        if(nestedLoopDepth > 0)
+        if (nestedLoopDepth > 0) {
           excelWriter.addCell(cell, number.doubleValue());
-        else // if we are not in a loop, we can set the cell value directly, otherwise we would overwrite the template cell and styles (*)
+        } else { // if we are not in a loop, we can set the cell value directly, otherwise we would overwrite the template cell and styles (*)
           cell.setCellValue(number.doubleValue());
+        }
         return ModificationInformation.empty();
       } else if (placeholderData.getType().equals(PlaceholderType.CUSTOM) && placeholderData instanceof ExcelPlaceholderData excelPlaceholderData) {
         return excelPlaceholderData.transform(cell, excelWriter, offset, LocaleUtil.getUserLocale(), options);
@@ -138,10 +139,11 @@ public class ExcelGenerator {
             // see: https://docs.oracle.com/en/java/javase/21/docs//api/java.base/java/lang/String.html#replaceAll(java.lang.String,java.lang.String)
             .map(Matcher::quoteReplacement)
             .orElse(""));
-    if(nestedLoopDepth > 0)
+    if (nestedLoopDepth > 0) {
       excelWriter.addCell(cell, newCellText);
-    else // (*) see above
+    } else { // (*) see above
       cell.setCellValue(newCellText);
+    }
     return ModificationInformation.empty();
   }
 
