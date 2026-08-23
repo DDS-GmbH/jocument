@@ -29,7 +29,7 @@ jobs:
         with:
           arguments: checkMain checkTest
       - name: Archive checkstyle results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: checkstyle-results
@@ -51,7 +51,7 @@ jobs:
         with:
           arguments: dependencyCheckAnalyze
       - name: Archive owasp check results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: owasp-results
@@ -77,7 +77,7 @@ jobs:
         with:
           arguments: automatedTests
       - name: Archive test results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: test-results
