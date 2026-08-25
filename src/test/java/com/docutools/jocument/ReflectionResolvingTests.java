@@ -29,11 +29,14 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 @DisplayName("Resolve placeholders from an object graph via reflection.")
@@ -66,6 +69,57 @@ class ReflectionResolvingTests {
     assertThat(name, equalTo(SampleModelData.PICARD.getName()));
     assertThat(rank, is(4));
     assertThat(uniform, is(Uniform.Red));
+  }
+
+  @ParameterizedTest(name = "Strip trailing char U+{0}")
+  @MethodSource("invisibleAndWhitespaceCharacters")
+  @DisplayName("Resolve a placeholder name carrying a trailing invisible/whitespace character.")
+  void shouldResolveNameWithTrailingInvisibleCharacter(String invisibleChar) {
+    // Act
+    String name = resolver.resolve("name" + invisibleChar)
+        .map(PlaceholderData::toString)
+        .orElseThrow();
+    // Assert
+    assertThat(name, equalTo(SampleModelData.PICARD.getName()));
+  }
+
+  @ParameterizedTest(name = "Strip leading char U+{0}")
+  @MethodSource("invisibleAndWhitespaceCharacters")
+  @DisplayName("Resolve a placeholder name carrying a leading invisible/whitespace character.")
+  void shouldResolveNameWithLeadingInvisibleCharacter(String invisibleChar) {
+    // Act
+    String name = resolver.resolve(invisibleChar + "name")
+        .map(PlaceholderData::toString)
+        .orElseThrow();
+    // Assert
+    assertThat(name, equalTo(SampleModelData.PICARD.getName()));
+  }
+
+  @ParameterizedTest(name = "Strip embedded char U+{0}")
+  @MethodSource("invisibleAndWhitespaceCharacters")
+  @DisplayName("Resolve a placeholder name carrying an invisible/whitespace character in the middle.")
+  void shouldResolveNameWithEmbeddedInvisibleCharacter(String invisibleChar) {
+    // Act
+    String name = resolver.resolve("na" + invisibleChar + "me")
+        .map(PlaceholderData::toString)
+        .orElseThrow();
+    // Assert
+    assertThat(name, equalTo(SampleModelData.PICARD.getName()));
+  }
+
+  static Stream<Arguments> invisibleAndWhitespaceCharacters() {
+    return Stream.of(
+        Arguments.of(" "),       // Regular space
+        Arguments.of("\t"),      // Tab
+        Arguments.of("\u00A0"),  // No-Break Space
+        Arguments.of("\u200B"),  // Zero Width Space
+        Arguments.of("\u200C"),  // Zero Width Non-Joiner
+        Arguments.of("\u200D"),  // Zero Width Joiner
+        Arguments.of("\u200E"),  // Left-to-Right Mark
+        Arguments.of("\u200F"),  // Right-to-Left Mark
+        Arguments.of("\uFEFF"),  // Zero Width No-Break Space / BOM
+        Arguments.of("\u00AD")   // Soft Hyphen
+    );
   }
 
   @Test
