@@ -4,6 +4,7 @@ import com.docutools.jocument.impl.ScalarPlaceholderData;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.regex.Pattern;
 import org.apache.poi.util.LocaleUtil;
 
 /**
@@ -18,6 +19,8 @@ import org.apache.poi.util.LocaleUtil;
  * @since 2020-02-19
  */
 public abstract class PlaceholderResolver {
+
+  private static final Pattern INVISIBLE_CHARS = Pattern.compile("[\\p{Cf}\\h\\s]");
 
   protected GenerationOptions options = GenerationOptionsBuilder.buildDefaultOptions();
 
@@ -43,8 +46,12 @@ public abstract class PlaceholderResolver {
    * @return if the name could've been resolved the localised {@link com.docutools.jocument.PlaceholderData}
    */
   public Optional<PlaceholderData> resolve(String placeholderName, Locale locale) {
-    return doResolve(placeholderName, locale)
+    return doResolve(removeInvisibleChars(placeholderName), locale)
         .map(placeholderData -> format(locale, placeholderData));
+  }
+
+  private static String removeInvisibleChars(String placeholderName) {
+    return INVISIBLE_CHARS.matcher(placeholderName).replaceAll("");
   }
 
   private PlaceholderData format(Locale locale, PlaceholderData original) {
