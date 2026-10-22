@@ -1,6 +1,8 @@
 package com.docutools.jocument.image;
 
+import com.docutools.jocument.TempFiles;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.UUID;
 
@@ -64,7 +66,41 @@ public abstract class ImageReference implements AutoCloseable {
    */
   public abstract Path saveAsJpeg() throws IOException, NoWriterFoundException;
 
+  /**
+   * Saves the image to a temporary file in the given directory as JPEG. Won't affect original file.
+   * The default implementation moves the file written by {@link #saveAsJpeg()} into the directory.
+   *
+   * @param directory the directory to save the file in, or {@code null} for the default temporary-file directory
+   * @return the {@link Path} to the JPEG
+   */
+  public Path saveAsJpeg(Path directory) throws IOException, NoWriterFoundException {
+    return moveTo(saveAsJpeg(), directory);
+  }
+
   public abstract Path saveAsPng() throws IOException, NoWriterFoundException;
+
+  /**
+   * Saves the image to a temporary file in the given directory as PNG. Won't affect original file.
+   * The default implementation moves the file written by {@link #saveAsPng()} into the directory.
+   *
+   * @param directory the directory to save the file in, or {@code null} for the default temporary-file directory
+   * @return the {@link Path} to the PNG
+   */
+  public Path saveAsPng(Path directory) throws IOException, NoWriterFoundException {
+    return moveTo(saveAsPng(), directory);
+  }
+
+  private static Path moveTo(Path file, Path directory) throws IOException {
+    if (directory == null) {
+      return file;
+    }
+    try {
+      return Files.move(file, directory.resolve(file.getFileName()));
+    } catch (IOException | RuntimeException e) {
+      TempFiles.deleteQuietly(file, e);
+      throw e;
+    }
+  }
 
   @Override
   public abstract void close();

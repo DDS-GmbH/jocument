@@ -2,6 +2,7 @@ package com.docutools.jocument.impl.word;
 
 import com.docutools.jocument.GenerationOptions;
 import com.docutools.jocument.PlaceholderResolver;
+import com.docutools.jocument.TempFiles;
 import com.docutools.jocument.Template;
 import com.docutools.jocument.impl.DocumentImpl;
 import java.io.IOException;
@@ -27,7 +28,7 @@ public class WordDocumentImpl extends DocumentImpl {
   @Override
   protected Path generate() throws IOException {
     logger.info("Starting generation");
-    Path file = Files.createTempFile("jocument-", ".docx");
+    Path file = options.createTempFile(".docx");
     try (XWPFDocument document = new XWPFDocument(template.openStream())) {
       List<IBodyElement> bodyElements = new ArrayList<>(document.getBodyElements().size() + document.getHeaderList().size());
       bodyElements.addAll(document.getBodyElements());
@@ -45,6 +46,9 @@ public class WordDocumentImpl extends DocumentImpl {
         logger.info("Writing document to {}", os);
         document.write(os);
       }
+    } catch (IOException | RuntimeException | Error e) {
+      TempFiles.deleteQuietly(file, e);
+      throw e;
     }
     logger.info("Finished generation");
     return file;

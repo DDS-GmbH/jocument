@@ -2,6 +2,7 @@ package com.docutools.jocument.impl;
 
 import com.docutools.jocument.PlaceholderData;
 import com.docutools.jocument.PlaceholderResolver;
+import com.docutools.jocument.TempFiles;
 import com.docutools.jocument.impl.word.placeholders.ImagePlaceholderData;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -15,7 +16,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Locale;
@@ -127,8 +127,13 @@ public class JsonResolver extends PlaceholderResolver {
 
   private Optional<Path> fromUrlContent(String url) {
     try (InputStream stream = new URL(url).openStream()) {
-      Path tmp = Files.createTempFile("jocument-", ".dat");
-      IOUtils.copy(stream, tmp.toFile());
+      Path tmp = TempFiles.create(null, ".dat");
+      try {
+        IOUtils.copy(stream, tmp.toFile());
+      } catch (IOException | RuntimeException e) {
+        TempFiles.deleteQuietly(tmp, e);
+        throw e;
+      }
       return Optional.of(tmp);
     } catch (IOException e) {
       logger.warn("Encountered IOException when trying to resolve URL %s".formatted(url), e);

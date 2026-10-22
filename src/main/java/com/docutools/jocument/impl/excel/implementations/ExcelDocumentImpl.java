@@ -2,6 +2,7 @@ package com.docutools.jocument.impl.excel.implementations;
 
 import com.docutools.jocument.GenerationOptions;
 import com.docutools.jocument.PlaceholderResolver;
+import com.docutools.jocument.TempFiles;
 import com.docutools.jocument.Template;
 import com.docutools.jocument.impl.DocumentImpl;
 import com.docutools.jocument.impl.excel.interfaces.ExcelWriter;
@@ -54,7 +55,7 @@ public class ExcelDocumentImpl extends DocumentImpl {
   @Override
   protected Path generate() throws IOException {
     logger.info("Starting generation");
-    Path file = Files.createTempFile("jocument-", ".xlsx");
+    Path file = options.createTempFile(".xlsx");
     try (XSSFWorkbook workbook = new XSSFWorkbook(template.openStream())) {
       ExcelWriter excelWriter = new XSSFWriter(workbook);
       for (Iterator<Sheet> it = workbook.sheetIterator(); it.hasNext(); ) {
@@ -69,6 +70,9 @@ public class ExcelDocumentImpl extends DocumentImpl {
         logger.info("Writing document to {}", os);
         workbook.write(os);
       }
+    } catch (IOException | RuntimeException | Error e) {
+      TempFiles.deleteQuietly(file, e);
+      throw e;
     }
     return file;
   }
