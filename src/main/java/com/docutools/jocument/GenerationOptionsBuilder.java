@@ -5,6 +5,7 @@ import com.docutools.jocument.formatting.PlaceholderDataFormatter;
 import com.docutools.jocument.formatting.PlaceholderDataFormattingOption;
 import com.docutools.jocument.image.DefaultImageStrategy;
 import com.docutools.jocument.image.ImageStrategy;
+import java.nio.file.Path;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
@@ -30,6 +31,7 @@ public final class GenerationOptionsBuilder {
   private BiFunction<String, Locale, Optional<String>> translationFunction = null;
   private Duration waitTime = Duration.ofSeconds(30);
   private MimeType mimeType;
+  private Path tempDirectory;
 
   public GenerationOptionsBuilder() {
     this.imageStrategy = DefaultImageStrategy.instance();
@@ -64,8 +66,21 @@ public final class GenerationOptionsBuilder {
     return this;
   }
 
+  /**
+   * Sets the directory jocument writes the generated document and temporary images to.
+   * Defaults to the default temporary-file directory ({@code java.io.tmpdir}).
+   *
+   * @param tempDirectory The directory, which has to exist
+   * @return this builder
+   */
+  public GenerationOptionsBuilder withTempDirectory(Path tempDirectory) {
+    this.tempDirectory = tempDirectory;
+    return this;
+  }
+
   public GenerationOptions build() {
-    return new GenerationOptions(imageStrategy, waitTime, formattingOptions, translationFunction, Optional.ofNullable(mimeType));
+    return new GenerationOptions(imageStrategy, waitTime, formattingOptions, translationFunction, Optional.ofNullable(mimeType),
+        Optional.ofNullable(tempDirectory));
   }
 
 }

@@ -1,8 +1,8 @@
 package com.docutools.jocument.image;
 
+import com.docutools.jocument.TempFiles;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import javax.imageio.ImageIO;
 import org.apache.logging.log4j.LogManager;
@@ -41,25 +41,40 @@ public final class DefaultImageReference extends ImageReference {
 
   @Override
   public Path saveAsJpeg() throws IOException, NoWriterFoundException {
-    return saveAs(".jpg", "JPEG");
+    return saveAsJpeg(null);
+  }
+
+  @Override
+  public Path saveAsJpeg(Path directory) throws IOException, NoWriterFoundException {
+    return saveAs(directory, ".jpg", "JPEG");
   }
 
   @Override
   public Path saveAsPng() throws IOException, NoWriterFoundException {
-    return saveAs(".png", "PNG");
+    return saveAsPng(null);
   }
 
-  private Path saveAs(String suffix, String formatName) throws IOException, NoWriterFoundException {
+  @Override
+  public Path saveAsPng(Path directory) throws IOException, NoWriterFoundException {
+    return saveAs(directory, ".png", "PNG");
+  }
+
+  private Path saveAs(Path directory, String suffix, String formatName) throws IOException, NoWriterFoundException {
     if (image == null) {
       throw new ImageReferenceClosedException("Image was already closed.");
     }
 
-    var filePath = Files.createTempFile("jocument-", suffix);
+    var filePath = TempFiles.create(directory, suffix);
     log.trace("Saving image {} to '{}'...", id, filePath);
 
-    boolean foundWriter = ImageIO.write(image, formatName, filePath.toFile());
-    if (!foundWriter) {
-      throw new NoWriterFoundException(formatName);
+    try {
+      boolean foundWriter = ImageIO.write(image, formatName, filePath.toFile());
+      if (!foundWriter) {
+        throw new NoWriterFoundException(formatName);
+      }
+    } catch (IOException | NoWriterFoundException | RuntimeException | Error e) {
+      TempFiles.deleteQuietly(filePath, e);
+      throw e;
     }
     log.trace("Successfully saved image {} to '{}'", id, filePath);
 

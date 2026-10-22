@@ -103,22 +103,23 @@ public class ImagePlaceholderData extends CustomWordPlaceholderData {
       double scale = Math.max(image.getWidth() / (double) maxWidth, image.getHeight() / (double) maxHeight);
       if (scale > 1.0) {
         try (var resized = options.imageStrategy().scale(image, 1 / scale)) {
-          return saveImage(resized);
+          return saveImage(resized, options);
         }
       }
-      return saveImage(image);
+      return saveImage(image, options);
     } catch (IOException | NoWriterFoundException | IncompatibleImageReferenceException e) {
       logger.error(e);
       return imagePath;
     }
   }
 
-  private Path saveImage(ImageReference imageReference) throws IOException, NoWriterFoundException {
+  private Path saveImage(ImageReference imageReference, GenerationOptions options) throws IOException, NoWriterFoundException {
+    Path directory = options.tempDirectory().orElse(null);
     try {
-      return imageReference.saveAsJpeg();
+      return imageReference.saveAsJpeg(directory);
     } catch (NoWriterFoundException e) {
       try {
-        return imageReference.saveAsPng();
+        return imageReference.saveAsPng(directory);
       } catch (NoWriterFoundException ex) {
         throw new NoWriterFoundException("JPG,PNG");
       }
